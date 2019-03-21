@@ -1,0 +1,6 @@
+IPsec-StateMachineExtractor - Extract the state machine of an IKEv1/IKEv2 implementation
+
+Copyright © ${project.inceptionYear} ${owner}
+
+Licensed under Apache License 2.0
+http://www.apache.org/licenses/LICENSE-2.0
