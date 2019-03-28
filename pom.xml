@@ -26,44 +26,14 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-api</artifactId>
+            <groupId>de.learnlib.distribution</groupId>
+            <artifactId>learnlib-distribution</artifactId>
+            <type>pom</type>
         </dependency>
         <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-counterexamples</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-equivalence-oracles</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-membership-oracles</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-drivers-simulator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-cache</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-lstar</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-dhc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-ttt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.learnlib</groupId>
-            <artifactId>learnlib-kearns-vazirani</artifactId>
+            <groupId>de.learnlib.testsupport</groupId>
+            <artifactId>learnlib-learning-examples</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>net.automatalib</groupId>
@@ -76,21 +46,13 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.8.2</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.8.2</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
             <groupId>de.rub.nds.tlsattacker</groupId>
             <artifactId>Transport</artifactId>
             <version>2.8</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
     </dependencies>
     <build>
