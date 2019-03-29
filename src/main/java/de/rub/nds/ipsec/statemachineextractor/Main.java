@@ -8,65 +8,92 @@
  */
 package de.rub.nds.ipsec.statemachineextractor;
 
-import de.learnlib.algorithms.dhc.mealy.MealyDHC;
-import de.learnlib.api.oracle.MembershipOracle;
+import de.learnlib.algorithms.lstar.mealy.ExtensibleLStarMealyBuilder;
 import de.learnlib.api.query.DefaultQuery;
-import de.learnlib.examples.mealy.ExampleCoffeeMachine;
-import de.learnlib.examples.mealy.ExampleCoffeeMachine.Input;
-import de.learnlib.filter.cache.mealy.MealyCaches;
-import de.learnlib.oracle.equivalence.SimulatorEQOracle;
-import de.learnlib.oracle.membership.SimulatorOracle;
+import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1MessageEnum;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Random;
+
+import net.automatalib.automata.transout.MealyMachine;
+import net.automatalib.words.Alphabet;
+import net.automatalib.words.Word;
+import net.automatalib.words.impl.Alphabets;
+import de.learnlib.api.SUL;
+import de.learnlib.api.algorithm.LearningAlgorithm.MealyLearner;
+import de.learnlib.api.oracle.EquivalenceOracle.MealyEquivalenceOracle;
+import de.learnlib.filter.cache.mealy.MealyCacheOracle;
+import de.learnlib.mapper.ContextExecutableInputSUL;
+import de.learnlib.mapper.SULMappers;
+import de.learnlib.mapper.api.ContextExecutableInput;
+import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOracle;
+import de.learnlib.oracle.membership.SULOracle;
+import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1MessageMapper;
+import de.rub.nds.ipsec.statemachineextractor.ikev1.ISAKMPMessage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.automatalib.automata.transout.impl.compact.CompactMealy;
 import net.automatalib.serialization.dot.GraphDOT;
-import net.automatalib.words.Alphabet;
-import net.automatalib.words.Word;
 
 /**
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class Main {
 
-    public static void main(String[] args) {
-        CompactMealy<Input, String> fm = ExampleCoffeeMachine.constructMachine();
-        Alphabet<Input> alphabet = fm.getInputAlphabet();
+    public static void main(String[] args) throws UnknownHostException {
+        Instant instant = Instant.now();
+        Alphabet<IKEv1MessageEnum> alphabet = Alphabets.fromEnum(IKEv1MessageEnum.class);
+        final InetAddressContextHandler contextHandler = new InetAddressContextHandler("10.0.3.4");
+        final ContextExecutableInputSUL<ContextExecutableInput<ISAKMPMessage, InetAddress>, ISAKMPMessage, InetAddress> ceiSUL;
+        ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
+        SUL<IKEv1MessageEnum, IKEv1MessageEnum> sul = SULMappers.apply(new IKEv1MessageMapper(), ceiSUL);
+        SULOracle<IKEv1MessageEnum, IKEv1MessageEnum> oracle = new SULOracle<>(sul);
+        MealyCacheOracle<IKEv1MessageEnum, IKEv1MessageEnum> mqOracle = MealyCacheOracle.createDAGCacheOracle(alphabet, null, oracle);
 
-        SimulatorOracle<Input, Word<String>> simoracle = new SimulatorOracle<>(fm);
-        SimulatorEQOracle<Input, Word<String>> eqoracle = new SimulatorEQOracle<>(fm);
+        MealyLearner<IKEv1MessageEnum, IKEv1MessageEnum> learner;
+        learner = new ExtensibleLStarMealyBuilder<IKEv1MessageEnum, IKEv1MessageEnum>().withAlphabet(alphabet).withOracle(mqOracle).create();
 
-        MembershipOracle<Input, Word<String>> cache = MealyCaches.createCache(alphabet, simoracle);
+        learner.startLearning();
+        MealyMachine<?, IKEv1MessageEnum, ?, IKEv1MessageEnum> hypothesis = learner.getHypothesisModel();
 
-        MealyDHC<Input, String> learner = new MealyDHC<>(alphabet, cache);
+        MealyEquivalenceOracle<IKEv1MessageEnum, IKEv1MessageEnum> eqOracle = new MealyRandomWordsEQOracle<>(
+                mqOracle,
+                1, // minLength
+                4, //maxLength
+                50, // maxTests
+                new Random(1));
 
-        DefaultQuery<Input, Word<String>> counterexample = null;
-        do {
-            if (counterexample == null) {
-                learner.startLearning();
-            } else {
-                boolean refined = learner.refineHypothesis(counterexample);
-                if (!refined) {
-                    System.err.println("No refinement effected by counterexample!");
-                }
-            }
-            counterexample = eqoracle.findCounterExample(learner.getHypothesisModel(), alphabet);
-        } while (counterexample != null);
-        CompactMealy<Input, String> hypothesisModel = learner.getHypothesisModel();
+        DefaultQuery<IKEv1MessageEnum, Word<IKEv1MessageEnum>> ce;
+        while ((ce = eqOracle.findCounterExample(hypothesis, alphabet)) != null) {
+            System.err.println("Found counterexample " + ce);
+            System.err.println("Current hypothesis has " + hypothesis.getStates().size() + " states");
+
+            learner.refineHypothesis(ce);
+            hypothesis = learner.getHypothesisModel();
+        }
+        System.err.println("Final hypothesis has " + hypothesis.getStates().size() + " states");
+
+        Instant end = Instant.now();
+        Duration duration = Duration.between(instant, end);
+        System.err.println("duration " + duration);
+
         try {
-            writeDotModel(hypothesisModel, "test.dot");
+            writeDotModel(hypothesis, alphabet, "test.dot");
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public static void writeDotModel(CompactMealy<Input, String> model, String filename) throws IOException, InterruptedException {
-		File dotFile = new File(filename);
+
+    public static <I> void writeDotModel(MealyMachine<?, I, ?, I> model, Alphabet<I> alphabet, String filename) throws IOException, InterruptedException {
+        MealyMachine.MealyGraphView mealyGraphView = new MealyMachine.MealyGraphView(model, alphabet);
+        File dotFile = new File(filename);
         try (PrintStream psDotFile = new PrintStream(dotFile)) {
-            GraphDOT.write(model, psDotFile);
+            GraphDOT.write(mealyGraphView, psDotFile);
         }
-		Runtime.getRuntime().exec("dot -Tpdf -O " + filename);
-	}
+        Runtime.getRuntime().exec("dot -Tpdf -O " + filename);
+    }
 }

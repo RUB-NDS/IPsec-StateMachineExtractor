@@ -31,11 +31,6 @@
             <type>pom</type>
         </dependency>
         <dependency>
-            <groupId>de.learnlib.testsupport</groupId>
-            <artifactId>learnlib-learning-examples</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>net.automatalib</groupId>
             <artifactId>automata-dot-visualizer</artifactId>
         </dependency>
