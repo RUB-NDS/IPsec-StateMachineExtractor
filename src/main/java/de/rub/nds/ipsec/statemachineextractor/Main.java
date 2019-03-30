@@ -28,8 +28,7 @@ import de.learnlib.mapper.SULMappers;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOracle;
 import de.learnlib.oracle.membership.SULOracle;
-import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1MessageMapper;
-import de.rub.nds.ipsec.statemachineextractor.ikev1.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -50,7 +49,7 @@ public class Main {
         final InetAddressContextHandler contextHandler = new InetAddressContextHandler("10.0.3.4");
         final ContextExecutableInputSUL<ContextExecutableInput<ISAKMPMessage, InetAddress>, ISAKMPMessage, InetAddress> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
-        SUL<IKEv1MessageEnum, IKEv1MessageEnum> sul = SULMappers.apply(new IKEv1MessageMapper(), ceiSUL);
+        SUL<IKEv1MessageEnum, IKEv1MessageEnum> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
         SULOracle<IKEv1MessageEnum, IKEv1MessageEnum> oracle = new SULOracle<>(sul);
         MealyCacheOracle<IKEv1MessageEnum, IKEv1MessageEnum> mqOracle = MealyCacheOracle.createDAGCacheOracle(alphabet, null, oracle);
 

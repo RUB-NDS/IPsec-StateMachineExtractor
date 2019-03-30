@@ -6,17 +6,19 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ikev1;
+package de.rub.nds.ipsec.statemachineextractor;
 
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.mapper.api.SULMapper;
+import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1MessageEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import java.net.InetAddress;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1MessageMapper implements SULMapper<IKEv1MessageEnum, IKEv1MessageEnum, ContextExecutableInput<ISAKMPMessage, InetAddress>, ISAKMPMessage> {
+public class IKEMessageMapper implements SULMapper<IKEv1MessageEnum, IKEv1MessageEnum, ContextExecutableInput<ISAKMPMessage, InetAddress>, ISAKMPMessage> {
 
     @Override
     public ContextExecutableInput<ISAKMPMessage, InetAddress> mapInput(IKEv1MessageEnum abstractInput) {
