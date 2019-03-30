@@ -8,11 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import java.util.Arrays;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -21,26 +16,7 @@ import static org.junit.Assert.*;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class ISAKMPMessageTest {
-
-    public ISAKMPMessageTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
+    
     /**
      * Test of getInitiatorCookie method, of class ISAKMPMessage.
      */
@@ -166,7 +142,6 @@ public class ISAKMPMessageTest {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x1c};
-        System.out.println(Arrays.toString(instance.getBytes()));
         assertArrayEquals(expResult, instance.getBytes());
     }
 

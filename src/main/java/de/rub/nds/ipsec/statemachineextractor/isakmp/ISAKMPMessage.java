@@ -22,6 +22,8 @@ import java.util.Random;
  */
 public abstract class ISAKMPMessage {
 
+    protected static final int ISAKMP_HEADER_LEN = 28;
+    
     private byte[] initiatorCookie;
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte version = 0x10;
@@ -123,7 +125,7 @@ public abstract class ISAKMPMessage {
     }
 
     public int getLength() {
-        int length = 28;
+        int length = ISAKMP_HEADER_LEN;
         for (ISAKMPPayload payload : payloads) {
             length += payload.getLength();
         }
