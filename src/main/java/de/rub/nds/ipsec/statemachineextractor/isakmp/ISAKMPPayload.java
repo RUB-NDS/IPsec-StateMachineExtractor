@@ -15,28 +15,12 @@ import java.io.ByteArrayOutputStream;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public abstract class ISAKMPPayload {
+public abstract class ISAKMPPayload implements ISAKMPSerializable {
 
     protected static final int ISAKMP_PAYLOAD_HEADER_LEN = 4;
     
     private final PayloadTypeEnum type;
-
-    private PayloadTypeEnum nextPayload = PayloadTypeEnum.NONE;
-
-    /**
-     * @return the length of the full payload, including the generic payload
-     * header
-     */
-    public abstract int getLength();
-
-    public byte[] getBytes() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(getGenericPayloadHeader(), 0, ISAKMP_PAYLOAD_HEADER_LEN);
-        writeBytes(baos);
-        return baos.toByteArray();
-    }
-
-    protected abstract void writeBytes(ByteArrayOutputStream baos);
+    protected PayloadTypeEnum nextPayload = PayloadTypeEnum.NONE;
 
     public ISAKMPPayload(PayloadTypeEnum type) {
         this.type = type;
@@ -45,7 +29,19 @@ public abstract class ISAKMPPayload {
     public PayloadTypeEnum getType() {
         return type;
     }
+    
+    /**
+     * @return the length of the full payload, including the generic payload
+     * header
+     */
+    @Override
+    public abstract int getLength();
 
+    @Override
+    public void writeBytes(ByteArrayOutputStream baos) {
+        baos.write(getGenericPayloadHeader(), 0, ISAKMP_PAYLOAD_HEADER_LEN);
+    }
+    
     protected void setNextPayload(PayloadTypeEnum nextPayload) {
         this.nextPayload = nextPayload;
     }
@@ -59,4 +55,5 @@ public abstract class ISAKMPPayload {
         genericPayloadHeader[0] = nextPayload.getValue();
         return genericPayloadHeader;
     }
+
 }

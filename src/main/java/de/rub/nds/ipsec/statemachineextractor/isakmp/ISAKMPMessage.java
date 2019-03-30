@@ -20,17 +20,17 @@ import java.util.Random;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public abstract class ISAKMPMessage {
+public abstract class ISAKMPMessage implements ISAKMPSerializable{
 
     protected static final int ISAKMP_HEADER_LEN = 28;
-    
+
     private byte[] initiatorCookie;
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte version = 0x10;
     private ExchangeTypeEnum exchangeType = ExchangeTypeEnum.NONE;
     private final BitSet flags = new BitSet(3);
     private byte[] messageId = new byte[]{0x00, 0x00, 0x00, 0x00};
-    private List<ISAKMPPayload> payloads = new ArrayList<>();
+    private final List<ISAKMPPayload> payloads = new ArrayList<>();
 
     public byte[] getInitiatorCookie() {
         if (initiatorCookie == null) {
@@ -120,10 +120,14 @@ public abstract class ISAKMPMessage {
         return Collections.unmodifiableList(payloads);
     }
 
-    public void setPayloads(List<ISAKMPPayload> payloads) {
-        this.payloads = payloads;
+    public void addPayload(ISAKMPPayload payload) {
+        if (!payloads.isEmpty()) {
+            payloads.get(payloads.size() - 1).setNextPayload(payload.getType());
+        }
+        payloads.add(payload);
     }
 
+    @Override
     public int getLength() {
         int length = ISAKMP_HEADER_LEN;
         for (ISAKMPPayload payload : payloads) {
@@ -131,9 +135,9 @@ public abstract class ISAKMPMessage {
         }
         return length;
     }
-
-    public byte[] getBytes() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    
+    @Override
+    public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(getInitiatorCookie(), 0, 8);
         baos.write(responderCookie, 0, 8);
         if (payloads.isEmpty()) {
@@ -146,10 +150,21 @@ public abstract class ISAKMPMessage {
         baos.write(getFlags());
         baos.write(messageId, 0, 4);
         baos.write(DatatypeHelper.intTo4ByteArray(getLength()), 0, 4);
-        for (ISAKMPPayload payload : payloads) {
-            byte[] payloadBytes = payload.getBytes();
-            baos.write(payloadBytes, 0, payloadBytes.length);
+        for (int i = 0; i < payloads.size(); i++) {
+            ISAKMPPayload payload = payloads.get(i);
+            if (i < payloads.size() - 1) {
+                ISAKMPPayload nextPayload = payloads.get(i + 1);
+                payload.setNextPayload(nextPayload.getType());
+            } else {
+                payload.setNextPayload(PayloadTypeEnum.NONE);
+            }
+            payload.writeBytes(baos);
         }
+    }
+
+    public byte[] getBytes() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        writeBytes(baos);
         return baos.toByteArray();
     }
 }
