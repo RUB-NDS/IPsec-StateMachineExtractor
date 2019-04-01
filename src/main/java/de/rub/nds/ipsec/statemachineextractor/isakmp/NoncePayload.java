@@ -12,18 +12,18 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class KeyExchangePayload extends SimpleBinaryPayload {
+public class NoncePayload extends SimpleBinaryPayload {
 
-    public KeyExchangePayload() {
-        super(PayloadTypeEnum.KeyExchange);
+    public NoncePayload() {
+        super(PayloadTypeEnum.Nonce);
     }
 
-    public byte[] getKeyExchangeData() {
+    public byte[] getNonceData() {
         return getBinaryData();
     }
 
-    public void setKeyExchangeData(byte[] keyExchangeData) {
-        setBinaryData(keyExchangeData);
+    public void setNonceData(byte[] nonceData) {
+        setBinaryData(nonceData);
     }
 
 }
