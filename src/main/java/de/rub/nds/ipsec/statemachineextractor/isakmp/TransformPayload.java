@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Attribute;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class TransformPayload extends ISAKMPPayload {
     
     private byte transformNumber;
     private byte transformId = 0x01; //KEY_IKE
-    private final List<IKEAttribute> attributes = new ArrayList<>();
+    private final List<IKEv1Attribute> attributes = new ArrayList<>();
 
     public TransformPayload() {
         super(PayloadTypeEnum.Transform);
@@ -32,7 +32,7 @@ public class TransformPayload extends ISAKMPPayload {
     @Override
     public int getLength() {
         int length = TRANSFORM_PAYLOAD_HEADER_LEN;
-        for (IKEAttribute attribute : attributes) {
+        for (IKEv1Attribute attribute : attributes) {
             length += attribute.getLength();
         }
         return length;
@@ -45,7 +45,7 @@ public class TransformPayload extends ISAKMPPayload {
         baos.write(transformId);
         baos.write(0x00);
         baos.write(0x00);
-        for (IKEAttribute attribute : attributes) {
+        for (IKEv1Attribute attribute : attributes) {
             attribute.writeBytes(baos);
         }
     }
@@ -66,7 +66,7 @@ public class TransformPayload extends ISAKMPPayload {
         this.transformId = transformId;
     }
     
-    public void addIKEAttribute(IKEAttribute attribute) {
+    public void addIKEAttribute(IKEv1Attribute attribute) {
         attributes.add(attribute);
     }
 

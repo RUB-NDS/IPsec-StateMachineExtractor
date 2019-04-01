@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Attribute;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -22,13 +22,13 @@ public class TransformPayloadTest {
     public static TransformPayload getTestTransformPayload() {
         TransformPayload instance = new TransformPayload();
         instance.setTransformNumber((byte)1);
-        instance.addIKEAttribute(IKEAttribute.AES_CBC);
-        instance.addIKEAttribute(IKEAttribute.KEY_LEN_128);
-        instance.addIKEAttribute(IKEAttribute.SHA1);
-        instance.addIKEAttribute(IKEAttribute.DH_GROUP_5);
-        instance.addIKEAttribute(IKEAttribute.PKE);
-        instance.addIKEAttribute(IKEAttribute.LIFETYPE_SEC);
-        instance.addIKEAttribute(IKEAttribute.DURATION28800);
+        instance.addIKEAttribute(IKEv1Attribute.AES_CBC);
+        instance.addIKEAttribute(IKEv1Attribute.KEY_LEN_128);
+        instance.addIKEAttribute(IKEv1Attribute.SHA1);
+        instance.addIKEAttribute(IKEv1Attribute.DH_GROUP_5);
+        instance.addIKEAttribute(IKEv1Attribute.PKE);
+        instance.addIKEAttribute(IKEv1Attribute.LIFETYPE_SEC);
+        instance.addIKEAttribute(IKEv1Attribute.DURATION28800);
         return instance;
     }
     

@@ -16,11 +16,11 @@ import java.io.ByteArrayOutputStream;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEAttribute implements ISAKMPSerializable {
+public class IKEv1Attribute implements ISAKMPSerializable {
     
     private final byte[] bytes;
 
-    private IKEAttribute(int bytes) {
+    private IKEv1Attribute(int bytes) {
         this.bytes = DatatypeHelper.intTo4ByteArray(bytes);
     }
     
@@ -34,11 +34,11 @@ public class IKEAttribute implements ISAKMPSerializable {
         baos.write(bytes, 0, 4);
     }
     
-    public static IKEAttribute AES_CBC = new IKEAttribute(0x80010007);
-    public static IKEAttribute KEY_LEN_128 = new IKEAttribute(0x800e0080);
-    public static IKEAttribute SHA1 = new IKEAttribute(0x80020002);
-    public static IKEAttribute DH_GROUP_5 = new IKEAttribute(0x80040005);
-    public static IKEAttribute PKE = new IKEAttribute(0x80030004);
-    public static IKEAttribute LIFETYPE_SEC = new IKEAttribute(0x800b0001);
-    public static IKEAttribute DURATION28800 = new IKEAttribute(0x800c7080);
+    public static IKEv1Attribute AES_CBC = new IKEv1Attribute(0x80010007);
+    public static IKEv1Attribute KEY_LEN_128 = new IKEv1Attribute(0x800e0080);
+    public static IKEv1Attribute SHA1 = new IKEv1Attribute(0x80020002);
+    public static IKEv1Attribute DH_GROUP_5 = new IKEv1Attribute(0x80040005);
+    public static IKEv1Attribute PKE = new IKEv1Attribute(0x80030004);
+    public static IKEv1Attribute LIFETYPE_SEC = new IKEv1Attribute(0x800b0001);
+    public static IKEv1Attribute DURATION28800 = new IKEv1Attribute(0x800c7080);
 }
