@@ -26,4 +26,20 @@ public final class DatatypeHelper {
             (byte) value};
     }
 
+    /*
+     * @see https://stackoverflow.com/a/140861
+     */
+    public static final byte[] hexDumpToByteArray(String dump) {
+        int len = dump.length();
+        if ((len & 1) == 1) {
+            throw new IllegalArgumentException("Hexdump is not of even length!");
+        }
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(dump.charAt(i), 16) << 4)
+                    + Character.digit(dump.charAt(i + 1), 16));
+        }
+        return data;
+    }
+
 }

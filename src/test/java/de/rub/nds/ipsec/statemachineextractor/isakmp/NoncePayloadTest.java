@@ -8,8 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
 import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,7 +31,7 @@ public class NoncePayloadTest {
 
     public static NoncePayload getTestNoncePayload() {
         NoncePayload instance = new NoncePayload();
-        instance.setNonceData(new BigInteger(TESTDATA, 16).toByteArray());
+        instance.setNonceData(hexDumpToByteArray(TESTDATA));
         return instance;
     }
 
@@ -41,10 +41,7 @@ public class NoncePayloadTest {
     @Test
     public void testWriteBytes() {
         NoncePayload instance = getTestNoncePayload();
-        byte[] expResult = new BigInteger("01000104" + TESTDATA, 16).toByteArray();
-        /* The 0x01 in the first byte only makes sure that the byte array has
-         * the correct length. The next line fixes this*/
-        expResult[0] = 0x00;
+        byte[] expResult = hexDumpToByteArray("00000104" + TESTDATA);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();

@@ -8,8 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
 import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -29,7 +29,7 @@ public class KeyExchangePayloadTest {
 
     public static KeyExchangePayload getTestKeyExchangePayload() {
         KeyExchangePayload instance = new KeyExchangePayload();
-        instance.setKeyExchangeData(new BigInteger(TESTDATA, 16).toByteArray());
+        instance.setKeyExchangeData(hexDumpToByteArray(TESTDATA));
         return instance;
     }
 
@@ -39,10 +39,7 @@ public class KeyExchangePayloadTest {
     @Test
     public void testWriteBytes() {
         KeyExchangePayload instance = getTestKeyExchangePayload();
-        byte[] expResult = new BigInteger("010000c4" + TESTDATA, 16).toByteArray();
-        /* The 0x01 in the first byte only makes sure that the byte array has
-         * the correct length. The next line fixes this*/
-        expResult[0] = 0x00;
+        byte[] expResult = hexDumpToByteArray("000000c4" + TESTDATA);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
