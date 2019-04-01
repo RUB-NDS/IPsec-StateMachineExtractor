@@ -15,12 +15,12 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1MainModeSecurityAssociationMessage extends IKEv1MainModeMessage {
-
+public class IKEv1MainModeHashMessage extends IKEv1MainModeMessage {
+   
     @Override
     public final void addPayload(ISAKMPPayload payload) {
-        if (getPayloads().isEmpty() && payload.getType() != PayloadTypeEnum.SecurityAssociation)
-            throw new IllegalArgumentException("First payload has to be a Security Association Payload!");
+        if (getPayloads().isEmpty() && payload.getType() != PayloadTypeEnum.Hash)
+            throw new IllegalArgumentException("First payload has to be a Hash Payload!");
         super.addPayload(payload);
     }
 }
