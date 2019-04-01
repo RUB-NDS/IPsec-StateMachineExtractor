@@ -46,7 +46,7 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
         this.nextPayload = nextPayload;
     }
 
-    private byte[] getGenericPayloadHeader() {
+    protected byte[] getGenericPayloadHeader() {
         int length = getLength();
         if (length > 0x0000FFFF) {
             throw new IllegalStateException("Payload too large");
