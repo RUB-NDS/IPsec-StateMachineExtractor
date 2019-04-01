@@ -20,7 +20,7 @@ public class IKEv1Attribute implements ISAKMPSerializable {
     
     private final byte[] bytes;
 
-    private IKEv1Attribute(int bytes) {
+    IKEv1Attribute(int bytes) {
         this.bytes = DatatypeHelper.intTo4ByteArray(bytes);
     }
     

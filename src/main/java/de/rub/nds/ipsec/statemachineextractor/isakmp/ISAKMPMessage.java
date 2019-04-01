@@ -77,11 +77,11 @@ public abstract class ISAKMPMessage implements ISAKMPSerializable{
         this.version = (byte) ((this.version & 0xF0) | minor);
     }
 
-    public ExchangeTypeEnum getExchangeType() {
+    protected ExchangeTypeEnum getExchangeType() {
         return exchangeType;
     }
 
-    public void setExchangeType(ExchangeTypeEnum exchangeType) {
+    protected void setExchangeType(ExchangeTypeEnum exchangeType) {
         this.exchangeType = exchangeType;
     }
 
