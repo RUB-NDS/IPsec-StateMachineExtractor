@@ -9,6 +9,8 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayloadTest.getTestProposalPayload;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -45,5 +47,19 @@ public class SecurityAssociationPayloadTest {
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of fromStream method, of class SecurityAssociationPayload.
+     */
+    @Test
+    public void testFromStream() throws ISAKMPParsingException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        getTestSecurityAssociationPayload().writeBytes(baos);
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        SecurityAssociationPayload instance = SecurityAssociationPayload.fromStream(bais);
+        assertEquals(0, bais.available());
+        assertArrayEquals(DatatypeHelper.intTo4ByteArray(1), instance.getSituation());
+        assertEquals(1, instance.getDomainOfInterpretation());
     }
 }

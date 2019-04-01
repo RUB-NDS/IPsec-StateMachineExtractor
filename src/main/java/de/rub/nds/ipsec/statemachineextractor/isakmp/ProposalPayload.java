@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,24 @@ public class ProposalPayload extends ISAKMPPayload {
 
     public void addTransform(TransformPayload transform) {
         transforms.add(transform);
+    }
+
+    public static ProposalPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        ProposalPayload proposalPayload = new ProposalPayload();
+        int length = proposalPayload.fillGenericPayloadHeaderFromStream(bais);
+        byte[] buffer = read4ByteFromStream(bais);
+        proposalPayload.setProposalNumber(buffer[0]);
+        proposalPayload.setProtocolId(buffer[1]);
+        if (buffer[2] != 0) {
+            throw new ISAKMPParsingException("SPI Size is not zero!");
+        }
+        for(byte i = 0; i < buffer[3]; i++) {
+            proposalPayload.addTransform(TransformPayload.fromStream(bais));
+        }
+        if (length != proposalPayload.getLength()) {
+            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + proposalPayload.getLength() + "vs. Received: " + length + "!");
+        }
+        return proposalPayload;
     }
 
 }

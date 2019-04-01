@@ -9,7 +9,10 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -62,7 +65,7 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
     public void setIntegrityFlag(boolean value) {
         this.situation.set(2, value);
     }
-    
+
     public void addProposalPayload(ProposalPayload payload) {
         payloads.add(payload);
     }
@@ -84,6 +87,21 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
         for (ProposalPayload payload : payloads) {
             payload.writeBytes(baos);
         }
+    }
+
+    public static SecurityAssociationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
+        int length = securityAssociationPayload.fillGenericPayloadHeaderFromStream(bais);
+        securityAssociationPayload.setDomainOfInterpretation(ByteBuffer.wrap(read4ByteFromStream(bais)).getInt());
+        byte[] buffer = read4ByteFromStream(bais);
+        securityAssociationPayload.setIdentityOnlyFlag((buffer[3] & 1) > 0);
+        securityAssociationPayload.setSecrecyFlag((buffer[3] & 2) > 0);
+        securityAssociationPayload.setIntegrityFlag((buffer[3] & 4) > 0);
+        securityAssociationPayload.addProposalPayload(ProposalPayload.fromStream(bais));
+        if (length != securityAssociationPayload.getLength()) {
+            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + securityAssociationPayload.getLength() + "vs. Received: " + length + "!");
+        }
+        return securityAssociationPayload;
     }
 
 }

@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Attribute;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -49,5 +50,19 @@ public class TransformPayloadTest {
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of fromStream method, of class TransformPayload.
+     */
+    @Test
+    public void testFromStream() throws ISAKMPParsingException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        getTestTransformPayload().writeBytes(baos);
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        TransformPayload instance = TransformPayload.fromStream(bais);
+        assertEquals(0, bais.available());
+        assertEquals(1, instance.getTransformId());
+        assertEquals(1, instance.getTransformNumber());
     }
 }

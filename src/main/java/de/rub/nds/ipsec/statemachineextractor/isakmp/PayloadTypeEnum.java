@@ -8,6 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
@@ -37,6 +40,19 @@ public enum PayloadTypeEnum {
 
     public byte getValue() {
         return value;
+    }
+    
+    // Reverse-lookup map
+    private static final Map<Byte, PayloadTypeEnum> lookup = new HashMap<Byte, PayloadTypeEnum>();
+
+    static {
+        for (PayloadTypeEnum type : PayloadTypeEnum.values()) {
+            lookup.put(type.getValue(), type);
+        }
+    }
+    
+    public static PayloadTypeEnum get(byte value) {
+        return lookup.get(value);
     }
 
 }

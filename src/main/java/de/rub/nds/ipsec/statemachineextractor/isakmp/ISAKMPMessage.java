@@ -20,9 +20,9 @@ import java.util.Random;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public abstract class ISAKMPMessage implements ISAKMPSerializable{
+public class ISAKMPMessage implements ISAKMPSerializable {
 
-    protected static final int ISAKMP_HEADER_LEN = 28;
+    public static final int ISAKMP_HEADER_LEN = 28;
 
     private byte[] initiatorCookie;
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -63,6 +63,10 @@ public abstract class ISAKMPMessage implements ISAKMPSerializable{
         return version;
     }
 
+    public void setVersion(byte version) {
+        this.version = version;
+    }
+
     public void setMajorVersion(byte major) {
         if (major > 0x0F) {
             throw new IllegalArgumentException("The Major Version must be 4 bits long!");
@@ -77,11 +81,11 @@ public abstract class ISAKMPMessage implements ISAKMPSerializable{
         this.version = (byte) ((this.version & 0xF0) | minor);
     }
 
-    protected ExchangeTypeEnum getExchangeType() {
+    public ExchangeTypeEnum getExchangeType() {
         return exchangeType;
     }
 
-    protected void setExchangeType(ExchangeTypeEnum exchangeType) {
+    public void setExchangeType(ExchangeTypeEnum exchangeType) {
         this.exchangeType = exchangeType;
     }
 
@@ -135,7 +139,7 @@ public abstract class ISAKMPMessage implements ISAKMPSerializable{
         }
         return length;
     }
-    
+
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(getInitiatorCookie(), 0, 8);

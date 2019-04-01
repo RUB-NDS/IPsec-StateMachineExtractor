@@ -9,7 +9,9 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  *
@@ -18,9 +20,9 @@ import java.io.ByteArrayOutputStream;
 public abstract class ISAKMPPayload implements ISAKMPSerializable {
 
     protected static final int ISAKMP_PAYLOAD_HEADER_LEN = 4;
-    
+
     private final PayloadTypeEnum type;
-    protected PayloadTypeEnum nextPayload = PayloadTypeEnum.NONE;
+    private PayloadTypeEnum nextPayload = PayloadTypeEnum.NONE;
 
     public ISAKMPPayload(PayloadTypeEnum type) {
         this.type = type;
@@ -29,7 +31,7 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
     public PayloadTypeEnum getType() {
         return type;
     }
-    
+
     /**
      * @return the length of the full payload, including the generic payload
      * header
@@ -41,8 +43,12 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
     public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(getGenericPayloadHeader(), 0, ISAKMP_PAYLOAD_HEADER_LEN);
     }
-    
-    protected void setNextPayload(PayloadTypeEnum nextPayload) {
+
+    public PayloadTypeEnum getNextPayload() {
+        return nextPayload;
+    }
+
+    public void setNextPayload(PayloadTypeEnum nextPayload) {
         this.nextPayload = nextPayload;
     }
 
@@ -54,6 +60,25 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
         byte[] genericPayloadHeader = DatatypeHelper.intTo4ByteArray(length);
         genericPayloadHeader[0] = nextPayload.getValue();
         return genericPayloadHeader;
+    }
+
+    protected int fillGenericPayloadHeaderFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        byte[] genericPayloadHeader = read4ByteFromStream(bais);
+        nextPayload = PayloadTypeEnum.get((byte)genericPayloadHeader[0]);
+        return ((genericPayloadHeader[2] & 0xff) << 8) | (genericPayloadHeader[3] & 0xff);
+    }
+    
+    protected static byte[] read4ByteFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        byte[] buffer = new byte[4];
+        try {
+            int read = bais.read(buffer);
+            if (read != 4) {
+                throw new ISAKMPParsingException("Reading from InputStream failed!");
+            }
+        } catch (IOException ex) {
+            throw new ISAKMPParsingException(ex);
+        }
+        return buffer;
     }
 
 }

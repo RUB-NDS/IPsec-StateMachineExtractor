@@ -20,17 +20,20 @@ public class IKEv1Attribute implements ISAKMPSerializable {
     
     private final byte[] bytes;
 
-    IKEv1Attribute(int bytes) {
+    protected IKEv1Attribute(int bytes) {
+        //TODO: Implement dynamically sized attributes
         this.bytes = DatatypeHelper.intTo4ByteArray(bytes);
     }
     
     @Override
     public int getLength() {
+        //TODO: Implement dynamically sized attributes
         return 4;
     }
 
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
+        //TODO: Implement dynamically sized attributes
         baos.write(bytes, 0, 4);
     }
     

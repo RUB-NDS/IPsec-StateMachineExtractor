@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Attribute;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ import java.util.List;
 public class TransformPayload extends ISAKMPPayload {
 
     protected static final int TRANSFORM_PAYLOAD_HEADER_LEN = 8;
-    
+
     private byte transformNumber;
     private byte transformId = 0x01; //KEY_IKE
     private final List<IKEv1Attribute> attributes = new ArrayList<>();
@@ -28,7 +29,7 @@ public class TransformPayload extends ISAKMPPayload {
     public TransformPayload() {
         super(PayloadTypeEnum.Transform);
     }
-    
+
     @Override
     public int getLength() {
         int length = TRANSFORM_PAYLOAD_HEADER_LEN;
@@ -65,9 +66,30 @@ public class TransformPayload extends ISAKMPPayload {
     public void setTransformId(byte transformId) {
         this.transformId = transformId;
     }
-    
+
     public void addIKEAttribute(IKEv1Attribute attribute) {
         attributes.add(attribute);
     }
 
+    public static TransformPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        TransformPayload transformPayload = new TransformPayload();
+        int length = transformPayload.fillGenericPayloadHeaderFromStream(bais);
+        byte[] buffer = read4ByteFromStream(bais);
+        transformPayload.setTransformNumber(buffer[0]);
+        transformPayload.setTransformId(buffer[1]);
+        //TODO: Implement parsing IKEv1Attributes, this only fakes the correct size
+        bais.skip(length - TRANSFORM_PAYLOAD_HEADER_LEN);
+        transformPayload.addIKEAttribute(new IKEv1Attribute(1) {
+            @Override
+            public int getLength() {
+                return length - TRANSFORM_PAYLOAD_HEADER_LEN;
+            }
+
+            @Override
+            public void writeBytes(ByteArrayOutputStream baos) {
+                throw new UnsupportedOperationException("Serializing a parsed TransformPayload is not supprted!");
+            }
+        });
+        return transformPayload;
+    }
 }

@@ -9,10 +9,12 @@
 package de.rub.nds.ipsec.statemachineextractor.ikev1;
 
 import de.rub.nds.ipsec.statemachineextractor.ikev1.shims.CiscoPKEIdentificationPayloadTest;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayloadTest;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayloadTest;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import static de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayloadTest.getTestSecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
@@ -23,7 +25,7 @@ import static org.junit.Assert.*;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1MainModeKeyExchangeMessageTest {
+public class ISAKMPMessageTest {
     
     private static final String TESTDATA = "633132414a484e78a7f9df47256e976b04"
             + "10020000000000000002fc050000c4080b8f6b6883a2b694d24ce8a9453b760"
@@ -51,14 +53,24 @@ public class IKEv1MainModeKeyExchangeMessageTest {
             + "588a4be0d27178d92ef1f0075bdb87d971dc046092d908b8d6b9850b7f7fdff"
             + "dda9500000014afcad71368a1f1c96b8696fc77570100";
     
-    /**
-     * Test of addPayload method, of class IKEv1MainModeKeyExchangeMessage.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddPayload() {
-        ISAKMPPayload payload = new SecurityAssociationPayload();
-        IKEv1MainModeKeyExchangeMessage instance = new IKEv1MainModeKeyExchangeMessage();
-        instance.addPayload(payload);
+    public static ISAKMPMessage getTestIKEv1MainModeSecurityAssociationMessage() {
+        ISAKMPMessage instance = new ISAKMPMessage();
+        instance.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("633132414a484e78"));
+        instance.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+        instance.addPayload(getTestSecurityAssociationPayload());
+        return instance;
+    }
+    
+    public static ISAKMPMessage getTestIKEv1MainModeKeyExchangeMessage() {
+        ISAKMPMessage instance = new ISAKMPMessage();
+        instance.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("633132414a484e78"));
+        instance.setResponderCookie(DatatypeHelper.hexDumpToByteArray("a7f9df47256e976b"));
+        instance.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+        instance.addPayload(KeyExchangePayloadTest.getTestKeyExchangePayload());
+        instance.addPayload(CiscoPKEIdentificationPayloadTest.getTestCiscoPKEIdentificationPayload());
+        instance.addPayload(NoncePayloadTest.getTestNoncePayload());
+        instance.addPayload(VendorIDPayload.DeadPeerDetection);
+        return instance;
     }
     
     /**
@@ -66,18 +78,39 @@ public class IKEv1MainModeKeyExchangeMessageTest {
      */
     @Test
     public void testFullMessage() {
-        IKEv1MainModeKeyExchangeMessage instance = new IKEv1MainModeKeyExchangeMessage();
-        instance.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("633132414a484e78"));
-        instance.setResponderCookie(DatatypeHelper.hexDumpToByteArray("a7f9df47256e976b"));
-        instance.addPayload(KeyExchangePayloadTest.getTestKeyExchangePayload());
-        instance.addPayload(CiscoPKEIdentificationPayloadTest.getTestCiscoPKEIdentificationPayload());
-        instance.addPayload(NoncePayloadTest.getTestNoncePayload());
-        instance.addPayload(VendorIDPayload.DeadPeerDetection);
+        ISAKMPMessage instance = getTestIKEv1MainModeKeyExchangeMessage();
         byte[] expResult = DatatypeHelper.hexDumpToByteArray(TESTDATA);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of getBytes method, of class
+     * IKEv1MainModeSecurityAssociationMessage. This message was extracted from
+     * a Wireshark dump.
+     */
+    @Test
+    public void testGetBytes() {
+        ISAKMPMessage instance = new ISAKMPMessage();
+        instance.setInitiatorCookie(new byte[]{0x63, 0x31, 0x32, 0x41, 0x4a, 0x48, 0x4e, 0x78});
+        instance.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+        instance.addPayload(getTestSecurityAssociationPayload());
+        byte[] expResult = new byte[]{
+            0x63, 0x31, 0x32, 0x41, 0x4a, 0x48, 0x4e, 0x78,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x01, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 0x38,
+            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+            0x00, 0x00, 0x00, 0x2c, 0x01, 0x01, 0x00, 0x01,
+            0x00, 0x00, 0x00, 0x24, 0x01, 0x01, 0x00, 0x00,
+            -128, 0x01, 0x00, 0x07, -128, 0x0e, 0x00, -128,
+            -128, 0x02, 0x00, 0x02, -128, 0x04, 0x00, 0x05,
+            -128, 0x03, 0x00, 0x04, -128, 0x0b, 0x00, 0x01,
+            -128, 0x0c, 0x70, -128
+        };
+        assertArrayEquals(expResult, instance.getBytes());
     }
     
 }
