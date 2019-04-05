@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -46,5 +47,19 @@ public class NoncePayloadTest {
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of fromStream method, of class NoncePayload.
+     */
+    @Test
+    public void testFromStream() throws Exception {
+        NoncePayload origInstance = getTestNoncePayload();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        origInstance.writeBytes(baos);
+        byte[] result = baos.toByteArray();
+        ByteArrayInputStream bais = new ByteArrayInputStream(result);
+        NoncePayload newInstance = NoncePayload.fromStream(bais);
+        assertArrayEquals(origInstance.getNonceData(), newInstance.getNonceData());
     }
 }

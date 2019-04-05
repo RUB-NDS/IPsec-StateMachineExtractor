@@ -8,7 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  *
@@ -43,4 +45,22 @@ public abstract class SimpleBinaryPayload extends ISAKMPPayload {
         baos.write(binaryData, 0, binaryData.length);
     }
     
+    protected static SimpleBinaryPayload fromStream(ByteArrayInputStream bais, SimpleBinaryPayload payload) throws ISAKMPParsingException {
+        int length = payload.fillGenericPayloadHeaderFromStream(bais);
+        byte[] buffer = new byte[length - HEADER_LEN];
+        int readBytes;
+        try {
+            readBytes = bais.read(buffer);
+        } catch (IOException ex) {
+            throw new ISAKMPParsingException(ex);
+        }
+        if (readBytes != length - HEADER_LEN) {
+            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - HEADER_LEN) + "bytes)!");
+        }
+        payload.setBinaryData(buffer);
+        if (length != payload.getLength()) {
+            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + payload.getLength() + "vs. Received: " + length + "!");
+        }
+        return payload;
+    }
 }

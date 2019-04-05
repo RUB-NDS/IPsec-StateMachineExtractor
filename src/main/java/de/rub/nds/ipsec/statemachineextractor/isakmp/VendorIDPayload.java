@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
+import java.io.ByteArrayInputStream;
 
 /**
  *
@@ -35,6 +36,12 @@ public class VendorIDPayload extends SimpleBinaryPayload {
 
     private void _setVendorID(byte[] vendorID) {
         setBinaryData(vendorID);
+    }
+    
+    public static VendorIDPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        VendorIDPayload vendorIDpayload = new VendorIDPayload();
+        SimpleBinaryPayload.fromStream(bais, vendorIDpayload);
+        return vendorIDpayload;
     }
 
     public static VendorIDPayload DeadPeerDetection = new VendorIDPayload("afcad71368a1f1c96b8696fc77570100");

@@ -53,7 +53,7 @@ public class SecurityAssociationPayloadTest {
      * Test of fromStream method, of class SecurityAssociationPayload.
      */
     @Test
-    public void testFromStream() throws ISAKMPParsingException {
+    public void testFromStream() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         getTestSecurityAssociationPayload().writeBytes(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());

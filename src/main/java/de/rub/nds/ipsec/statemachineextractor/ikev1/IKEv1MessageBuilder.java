@@ -9,11 +9,15 @@
 package de.rub.nds.ipsec.statemachineextractor.ikev1;
 
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -54,12 +58,18 @@ public class IKEv1MessageBuilder {
                 case SecurityAssociation:
                     payload = SecurityAssociationPayload.fromStream(bais);
                     break;
-//                case KeyExchange:
-//                    payload = KeyExchangePayload.fromStream(bais);
-//                    break;
-//                case Hash:
-//                    payload = HashPayload.fromStream(bais);
-//                    break;
+                case KeyExchange:
+                    payload = KeyExchangePayload.fromStream(bais);
+                    break;
+                case Hash:
+                    payload = HashPayload.fromStream(bais);
+                    break;
+                case Nonce:
+                    payload = NoncePayload.fromStream(bais);
+                    break;
+                case VendorID:
+                    payload = VendorIDPayload.fromStream(bais);
+                    break;
                 default:
                     throw new UnsupportedOperationException("Not supported yet.");
             }

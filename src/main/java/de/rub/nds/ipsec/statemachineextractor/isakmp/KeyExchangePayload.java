@@ -8,6 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
+
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
@@ -24,6 +27,12 @@ public class KeyExchangePayload extends SimpleBinaryPayload {
 
     public void setKeyExchangeData(byte[] keyExchangeData) {
         setBinaryData(keyExchangeData);
+    }
+    
+    public static KeyExchangePayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        KeyExchangePayload keyExchangePayload = new KeyExchangePayload();
+        SimpleBinaryPayload.fromStream(bais, keyExchangePayload);
+        return keyExchangePayload;
     }
 
 }

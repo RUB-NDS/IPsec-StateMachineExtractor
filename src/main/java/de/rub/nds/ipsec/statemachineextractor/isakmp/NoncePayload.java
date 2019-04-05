@@ -8,6 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.io.ByteArrayInputStream;
+
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
@@ -24,6 +26,12 @@ public class NoncePayload extends SimpleBinaryPayload {
 
     public void setNonceData(byte[] nonceData) {
         setBinaryData(nonceData);
+    }
+    
+    public static NoncePayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        NoncePayload noncePayload = new NoncePayload();
+        SimpleBinaryPayload.fromStream(bais, noncePayload);
+        return noncePayload;
     }
 
 }

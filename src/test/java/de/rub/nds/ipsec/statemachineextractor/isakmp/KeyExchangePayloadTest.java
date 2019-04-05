@@ -8,7 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import static de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayloadTest.getTestNoncePayload;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -44,5 +46,19 @@ public class KeyExchangePayloadTest {
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of fromStream method, of class KeyExchangePayload.
+     */
+    @Test
+    public void testFromStream() throws Exception {
+        KeyExchangePayload origInstance = getTestKeyExchangePayload();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        origInstance.writeBytes(baos);
+        byte[] result = baos.toByteArray();
+        ByteArrayInputStream bais = new ByteArrayInputStream(result);
+        KeyExchangePayload newInstance = KeyExchangePayload.fromStream(bais);
+        assertArrayEquals(origInstance.getKeyExchangeData(), newInstance.getKeyExchangeData());
     }
 }

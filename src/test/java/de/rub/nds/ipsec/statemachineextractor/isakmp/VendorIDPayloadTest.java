@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -56,5 +57,19 @@ public class VendorIDPayloadTest {
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of fromStream method, of class VendorIDPayload.
+     */
+    @Test
+    public void testFromStream() throws Exception {
+        VendorIDPayload origInstance = VendorIDPayload.CiscoUnity10;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        origInstance.writeBytes(baos);
+        byte[] result = baos.toByteArray();
+        ByteArrayInputStream bais = new ByteArrayInputStream(result);
+        VendorIDPayload newInstance = VendorIDPayload.fromStream(bais);
+        assertArrayEquals(origInstance.getVendorID(), newInstance.getVendorID());
     }
 }
