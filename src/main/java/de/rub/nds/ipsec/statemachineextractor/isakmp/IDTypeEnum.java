@@ -8,6 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Identification Type Values as per RFC2407 Section 4.6.2.1.
  *
@@ -37,6 +40,19 @@ public enum IDTypeEnum {
 
     public byte getValue() {
         return value;
+    }
+    
+    // Reverse-lookup map
+    private static final Map<Byte, IDTypeEnum> lookup = new HashMap<Byte, IDTypeEnum>();
+
+    static {
+        for (IDTypeEnum type : IDTypeEnum.values()) {
+            lookup.put(type.getValue(), type);
+        }
+    }
+    
+    public static IDTypeEnum get(byte value) {
+        return lookup.get(value);
     }
 
 }

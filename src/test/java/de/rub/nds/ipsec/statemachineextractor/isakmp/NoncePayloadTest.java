@@ -61,5 +61,6 @@ public class NoncePayloadTest {
         ByteArrayInputStream bais = new ByteArrayInputStream(result);
         NoncePayload newInstance = NoncePayload.fromStream(bais);
         assertArrayEquals(origInstance.getNonceData(), newInstance.getNonceData());
+        assertEquals(0, bais.available());
     }
 }

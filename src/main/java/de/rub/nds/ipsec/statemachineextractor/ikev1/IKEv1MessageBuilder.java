@@ -13,6 +13,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
@@ -60,6 +61,9 @@ public class IKEv1MessageBuilder {
                     break;
                 case KeyExchange:
                     payload = KeyExchangePayload.fromStream(bais);
+                    break;
+                case Identification:
+                    payload = IdentificationPayload.fromStream(bais);
                     break;
                 case Hash:
                     payload = HashPayload.fromStream(bais);

@@ -60,5 +60,6 @@ public class KeyExchangePayloadTest {
         ByteArrayInputStream bais = new ByteArrayInputStream(result);
         KeyExchangePayload newInstance = KeyExchangePayload.fromStream(bais);
         assertArrayEquals(origInstance.getKeyExchangeData(), newInstance.getKeyExchangeData());
+        assertEquals(0, bais.available());
     }
 }

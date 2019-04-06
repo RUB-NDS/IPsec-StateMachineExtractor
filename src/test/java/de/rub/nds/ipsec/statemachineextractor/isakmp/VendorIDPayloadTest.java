@@ -71,5 +71,6 @@ public class VendorIDPayloadTest {
         ByteArrayInputStream bais = new ByteArrayInputStream(result);
         VendorIDPayload newInstance = VendorIDPayload.fromStream(bais);
         assertArrayEquals(origInstance.getVendorID(), newInstance.getVendorID());
+        assertEquals(0, bais.available());
     }
 }

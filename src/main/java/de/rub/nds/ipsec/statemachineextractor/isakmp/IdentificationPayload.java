@@ -8,7 +8,14 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -73,6 +80,27 @@ public class IdentificationPayload extends ISAKMPPayload {
         baos.write(protocolID);
         baos.write(port, 0, 2);
         baos.write(identificationData, 0, identificationData.length);
+    }
+    
+    public static IdentificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        IdentificationPayload identificationPayload = new IdentificationPayload();
+        int length = identificationPayload.fillGenericPayloadHeaderFromStream(bais);
+        byte[] buffer = read4ByteFromStream(bais);
+        identificationPayload.setIdType(IDTypeEnum.get(buffer[0]));
+        identificationPayload.setProtocolID(buffer[1]);
+        identificationPayload.setPort(Arrays.copyOfRange(buffer, 2, 4));
+        buffer = new byte[length - ID_HEADER_LEN];
+        int readBytes;
+        try {
+            readBytes = bais.read(buffer);
+        } catch (IOException ex) {
+            throw new ISAKMPParsingException(ex);
+        }
+        if (readBytes != length - ID_HEADER_LEN) {
+            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - ID_HEADER_LEN) + "bytes)!");
+        }
+        identificationPayload.setIdentificationData(buffer);
+        return identificationPayload;
     }
 
 }

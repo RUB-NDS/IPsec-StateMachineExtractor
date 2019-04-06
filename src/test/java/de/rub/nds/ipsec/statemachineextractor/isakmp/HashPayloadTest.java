@@ -32,6 +32,7 @@ public class HashPayloadTest {
         ByteArrayInputStream bais = new ByteArrayInputStream(result);
         HashPayload newInstance = HashPayload.fromStream(bais);
         assertArrayEquals(origInstance.getBinaryData(), newInstance.getHashData());
+        assertEquals(0, bais.available());
     }
     
 }

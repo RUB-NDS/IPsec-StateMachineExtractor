@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -41,6 +42,25 @@ public class IdentificationPayloadTest {
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of fromStream method, of class IdentificationPayload.
+     */
+    @Test
+    public void testFromStream() throws Exception {
+        IdentificationPayload origInstance = new IdentificationPayload();
+        origInstance.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+        origInstance.setIdentificationData(new byte[]{10, 11, 12, 13});
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        origInstance.writeBytes(baos);
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        IdentificationPayload newInstance = IdentificationPayload.fromStream(bais);
+        assertArrayEquals(origInstance.getIdentificationData(), newInstance.getIdentificationData());
+        assertEquals(origInstance.getIdType(), newInstance.getIdType());
+        assertEquals(origInstance.getProtocolID(), newInstance.getProtocolID());
+        assertArrayEquals(origInstance.getPort(), newInstance.getPort());
+        assertEquals(0, bais.available());
     }
 
 }
