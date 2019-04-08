@@ -22,7 +22,7 @@ public class ISAKMPMessageTest {
      */
     @Test
     public void testGetInitiatorCookie() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         byte[] result = instance.getInitiatorCookie();
         assertEquals(8, result.length);
     }
@@ -33,7 +33,7 @@ public class ISAKMPMessageTest {
     @Test
     public void testSetInitiatorCookie() {
         byte[] initiatorCookie = new byte[]{0x0A, 0x0B, 0x0C, 0x0D, 0x0A, 0x0B, 0x0C, 0x0D};
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setInitiatorCookie(initiatorCookie);
         assertArrayEquals(initiatorCookie, instance.getInitiatorCookie());
     }
@@ -44,7 +44,7 @@ public class ISAKMPMessageTest {
     @Test(expected = IllegalArgumentException.class)
     public void testSetOverlongInitiatorCookie() {
         byte[] initiatorCookie = new byte[]{0x0A, 0x0B, 0x0C, 0x0D, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E};
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setInitiatorCookie(initiatorCookie);
     }
 
@@ -53,7 +53,7 @@ public class ISAKMPMessageTest {
      */
     @Test
     public void testGetResponderCookie() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         byte[] expResult = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         byte[] result = instance.getResponderCookie();
         assertArrayEquals(expResult, result);
@@ -65,7 +65,7 @@ public class ISAKMPMessageTest {
     @Test(expected = IllegalArgumentException.class)
     public void testSetOverlongResponderCookie() {
         byte[] responderCookie = new byte[]{0x0A, 0x0B, 0x0C, 0x0D, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E};
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setResponderCookie(responderCookie);
     }
 
@@ -74,7 +74,7 @@ public class ISAKMPMessageTest {
      */
     @Test
     public void testSetMajorVersion() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setMajorVersion((byte) 0x0);
         assertEquals(0x00, instance.getVersion());
         instance.setMajorVersion((byte) 0x2);
@@ -86,7 +86,7 @@ public class ISAKMPMessageTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testSetWrongMajorVersion() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setMajorVersion((byte) 0x10);
     }
 
@@ -95,7 +95,7 @@ public class ISAKMPMessageTest {
      */
     @Test
     public void testSetMinorVersion() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setMinorVersion((byte) 0x0);
         assertEquals(0x10, instance.getVersion());
         instance.setMinorVersion((byte) 0x2);
@@ -107,7 +107,7 @@ public class ISAKMPMessageTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testSetWrongMinorVersion() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setMinorVersion((byte) 0x10);
     }
 
@@ -116,7 +116,7 @@ public class ISAKMPMessageTest {
      */
     @Test
     public void testSetFlags() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         assertEquals(0x00, instance.getFlags());
         instance.setEncryptedFlag(true);
         assertEquals(0x01, instance.getFlags());
@@ -134,7 +134,7 @@ public class ISAKMPMessageTest {
      */
     @Test
     public void testGetBytes() {
-        ISAKMPMessage instance = new ISAKMPMessageImpl();
+        ISAKMPMessage instance = new ISAKMPMessage();
         instance.setInitiatorCookie(new byte[]{0x63, 0x31, 0x32, 0x41, 0x4a, 0x48, 0x4e, 0x78});
         instance.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         byte[] expResult = new byte[]{
@@ -143,9 +143,6 @@ public class ISAKMPMessageTest {
             0x00, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x1c};
         assertArrayEquals(expResult, instance.getBytes());
-    }
-
-    public class ISAKMPMessageImpl extends ISAKMPMessage {
     }
 
 }

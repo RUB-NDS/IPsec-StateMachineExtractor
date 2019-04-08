@@ -16,6 +16,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
@@ -36,7 +37,7 @@ public class IKEv1MessageBuilder {
         if (bytes.length < ISAKMPMessage.ISAKMP_HEADER_LEN) {
             throw new ISAKMPParsingException("Not enough bytes supplied to build an ISAKMPMessage!");
         }
-        if (ExchangeTypeEnum.get(bytes[18]) != ExchangeTypeEnum.IdentityProtection) {
+        if (ExchangeTypeEnum.get(bytes[18]) != ExchangeTypeEnum.IdentityProtection && ExchangeTypeEnum.get(bytes[18]) != ExchangeTypeEnum.Informational) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
         ISAKMPMessage message = new ISAKMPMessage();
@@ -73,6 +74,9 @@ public class IKEv1MessageBuilder {
                     break;
                 case VendorID:
                     payload = VendorIDPayload.fromStream(bais);
+                    break;
+                case Notification:
+                    payload = NotificationPayload.fromStream(bais);
                     break;
                 default:
                     throw new UnsupportedOperationException("Not supported yet.");
