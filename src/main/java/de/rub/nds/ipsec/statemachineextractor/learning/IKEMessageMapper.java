@@ -38,11 +38,11 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
             ISAKMPMessage msg = new ISAKMPMessage();
             try {
                 switch (abstractInput) {
-                    case IKEv1_MM_SA:
+                    case IKEv1_MM_SA_PKE:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(getPKESecurityAssociationPayload());
                         break;
-                    case IKEv1_MM_KEX:
+                    case IKEv1_MM_KEX_PKE:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         KeyExchangePayload keyExchangePayload = new KeyExchangePayload();
 //                        handshake.prepareKeyExchangePayload(keyExchangePayload);
