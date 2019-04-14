@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import static de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayloadTest.getTestNoncePayload;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

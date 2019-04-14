@@ -12,10 +12,7 @@ import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4B
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -55,8 +52,9 @@ public class IdentificationPayload extends ISAKMPPayload {
     }
 
     public void setPort(byte[] port) {
-        if (port.length != 2)
+        if (port.length != 2) {
             throw new IllegalArgumentException("Port must be exactly 2 bytes!");
+        }
         this.port = port;
     }
 
@@ -81,7 +79,7 @@ public class IdentificationPayload extends ISAKMPPayload {
         baos.write(port, 0, 2);
         baos.write(identificationData, 0, identificationData.length);
     }
-    
+
     public static IdentificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         IdentificationPayload identificationPayload = new IdentificationPayload();
         int length = identificationPayload.fillGenericPayloadHeaderFromStream(bais);

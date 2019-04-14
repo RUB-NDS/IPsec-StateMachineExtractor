@@ -8,9 +8,10 @@
  */
 package de.rub.nds.ipsec.statemachineextractor;
 
+import de.rub.nds.ipsec.statemachineextractor.learning.IKEMessageMapper;
 import de.learnlib.algorithms.lstar.mealy.ExtensibleLStarMealyBuilder;
 import de.learnlib.api.query.DefaultQuery;
-import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1MessageEnum;
+import de.rub.nds.ipsec.statemachineextractor.learning.IKEAlphabet;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;
@@ -28,11 +29,12 @@ import de.learnlib.mapper.SULMappers;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOracle;
 import de.learnlib.oracle.membership.SULOracle;
+import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.learning.IKEv1HandshakeContextHandler;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,30 +45,34 @@ import net.automatalib.serialization.dot.GraphDOT;
  */
 public class Main {
 
+    private static final long timeout = 100;
+    private static final String host = "10.0.3.4";
+    private static final int port = 500;
+    
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
-        Alphabet<IKEv1MessageEnum> alphabet = Alphabets.fromEnum(IKEv1MessageEnum.class);
-        final InetAddressContextHandler contextHandler = new InetAddressContextHandler("10.0.3.4");
-        final ContextExecutableInputSUL<ContextExecutableInput<ISAKMPMessage, InetAddress>, ISAKMPMessage, InetAddress> ceiSUL;
+        Alphabet<IKEAlphabet> alphabet = Alphabets.fromEnum(IKEAlphabet.class);
+        final IKEv1HandshakeContextHandler contextHandler = new IKEv1HandshakeContextHandler(timeout, host, port);
+        final ContextExecutableInputSUL<ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage, IKEv1Handshake> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
-        SUL<IKEv1MessageEnum, IKEv1MessageEnum> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
-        SULOracle<IKEv1MessageEnum, IKEv1MessageEnum> oracle = new SULOracle<>(sul);
-        MealyCacheOracle<IKEv1MessageEnum, IKEv1MessageEnum> mqOracle = MealyCacheOracle.createDAGCacheOracle(alphabet, null, oracle);
+        SUL<IKEAlphabet, IKEAlphabet> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
+        SULOracle<IKEAlphabet, IKEAlphabet> oracle = new SULOracle<>(sul);
+        MealyCacheOracle<IKEAlphabet, IKEAlphabet> mqOracle = MealyCacheOracle.createDAGCacheOracle(alphabet, null, oracle);
 
-        MealyLearner<IKEv1MessageEnum, IKEv1MessageEnum> learner;
-        learner = new ExtensibleLStarMealyBuilder<IKEv1MessageEnum, IKEv1MessageEnum>().withAlphabet(alphabet).withOracle(mqOracle).create();
+        MealyLearner<IKEAlphabet, IKEAlphabet> learner;
+        learner = new ExtensibleLStarMealyBuilder<IKEAlphabet, IKEAlphabet>().withAlphabet(alphabet).withOracle(mqOracle).create();
 
         learner.startLearning();
-        MealyMachine<?, IKEv1MessageEnum, ?, IKEv1MessageEnum> hypothesis = learner.getHypothesisModel();
+        MealyMachine<?, IKEAlphabet, ?, IKEAlphabet> hypothesis = learner.getHypothesisModel();
 
-        MealyEquivalenceOracle<IKEv1MessageEnum, IKEv1MessageEnum> eqOracle = new MealyRandomWordsEQOracle<>(
+        MealyEquivalenceOracle<IKEAlphabet, IKEAlphabet> eqOracle = new MealyRandomWordsEQOracle<>(
                 mqOracle,
                 1, // minLength
                 4, //maxLength
                 50, // maxTests
                 new Random(1));
 
-        DefaultQuery<IKEv1MessageEnum, Word<IKEv1MessageEnum>> ce;
+        DefaultQuery<IKEAlphabet, Word<IKEAlphabet>> ce;
         while ((ce = eqOracle.findCounterExample(hypothesis, alphabet)) != null) {
             System.err.println("Found counterexample " + ce);
             System.err.println("Current hypothesis has " + hypothesis.getStates().size() + " states");

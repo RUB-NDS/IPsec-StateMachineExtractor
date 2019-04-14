@@ -6,13 +6,13 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ikev1;
+package de.rub.nds.ipsec.statemachineextractor.learning;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum IKEv1MessageEnum {
+public enum IKEAlphabet {
     IKEv1_MM_SA,
     IKEv1_MM_KEX,
     IKEv1_MM_HASH
