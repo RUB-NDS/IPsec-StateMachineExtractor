@@ -25,6 +25,10 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -44,11 +48,9 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
                         break;
                     case IKEv1_MM_KEX_PKE:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-                        KeyExchangePayload keyExchangePayload = new KeyExchangePayload();
-                        handshake.prepareKeyExchangePayload(keyExchangePayload);
+                        KeyExchangePayload keyExchangePayload = handshake.prepareKeyExchangePayload();
                         msg.addPayload(keyExchangePayload);
-                        IdentificationPayload identificationPayload = new IdentificationPayload();
-                        handshake.prepareIdentificationPayload(identificationPayload);
+                        IdentificationPayload identificationPayload = handshake.prepareIdentificationPayload();
                         msg.addPayload(identificationPayload);
                         NoncePayload noncePayload = new NoncePayload();
 //                        handshake.prepareNoncePayload(noncePayload);
@@ -65,7 +67,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
                         throw new UnsupportedOperationException("Not supported yet.");
                 }
                 return handshake.exchangeMessage(msg);
-            } catch (IOException | ISAKMPParsingException ex) {
+            } catch (IOException | ISAKMPParsingException | NoSuchAlgorithmException | InvalidAlgorithmParameterException ex) {
                 throw new SULException(ex);
             }
         };
@@ -76,7 +78,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    private static SecurityAssociationPayload getPKESecurityAssociationPayload() {
+    public static SecurityAssociationPayload getPKESecurityAssociationPayload() {
         TransformPayload transformPayload = new TransformPayload();
         transformPayload.setTransformNumber((byte) 1);
         transformPayload.addIKEAttribute(IKEv1Attribute.Cipher.AES_CBC.getAttribute());
@@ -84,6 +86,24 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
         transformPayload.addIKEAttribute(IKEv1Attribute.Hash.SHA1.getAttribute());
         transformPayload.addIKEAttribute(IKEv1Attribute.DH.GROUP5.getAttribute());
         transformPayload.addIKEAttribute(IKEv1Attribute.Auth.PKE.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.LifeType.SECONDS.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(28800));
+        ProposalPayload proposalPayload = new ProposalPayload();
+        proposalPayload.addTransform(transformPayload);
+        SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
+        securityAssociationPayload.setIdentityOnlyFlag(true);
+        securityAssociationPayload.addProposalPayload(proposalPayload);
+        return securityAssociationPayload;
+    }
+    
+    public static SecurityAssociationPayload getPSKSecurityAssociationPayload() {
+        TransformPayload transformPayload = new TransformPayload();
+        transformPayload.setTransformNumber((byte) 1);
+        transformPayload.addIKEAttribute(IKEv1Attribute.Cipher.AES_CBC.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.KeyLength.L128.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.Hash.SHA1.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.DH.GROUP5.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.Auth.PSK.getAttribute());
         transformPayload.addIKEAttribute(IKEv1Attribute.LifeType.SECONDS.getAttribute());
         transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(28800));
         ProposalPayload proposalPayload = new ProposalPayload();

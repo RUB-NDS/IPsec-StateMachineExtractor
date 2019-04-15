@@ -8,16 +8,24 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
+import static de.rub.nds.ipsec.statemachineextractor.learning.IKEMessageMapper.getPSKSecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.ECParameterSpec;
 
 /**
  *
@@ -27,6 +35,10 @@ public class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
     private byte[] initiatorCookie, responderCookie;
+    private KeyPair keyPair;
+
+    // The default "ciphersuite"
+    private IKEDHGroupEnum group = IKEDHGroupEnum.GROUP5_1536;
 
     public IKEv1Handshake(long timeout, InetAddress remoteAddress, int port) {
         this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);
@@ -60,22 +72,36 @@ public class IKEv1Handshake {
         }
     }
 
-    public void prepareKeyExchangePayload(KeyExchangePayload keyExchangePayload) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyExchangePayload prepareKeyExchangePayload() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+        if (keyPair == null) {
+            KeyPairGenerator keyPairGen;
+            if (group.isEC()) {
+                keyPairGen = KeyPairGenerator.getInstance("EC");
+            } else {
+                keyPairGen = KeyPairGenerator.getInstance("DiffieHellman");
+            }
+            keyPairGen.initialize(group.getAlgorithmParameterSpec());
+            keyPair = keyPairGen.generateKeyPair();
+        }
+        KeyExchangePayload result = new KeyExchangePayload();
+        result.setKeyExchangeData(keyPair.getPublic().getEncoded());
+        return result;
     }
 
-    public void prepareIdentificationPayload(IdentificationPayload identificationPayload) throws IOException {
+    public IdentificationPayload prepareIdentificationPayload() throws IOException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
         InetAddress addr = udpTH.getLocalAddress();
+        IdentificationPayload result = new IdentificationPayload();
         if (addr instanceof Inet6Address) {
-            identificationPayload.setIdType(IDTypeEnum.ID_IPV6_ADDR);
-            identificationPayload.setIdentificationData(addr.getAddress());
+            result.setIdType(IDTypeEnum.ID_IPV6_ADDR);
+            result.setIdentificationData(addr.getAddress());
         } else if (addr instanceof Inet4Address) {
-            identificationPayload.setIdType(IDTypeEnum.ID_IPV4_ADDR);
-            identificationPayload.setIdentificationData(addr.getAddress());
+            result.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+            result.setIdentificationData(addr.getAddress());
         }
+        return result;
     }
 
 }

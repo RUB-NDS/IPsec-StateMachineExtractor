@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -67,6 +68,10 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
 
     public void addProposalPayload(ProposalPayload payload) {
         payloads.add(payload);
+    }
+    
+    public List<ProposalPayload> getProposalPayloads() {
+        return Collections.unmodifiableList(payloads);
     }
 
     @Override

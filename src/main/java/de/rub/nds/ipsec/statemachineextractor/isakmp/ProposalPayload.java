@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -81,6 +82,10 @@ public class ProposalPayload extends ISAKMPPayload {
 
     public void addTransform(TransformPayload transform) {
         transforms.add(transform);
+    }
+    
+    public List<TransformPayload> getTransformPayloads() {
+        return Collections.unmodifiableList(transforms);
     }
 
     public static ProposalPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
