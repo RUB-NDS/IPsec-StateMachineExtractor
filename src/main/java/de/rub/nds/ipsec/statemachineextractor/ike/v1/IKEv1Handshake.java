@@ -12,6 +12,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -26,6 +27,7 @@ public class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
     private byte[] initiatorCookie, responderCookie;
+    
 
     public IKEv1Handshake(long timeout, InetAddress remoteAddress, int port) {
         this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);
@@ -59,6 +61,10 @@ public class IKEv1Handshake {
         }
     }
 
+    public void prepareKeyExchangePayload(KeyExchangePayload keyExchangePayload) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     public void prepareIdentificationPayload(IdentificationPayload identificationPayload) throws IOException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
@@ -72,4 +78,5 @@ public class IKEv1Handshake {
             identificationPayload.setIdentificationData(addr.getAddress());
         }
     }
+
 }

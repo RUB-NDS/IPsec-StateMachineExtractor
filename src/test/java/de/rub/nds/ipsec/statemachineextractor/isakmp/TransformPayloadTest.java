@@ -23,13 +23,13 @@ public class TransformPayloadTest {
     public static TransformPayload getTestTransformPayload() {
         TransformPayload instance = new TransformPayload();
         instance.setTransformNumber((byte)1);
-        instance.addIKEAttribute(IKEv1Attribute.AES_CBC);
-        instance.addIKEAttribute(IKEv1Attribute.KEY_LEN_128);
-        instance.addIKEAttribute(IKEv1Attribute.SHA1);
-        instance.addIKEAttribute(IKEv1Attribute.DH_GROUP_5);
-        instance.addIKEAttribute(IKEv1Attribute.PKE);
-        instance.addIKEAttribute(IKEv1Attribute.LIFETYPE_SEC);
-        instance.addIKEAttribute(IKEv1Attribute.DURATION28800);
+        instance.addIKEAttribute(IKEv1Attribute.Cipher.AES_CBC.getAttribute());
+        instance.addIKEAttribute(IKEv1Attribute.KeyLength.L128.getAttribute());
+        instance.addIKEAttribute(IKEv1Attribute.Hash.SHA1.getAttribute());
+        instance.addIKEAttribute(IKEv1Attribute.DH.GROUP5.getAttribute());
+        instance.addIKEAttribute(IKEv1Attribute.Auth.PKE.getAttribute());
+        instance.addIKEAttribute(IKEv1Attribute.LifeType.SECONDS.getAttribute());
+        instance.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(28800));
         return instance;
     }
     

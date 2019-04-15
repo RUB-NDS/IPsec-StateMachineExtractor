@@ -45,7 +45,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
                     case IKEv1_MM_KEX_PKE:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         KeyExchangePayload keyExchangePayload = new KeyExchangePayload();
-//                        handshake.prepareKeyExchangePayload(keyExchangePayload);
+                        handshake.prepareKeyExchangePayload(keyExchangePayload);
                         msg.addPayload(keyExchangePayload);
                         IdentificationPayload identificationPayload = new IdentificationPayload();
                         handshake.prepareIdentificationPayload(identificationPayload);
@@ -79,13 +79,13 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
     private static SecurityAssociationPayload getPKESecurityAssociationPayload() {
         TransformPayload transformPayload = new TransformPayload();
         transformPayload.setTransformNumber((byte) 1);
-        transformPayload.addIKEAttribute(IKEv1Attribute.AES_CBC);
-        transformPayload.addIKEAttribute(IKEv1Attribute.KEY_LEN_128);
-        transformPayload.addIKEAttribute(IKEv1Attribute.SHA1);
-        transformPayload.addIKEAttribute(IKEv1Attribute.DH_GROUP_5);
-        transformPayload.addIKEAttribute(IKEv1Attribute.PKE);
-        transformPayload.addIKEAttribute(IKEv1Attribute.LIFETYPE_SEC);
-        transformPayload.addIKEAttribute(IKEv1Attribute.DURATION28800);
+        transformPayload.addIKEAttribute(IKEv1Attribute.Cipher.AES_CBC.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.KeyLength.L128.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.Hash.SHA1.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.DH.GROUP5.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.Auth.PKE.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.LifeType.SECONDS.getAttribute());
+        transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(28800));
         ProposalPayload proposalPayload = new ProposalPayload();
         proposalPayload.addTransform(transformPayload);
         SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
