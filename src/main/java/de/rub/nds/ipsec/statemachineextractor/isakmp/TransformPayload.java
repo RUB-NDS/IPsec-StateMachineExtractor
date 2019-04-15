@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Attribute;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;

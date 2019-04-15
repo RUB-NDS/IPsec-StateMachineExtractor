@@ -29,7 +29,7 @@ import de.learnlib.mapper.SULMappers;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOracle;
 import de.learnlib.oracle.membership.SULOracle;
-import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Handshake;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.learning.IKEv1HandshakeContextHandler;
 import de.rub.nds.tlsattacker.util.UnlimitedStrengthEnabler;

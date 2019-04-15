@@ -9,7 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.learning;
 
 import de.learnlib.mapper.ContextExecutableInputSUL.ContextHandler;
-import de.rub.nds.ipsec.statemachineextractor.ikev1.IKEv1Handshake;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;

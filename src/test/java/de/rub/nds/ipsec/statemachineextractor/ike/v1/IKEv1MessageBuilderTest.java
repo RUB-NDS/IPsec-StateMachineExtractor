@@ -6,8 +6,9 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ikev1;
+package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1MessageBuilder;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;

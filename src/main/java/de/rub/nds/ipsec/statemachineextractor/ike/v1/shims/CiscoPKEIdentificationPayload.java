@@ -6,7 +6,7 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ikev1.shims;
+package de.rub.nds.ipsec.statemachineextractor.ike.v1.shims;
 
 import de.rub.nds.ipsec.statemachineextractor.isakmp.*;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;

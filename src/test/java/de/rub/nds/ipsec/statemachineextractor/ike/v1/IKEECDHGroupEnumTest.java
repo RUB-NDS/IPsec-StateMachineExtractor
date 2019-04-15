@@ -6,8 +6,9 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ikev1;
+package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEECDHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.math.BigInteger;
 import java.security.KeyFactory;

@@ -11,8 +11,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.rub.nds.ipsec.statemachineextractor.ikev1.shims;
+package de.rub.nds.ipsec.statemachineextractor.ike.v1.shims;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.shims.CiscoPKEIdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
