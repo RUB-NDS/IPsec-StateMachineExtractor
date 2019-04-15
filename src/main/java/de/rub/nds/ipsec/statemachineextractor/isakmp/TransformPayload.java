@@ -9,8 +9,10 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Attribute;
+import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,19 +79,22 @@ public class TransformPayload extends ISAKMPPayload {
         byte[] buffer = read4ByteFromStream(bais);
         transformPayload.setTransformNumber(buffer[0]);
         transformPayload.setTransformId(buffer[1]);
-        //TODO: Implement parsing IKEv1Attributes, this only fakes the correct size
-        bais.skip(length - TRANSFORM_PAYLOAD_HEADER_LEN);
-        transformPayload.addIKEAttribute(new IKEv1Attribute(1) {
-            @Override
-            public int getLength() {
-                return length - TRANSFORM_PAYLOAD_HEADER_LEN;
+        if ((length - TRANSFORM_PAYLOAD_HEADER_LEN) % 4 != 0) {
+            throw new ISAKMPParsingException("Parsing variable length attributes is not supported.");
+        }
+        for (int i = 0; i < (length - TRANSFORM_PAYLOAD_HEADER_LEN) / 4; i++) {
+            int value = ByteBuffer.wrap(read4ByteFromStream(bais)).getInt();
+            IKEv1Attribute.FixedValueIKEv1Attribute attr = IKEv1Attribute.fromInt(value);
+            if (attr != null) {
+                transformPayload.addIKEAttribute(attr.getAttribute());
+                continue;
             }
-
-            @Override
-            public void writeBytes(ByteArrayOutputStream baos) {
-                throw new UnsupportedOperationException("Serializing a parsed TransformPayload is not supprted!");
+            if ((value >>> 16) == 0x800c) { // it's a duration
+                transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(value % 0x10000));
+                continue;
             }
-        });
+            throw new ISAKMPParsingException("Encountered unknown attribute.");
+        }
         return transformPayload;
     }
 }

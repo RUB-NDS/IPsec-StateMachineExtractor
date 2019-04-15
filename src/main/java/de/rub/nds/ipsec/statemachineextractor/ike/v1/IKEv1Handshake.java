@@ -27,7 +27,6 @@ public class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
     private byte[] initiatorCookie, responderCookie;
-    
 
     public IKEv1Handshake(long timeout, InetAddress remoteAddress, int port) {
         this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);

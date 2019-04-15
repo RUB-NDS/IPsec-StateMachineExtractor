@@ -9,7 +9,6 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import java.io.ByteArrayInputStream;
-import java.nio.ByteBuffer;
 
 /**
  *
