@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEECDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -31,9 +31,9 @@ import org.junit.Test;
  * 
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEECDHGroupEnumTest {
+public class IKEDHGroupEnumTest {
 
-    public IKEECDHGroupEnumTest() {
+    public IKEDHGroupEnumTest() {
         if (!(Security.getProviders()[0] instanceof BouncyCastleProvider)) {
             Security.insertProviderAt(new BouncyCastleProvider(), 1);
         }
@@ -42,7 +42,7 @@ public class IKEECDHGroupEnumTest {
     @Test
     public void testECDH() throws Exception {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("EC");
-        keyPairGen.initialize(IKEECDHGroupEnum.GROUP19_256.getECParameterSpec());
+        keyPairGen.initialize((ECParameterSpec)IKEDHGroupEnum.GROUP19_256.getAlgorithmParameterSpec());
         KeyPair keyPairA = keyPairGen.generateKeyPair();
         KeyPair keyPairB = keyPairGen.generateKeyPair();
         KeyAgreement keyAgreementA = KeyAgreement.getInstance("ECDH");
@@ -61,7 +61,7 @@ public class IKEECDHGroupEnumTest {
      */
     @Test
     public void testGetECParameterSpec_GROUP19_256() throws Exception {
-        ECParameterSpec ecParameterSpec = IKEECDHGroupEnum.GROUP19_256.getECParameterSpec();        
+        ECParameterSpec ecParameterSpec = (ECParameterSpec)IKEDHGroupEnum.GROUP19_256.getAlgorithmParameterSpec();        
         ECPrivateKeySpec priKeySpecA = new ECPrivateKeySpec(new BigInteger("C88F01F510D9AC3F70A292DAA2316DE544E9AAB8AFE84049C62A9C57862D1433", 16), ecParameterSpec);
         ECPrivateKeySpec priKeySpecB = new ECPrivateKeySpec(new BigInteger("C6EF9C5D78AE012A011164ACB397CE2088685D8F06BF9BE0B283AB46476BEE53", 16), ecParameterSpec);
         ECPublicKeySpec pubKeySpecA = new ECPublicKeySpec(new ECPoint(new BigInteger("DAD0B65394221CF9B051E1FECA5787D098DFE637FC90B9EF945D0C3772581180", 16), new BigInteger("5271A0461CDB8252D61F1C456FA3E59AB1F45B33ACCF5F58389E0577B8990BB3", 16)), ecParameterSpec);
@@ -89,7 +89,7 @@ public class IKEECDHGroupEnumTest {
      */
     @Test
     public void testGetECParameterSpec_GROUP20_384() throws Exception {
-        ECParameterSpec ecParameterSpec = IKEECDHGroupEnum.GROUP20_384.getECParameterSpec();        
+        ECParameterSpec ecParameterSpec = (ECParameterSpec)IKEDHGroupEnum.GROUP20_384.getAlgorithmParameterSpec();        
         ECPrivateKeySpec priKeySpecA = new ECPrivateKeySpec(new BigInteger("099F3C7034D4A2C699884D73A375A67F7624EF7C6B3C0F160647B67414DCE655E35B538041E649EE3FAEF896783AB194", 16), ecParameterSpec);
         ECPrivateKeySpec priKeySpecB = new ECPrivateKeySpec(new BigInteger("41CB0779B4BDB85D47846725FBEC3C9430FAB46CC8DC5060855CC9BDA0AA2942E0308312916B8ED2960E4BD55A7448FC", 16), ecParameterSpec);
         ECPublicKeySpec pubKeySpecA = new ECPublicKeySpec(new ECPoint(new BigInteger("667842D7D180AC2CDE6F74F37551F55755C7645C20EF73E31634FE72B4C55EE6DE3AC808ACB4BDB4C88732AEE95F41AA", 16), new BigInteger("9482ED1FC0EEB9CAFC4984625CCFC23F65032149E0E144ADA024181535A0F38EEB9FCFF3C2C947DAE69B4C634573A81C", 16)), ecParameterSpec);
@@ -117,7 +117,7 @@ public class IKEECDHGroupEnumTest {
      */
     @Test
     public void testGetECParameterSpec_GROUP21_521() throws Exception {
-        ECParameterSpec ecParameterSpec = IKEECDHGroupEnum.GROUP21_521.getECParameterSpec();        
+        ECParameterSpec ecParameterSpec = (ECParameterSpec)IKEDHGroupEnum.GROUP21_521.getAlgorithmParameterSpec();        
         ECPrivateKeySpec priKeySpecA = new ECPrivateKeySpec(new BigInteger("0037ADE9319A89F4DABDB3EF411AACCCA5123C61ACAB57B5393DCE47608172A095AA85A30FE1C2952C6771D937BA9777F5957B2639BAB072462F68C27A57382D4A52", 16), ecParameterSpec);
         ECPrivateKeySpec priKeySpecB = new ECPrivateKeySpec(new BigInteger("0145BA99A847AF43793FDD0E872E7CDFA16BE30FDC780F97BCCC3F078380201E9C677D600B343757A3BDBF2A3163E4C2F869CCA7458AA4A4EFFC311F5CB151685EB9", 16), ecParameterSpec);
         ECPublicKeySpec pubKeySpecA = new ECPublicKeySpec(new ECPoint(new BigInteger("0015417E84DBF28C0AD3C278713349DC7DF153C897A1891BD98BAB4357C9ECBEE1E3BF42E00B8E380AEAE57C2D107564941885942AF5A7F4601723C4195D176CED3E", 16), new BigInteger("017CAE20B6641D2EEB695786D8C946146239D099E18E1D5A514C739D7CB4A10AD8A788015AC405D7799DC75E7B7D5B6CF2261A6A7F1507438BF01BEB6CA3926F9582", 16)), ecParameterSpec);
