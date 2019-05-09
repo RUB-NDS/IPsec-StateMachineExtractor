@@ -1,3 +1,11 @@
+/**
+ * IPsec-StateMachineExtractor - Extract the state machine of an IKEv1/IKEv2 implementation
+ *
+ * Copyright © 2019 Ruhr University Bochum
+ *
+ * Licensed under Apache License 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
@@ -26,7 +34,7 @@ public class IKEv1HandshakeTest {
     public void testPrepareKeyExchangePayload() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
         KeyExchangePayload result = instance.prepareKeyExchangePayload();
-        assertEquals(196, result.getLength());
+        assertTrue(result.getLength() == 196 || result.getLength() == 197);
     }
     
 }

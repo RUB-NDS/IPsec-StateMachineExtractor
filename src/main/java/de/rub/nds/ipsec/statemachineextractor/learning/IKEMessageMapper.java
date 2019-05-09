@@ -27,8 +27,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.security.NoSuchProviderException;
 
 /**
  *
@@ -67,7 +66,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
                         throw new UnsupportedOperationException("Not supported yet.");
                 }
                 return handshake.exchangeMessage(msg);
-            } catch (IOException | ISAKMPParsingException | NoSuchAlgorithmException | InvalidAlgorithmParameterException ex) {
+            } catch (IOException | ISAKMPParsingException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException ex) {
                 throw new SULException(ex);
             }
         };

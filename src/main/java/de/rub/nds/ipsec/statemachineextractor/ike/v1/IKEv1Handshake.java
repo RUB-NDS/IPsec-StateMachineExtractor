@@ -14,8 +14,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
-import static de.rub.nds.ipsec.statemachineextractor.learning.IKEMessageMapper.getPSKSecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -25,7 +23,9 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.ECParameterSpec;
+import java.security.NoSuchProviderException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.provider.JCEDHPublicKey;
 
 /**
  *
@@ -72,19 +72,19 @@ public class IKEv1Handshake {
         }
     }
 
-    public KeyExchangePayload prepareKeyExchangePayload() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+    public KeyExchangePayload prepareKeyExchangePayload() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException {
         if (keyPair == null) {
             KeyPairGenerator keyPairGen;
             if (group.isEC()) {
-                keyPairGen = KeyPairGenerator.getInstance("EC");
+                keyPairGen = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             } else {
-                keyPairGen = KeyPairGenerator.getInstance("DiffieHellman");
+                keyPairGen = KeyPairGenerator.getInstance("DiffieHellman", BouncyCastleProvider.PROVIDER_NAME);
             }
             keyPairGen.initialize(group.getAlgorithmParameterSpec());
             keyPair = keyPairGen.generateKeyPair();
         }
         KeyExchangePayload result = new KeyExchangePayload();
-        result.setKeyExchangeData(keyPair.getPublic().getEncoded());
+        result.setKeyExchangeData(((JCEDHPublicKey)keyPair.getPublic()).getY().toByteArray());
         return result;
     }
 
