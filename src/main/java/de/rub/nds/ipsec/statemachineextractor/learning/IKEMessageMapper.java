@@ -33,10 +33,10 @@ import java.security.NoSuchProviderException;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
+public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetEnum, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
 
     @Override
-    public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(IKEAlphabet abstractInput) {
+    public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(IKEAlphabetEnum abstractInput) {
         return (IKEv1Handshake handshake) -> {
             ISAKMPMessage msg = new ISAKMPMessage();
             try {
@@ -73,7 +73,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabet, IKEAlphabet, Con
     }
 
     @Override
-    public IKEAlphabet mapOutput(ISAKMPMessage concreteOutput) {
+    public IKEAlphabetEnum mapOutput(ISAKMPMessage concreteOutput) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

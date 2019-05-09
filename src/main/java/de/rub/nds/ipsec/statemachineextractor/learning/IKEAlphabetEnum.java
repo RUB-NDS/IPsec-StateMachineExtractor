@@ -12,7 +12,7 @@ package de.rub.nds.ipsec.statemachineextractor.learning;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum IKEAlphabet {
+public enum IKEAlphabetEnum {
     IKEv1_MM_SA_PKE,
     IKEv1_MM_KEX_PKE,
     IKEv1_MM_HASH
