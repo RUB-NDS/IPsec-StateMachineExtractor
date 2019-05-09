@@ -25,9 +25,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.GeneralSecurityException;
 
 /**
  *
@@ -51,22 +49,21 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetE
                         msg.addPayload(keyExchangePayload);
                         IdentificationPayload identificationPayload = handshake.prepareIdentificationPayload();
                         msg.addPayload(identificationPayload);
-                        NoncePayload noncePayload = new NoncePayload();
-//                        handshake.prepareNoncePayload(noncePayload);
+                        NoncePayload noncePayload = handshake.prepareNoncePayload();
                         msg.addPayload(noncePayload);
                         msg.addPayload(VendorIDPayload.DeadPeerDetection);
                         break;
                     case IKEv1_MM_HASH:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         HashPayload hashPayload = new HashPayload();
-//                        handshake.prepareHashPayload(hashPayload);
+                        handshake.prepareHashPayload();
                         msg.addPayload(hashPayload);
                         break;
                     default:
                         throw new UnsupportedOperationException("Not supported yet.");
                 }
                 return handshake.exchangeMessage(msg);
-            } catch (IOException | ISAKMPParsingException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException ex) {
+            } catch (IOException | ISAKMPParsingException | GeneralSecurityException ex) {
                 throw new SULException(ex);
             }
         };
