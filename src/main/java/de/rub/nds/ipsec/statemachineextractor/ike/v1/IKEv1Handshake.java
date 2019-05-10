@@ -13,10 +13,12 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -28,16 +30,14 @@ import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.spec.ECPoint;
+import java.security.spec.ECParameterSpec;
 import java.security.spec.KeySpec;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.provider.JCEDHPublicKey;
-import org.bouncycastle.jce.provider.JCEECPublicKey;
 
 /**
  *
@@ -46,8 +46,7 @@ import org.bouncycastle.jce.provider.JCEECPublicKey;
 public class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
-    
-    
+
     private byte[] preSharedKey = new byte[]{};
     private byte[] initiatorCookie, responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private SecurityAssociationPayload securityAssociation = SecurityAssociationPayloadFactory.PSK_DES_MD5_G1;
@@ -59,6 +58,7 @@ public class IKEv1Handshake {
     private byte[] keyExchangeData = new byte[]{};
     private byte[] otherKeyExchangeData = new byte[]{};
     private byte[] identificationPayloadBody = new byte[]{};
+    private byte[] otherIdentificationPayloadBody = new byte[]{};
 
     // The default "ciphersuite"
     IKEv1Attribute.Auth authMethod = IKEv1Attribute.Auth.PSK;
@@ -70,7 +70,7 @@ public class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);
     }
 
-    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException {
+    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
@@ -86,8 +86,38 @@ public class IKEv1Handshake {
             throw new IOException("No data received within timeout");
         }
         ISAKMPMessage messageReceived = IKEv1MessageBuilder.fromByteArray(rxData);
-        responderCookie = messageReceived.getResponderCookie();
+        extractProperties(messageReceived);
         return messageReceived;
+    }
+
+    private void extractProperties(ISAKMPMessage msg) throws GeneralSecurityException {
+        responderCookie = msg.getResponderCookie();
+        for (ISAKMPPayload payload : msg.getPayloads()) {
+            switch (payload.getType()) {
+                case SecurityAssociation:
+                    securityAssociation = (SecurityAssociationPayload) payload;
+                    break;
+                case KeyExchange:
+                    KeyExchangePayload otherKeyExchangePayload = (KeyExchangePayload) payload;
+                    otherKeyExchangeData = otherKeyExchangePayload.getKeyExchangeData();
+                    if (group.isEC()) {
+                        ECParameterSpec algoSpec = (ECParameterSpec) group.getAlgorithmParameterSpec();
+                        otherPublicKey = CryptoHelper.createECPublicKeyFromBytes(algoSpec, otherKeyExchangeData);
+                    } else {
+                        DHParameterSpec algoSpec = (DHParameterSpec) group.getAlgorithmParameterSpec();
+                        otherPublicKey = CryptoHelper.createModPPublicKeyFromBytes(algoSpec, otherKeyExchangeData);
+                    }
+                    break;
+                case Identification:
+                    IdentificationPayload otherIdentificationPayload = (IdentificationPayload) payload;
+                    otherIdentificationPayloadBody = otherIdentificationPayload.getBody();
+                    break;
+                case Nonce:
+                    NoncePayload otherNoncePayload = (NoncePayload) payload;
+                    responderNonce = otherNoncePayload.getNonceData();
+                    break;
+            }
+        }
     }
 
     public void dispose() throws IOException {
@@ -103,55 +133,25 @@ public class IKEv1Handshake {
     public void setPreSharedKey(byte[] preSharedKey) {
         this.preSharedKey = preSharedKey;
     }
-    
+
     public KeyExchangePayload prepareKeyExchangePayload() throws GeneralSecurityException {
         KeyExchangePayload result;
         if (group.isEC()) {
-            result = prepareECKeyExchangePayload();
+            result = prepareKeyExchangePayload("EC");
         } else {
-            result = prepareModPKeyExchangePayload();
+            result = prepareKeyExchangePayload("DiffieHellman");
         }
         keyExchangeData = result.getKeyExchangeData();
         return result;
     }
 
-    protected KeyExchangePayload prepareModPKeyExchangePayload() throws GeneralSecurityException {
-        generateDHKeyPairIfNecessary("DiffieHellman");
-        KeyExchangePayload result = new KeyExchangePayload();
-        byte[] publicKeyBytes = ((JCEDHPublicKey) dhKeyPair.getPublic()).getY().toByteArray();
-        if (publicKeyBytes[0] != 0) {
-            result.setKeyExchangeData(publicKeyBytes);
-        } else {
-            byte[] shortPublicKeyBytes = new byte[publicKeyBytes.length - 1];
-            System.arraycopy(publicKeyBytes, 1, shortPublicKeyBytes, 0, publicKeyBytes.length - 1);
-            result.setKeyExchangeData(shortPublicKeyBytes);
-        }
-        return result;
-    }
-
-    protected KeyExchangePayload prepareECKeyExchangePayload() throws GeneralSecurityException {
-        generateDHKeyPairIfNecessary("EC");
-        KeyExchangePayload result = new KeyExchangePayload();
-        ECPoint w = ((JCEECPublicKey) dhKeyPair.getPublic()).getW();
-        byte[] publicKeyBytes = new byte[group.getPublicKeySizeInBytes()];
-        int paramLen = group.getPublicKeySizeInBytes() / 2;
-        byte[] wx = w.getAffineX().toByteArray();
-        int start = (wx[0] == 0 && wx.length == paramLen + 1) ? 1 : 0;
-        System.arraycopy(wx, start, publicKeyBytes, 0, paramLen);
-        byte[] wy = w.getAffineY().toByteArray();
-        start = (wy[0] == 0 && wy.length == paramLen + 1) ? 1 : 0;
-        System.arraycopy(wy, start, publicKeyBytes, paramLen, paramLen);
-        result.setKeyExchangeData(publicKeyBytes);
-        return result;
-    }
-    
-    private void generateDHKeyPairIfNecessary(String algoName) throws GeneralSecurityException {
+    protected KeyExchangePayload prepareKeyExchangePayload(String algoName) throws GeneralSecurityException {
         if (dhKeyPair == null) {
-            KeyPairGenerator keyPairGen;
-            keyPairGen = KeyPairGenerator.getInstance(algoName, BouncyCastleProvider.PROVIDER_NAME);
-            keyPairGen.initialize(group.getAlgorithmParameterSpec());
-            dhKeyPair = keyPairGen.generateKeyPair();
+            dhKeyPair = CryptoHelper.generateKeyPair(algoName, group.getAlgorithmParameterSpec());
         }
+        KeyExchangePayload result = new KeyExchangePayload();
+        result.setKeyExchangeData(CryptoHelper.publicKey2Bytes(dhKeyPair.getPublic()));
+        return result;
     }
 
     public IdentificationPayload prepareIdentificationPayload() throws IOException {
