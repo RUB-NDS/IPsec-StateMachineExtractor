@@ -43,6 +43,15 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
     public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(getGenericPayloadHeader(), 0, ISAKMP_PAYLOAD_HEADER_LEN);
     }
+    
+    public byte[] getBody() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        this.writeBytes(baos);
+        byte[] bytes = baos.toByteArray();
+        byte[] result = new byte[bytes.length - ISAKMP_PAYLOAD_HEADER_LEN];
+        System.arraycopy(bytes, ISAKMP_PAYLOAD_HEADER_LEN, result, 0, result.length);
+        return result;
+    }
 
     public PayloadTypeEnum getNextPayload() {
         return nextPayload;

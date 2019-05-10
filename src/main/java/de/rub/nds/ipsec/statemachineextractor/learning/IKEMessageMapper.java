@@ -13,6 +13,7 @@ import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.mapper.api.SULMapper;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
@@ -41,7 +42,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetE
                 switch (abstractInput) {
                     case IKEv1_MM_SA_PKE:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-                        msg.addPayload(getPKESecurityAssociationPayload());
+                        msg.addPayload(SecurityAssociationPayloadFactory.PKE_AES128_SHA1_G5);
                         break;
                     case IKEv1_MM_KEX_PKE:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
@@ -73,41 +74,5 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetE
     public IKEAlphabetEnum mapOutput(ISAKMPMessage concreteOutput) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    public static SecurityAssociationPayload getPKESecurityAssociationPayload() {
-        TransformPayload transformPayload = new TransformPayload();
-        transformPayload.setTransformNumber((byte) 1);
-        transformPayload.addIKEAttribute(IKEv1Attribute.Cipher.AES_CBC.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.KeyLength.L128.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.Hash.SHA1.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.DH.GROUP5.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.Auth.PKE.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.LifeType.SECONDS.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(28800));
-        ProposalPayload proposalPayload = new ProposalPayload();
-        proposalPayload.addTransform(transformPayload);
-        SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
-        securityAssociationPayload.setIdentityOnlyFlag(true);
-        securityAssociationPayload.addProposalPayload(proposalPayload);
-        return securityAssociationPayload;
-    }
     
-    public static SecurityAssociationPayload getPSKSecurityAssociationPayload() {
-        TransformPayload transformPayload = new TransformPayload();
-        transformPayload.setTransformNumber((byte) 1);
-        transformPayload.addIKEAttribute(IKEv1Attribute.Cipher.AES_CBC.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.KeyLength.L128.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.Hash.SHA1.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.DH.GROUP5.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.Auth.PSK.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.LifeType.SECONDS.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(28800));
-        ProposalPayload proposalPayload = new ProposalPayload();
-        proposalPayload.addTransform(transformPayload);
-        SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
-        securityAssociationPayload.setIdentityOnlyFlag(true);
-        securityAssociationPayload.addProposalPayload(proposalPayload);
-        return securityAssociationPayload;
-    }
-
 }
