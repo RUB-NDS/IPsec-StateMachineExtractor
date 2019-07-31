@@ -9,6 +9,8 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import java.net.InetAddress;
@@ -60,4 +62,13 @@ public class IKEv1HandshakeTest {
         assertEquals(instance.nonceLen + 4, result.getLength());
     }
 
+    /**
+     * Test of extractProperties method, of class IKEv1Handshake.
+     */
+    @Test
+    public void testExtractProperties() throws Exception {
+        ISAKMPMessage msg = ISAKMPMessageTest.getTestIKEv1MainModeSecurityAssociationMessage();
+        IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
+        instance.extractProperties(msg);
+    }
 }

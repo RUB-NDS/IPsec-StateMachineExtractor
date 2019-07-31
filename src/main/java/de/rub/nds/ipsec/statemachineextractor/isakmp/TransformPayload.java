@@ -8,7 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1AttributeFactory;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -84,16 +85,8 @@ public class TransformPayload extends ISAKMPPayload {
         }
         for (int i = 0; i < (length - TRANSFORM_PAYLOAD_HEADER_LEN) / 4; i++) {
             int value = ByteBuffer.wrap(read4ByteFromStream(bais)).getInt();
-            IKEv1Attribute.FixedValueIKEv1Attribute attr = IKEv1Attribute.fromInt(value);
-            if (attr != null) {
-                transformPayload.addIKEAttribute(attr.getAttribute());
-                continue;
-            }
-            if ((value >>> 16) == 0x800c) { // it's a duration
-                transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(value % 0x10000));
-                continue;
-            }
-            throw new ISAKMPParsingException("Encountered unknown attribute.");
+            IKEv1Attribute attr = IKEv1AttributeFactory.fromInt(value);
+            transformPayload.addIKEAttribute(attr);
         }
         return transformPayload;
     }

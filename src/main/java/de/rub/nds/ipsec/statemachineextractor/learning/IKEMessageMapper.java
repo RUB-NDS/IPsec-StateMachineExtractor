@@ -11,7 +11,8 @@ package de.rub.nds.ipsec.statemachineextractor.learning;
 import de.learnlib.api.exception.SULException;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.mapper.api.SULMapper;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
@@ -64,7 +65,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetE
                         throw new UnsupportedOperationException("Not supported yet.");
                 }
                 return handshake.exchangeMessage(msg);
-            } catch (IOException | ISAKMPParsingException | GeneralSecurityException ex) {
+            } catch (IOException | ISAKMPParsingException | IKEHandshakeException | GeneralSecurityException ex) {
                 throw new SULException(ex);
             }
         };

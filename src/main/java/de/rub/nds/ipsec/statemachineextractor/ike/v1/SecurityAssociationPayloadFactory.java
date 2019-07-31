@@ -8,6 +8,13 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DurationAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
@@ -21,18 +28,18 @@ public class SecurityAssociationPayloadFactory {
     private SecurityAssociationPayloadFactory() {
     }
 
-    public static SecurityAssociationPayload create(IKEv1Attribute.Auth authMethod, IKEv1Attribute.Cipher cipher, IKEv1Attribute.KeyLength keylength, IKEv1Attribute.Hash hash, IKEv1Attribute.DH group, IKEv1Attribute.LifeType lifetype, int duration) {
+    public static SecurityAssociationPayload create(AuthAttributeEnum authMethod, CipherAttributeEnum cipher, KeyLengthAttributeEnum keylength, HashAttributeEnum hash, DHGroupAttributeEnum group, LifeTypeAttributeEnum lifetype, DurationAttribute duration) {
         TransformPayload transformPayload = new TransformPayload();
         transformPayload.setTransformNumber((byte) 1);
-        transformPayload.addIKEAttribute(cipher.getAttribute());
-        if (keylength != null && cipher != IKEv1Attribute.Cipher.DES_CBC && cipher != IKEv1Attribute.Cipher.TRIPPLEDES_CBC && cipher != IKEv1Attribute.Cipher.IDEA_CBC) {
-            transformPayload.addIKEAttribute(keylength.getAttribute());
+        transformPayload.addIKEAttribute(cipher);
+        if(!cipher.isIsFixedKeySize()) {
+            transformPayload.addIKEAttribute(keylength);
         }
-        transformPayload.addIKEAttribute(hash.getAttribute());
-        transformPayload.addIKEAttribute(group.getAttribute());
-        transformPayload.addIKEAttribute(authMethod.getAttribute());
-        transformPayload.addIKEAttribute(lifetype.getAttribute());
-        transformPayload.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(duration));
+        transformPayload.addIKEAttribute(hash);
+        transformPayload.addIKEAttribute(group);
+        transformPayload.addIKEAttribute(authMethod);
+        transformPayload.addIKEAttribute(lifetype);
+        transformPayload.addIKEAttribute(duration);
         ProposalPayload proposalPayload = new ProposalPayload();
         proposalPayload.addTransform(transformPayload);
         SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
@@ -41,7 +48,7 @@ public class SecurityAssociationPayloadFactory {
         return securityAssociationPayload;
     }
     
-    public static final SecurityAssociationPayload PSK_DES_MD5_G1     = create(IKEv1Attribute.Auth.PSK, IKEv1Attribute.Cipher.DES_CBC, null, IKEv1Attribute.Hash.MD5, IKEv1Attribute.DH.GROUP1, IKEv1Attribute.LifeType.SECONDS, 28800);
-    public static final SecurityAssociationPayload PSK_AES128_SHA1_G5 = create(IKEv1Attribute.Auth.PSK, IKEv1Attribute.Cipher.AES_CBC, IKEv1Attribute.KeyLength.L128, IKEv1Attribute.Hash.SHA1, IKEv1Attribute.DH.GROUP5, IKEv1Attribute.LifeType.SECONDS, 28800);
-    public static final SecurityAssociationPayload PKE_AES128_SHA1_G5 = create(IKEv1Attribute.Auth.PKE, IKEv1Attribute.Cipher.AES_CBC, IKEv1Attribute.KeyLength.L128, IKEv1Attribute.Hash.SHA1, IKEv1Attribute.DH.GROUP5, IKEv1Attribute.LifeType.SECONDS, 28800);
+    public static final SecurityAssociationPayload PSK_DES_MD5_G1     = create(AuthAttributeEnum.PSK, CipherAttributeEnum.DES_CBC, null, HashAttributeEnum.MD5, DHGroupAttributeEnum.GROUP1, LifeTypeAttributeEnum.SECONDS, DurationAttribute.get(28800));
+    public static final SecurityAssociationPayload PSK_AES128_SHA1_G5 = create(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, DurationAttribute.get(28800));
+    public static final SecurityAssociationPayload PKE_AES128_SHA1_G5 = create(AuthAttributeEnum.PKE, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, DurationAttribute.get(28800));
 }

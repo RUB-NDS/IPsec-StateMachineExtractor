@@ -8,7 +8,13 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DurationAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
@@ -23,13 +29,13 @@ public class TransformPayloadTest {
     public static TransformPayload getTestTransformPayload() {
         TransformPayload instance = new TransformPayload();
         instance.setTransformNumber((byte)1);
-        instance.addIKEAttribute(IKEv1Attribute.Cipher.AES_CBC.getAttribute());
-        instance.addIKEAttribute(IKEv1Attribute.KeyLength.L128.getAttribute());
-        instance.addIKEAttribute(IKEv1Attribute.Hash.SHA1.getAttribute());
-        instance.addIKEAttribute(IKEv1Attribute.DH.GROUP5.getAttribute());
-        instance.addIKEAttribute(IKEv1Attribute.Auth.PKE.getAttribute());
-        instance.addIKEAttribute(IKEv1Attribute.LifeType.SECONDS.getAttribute());
-        instance.addIKEAttribute(IKEv1Attribute.Duration.getAttribute(28800));
+        instance.addIKEAttribute(CipherAttributeEnum.AES_CBC);
+        instance.addIKEAttribute(KeyLengthAttributeEnum.L128);
+        instance.addIKEAttribute(HashAttributeEnum.SHA1);
+        instance.addIKEAttribute(DHGroupAttributeEnum.GROUP5);
+        instance.addIKEAttribute(AuthAttributeEnum.PKE);
+        instance.addIKEAttribute(LifeTypeAttributeEnum.SECONDS);
+        instance.addIKEAttribute(DurationAttribute.get(28800));
         return instance;
     }
     

@@ -8,7 +8,16 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
+import static de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum.DSS_Sig;
+import static de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum.PKE;
+import static de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum.PSK;
+import static de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum.RevPKE;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
+import static de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum.SHA1;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
@@ -17,7 +26,9 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
@@ -61,8 +72,8 @@ public class IKEv1Handshake {
     private byte[] otherIdentificationPayloadBody = new byte[]{};
 
     // The default "ciphersuite"
-    IKEv1Attribute.Auth authMethod = IKEv1Attribute.Auth.PSK;
-    IKEv1Attribute.Hash hash = IKEv1Attribute.Hash.MD5;
+    AuthAttributeEnum authMethod = AuthAttributeEnum.PSK;
+    HashAttributeEnum hash = HashAttributeEnum.MD5;
     IKEDHGroupEnum group = IKEDHGroupEnum.GROUP1_768;
     int nonceLen = 8;
 
@@ -70,7 +81,7 @@ public class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);
     }
 
-    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException {
+    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
@@ -90,12 +101,20 @@ public class IKEv1Handshake {
         return messageReceived;
     }
 
-    private void extractProperties(ISAKMPMessage msg) throws GeneralSecurityException {
+    void extractProperties(ISAKMPMessage msg) throws GeneralSecurityException, IKEHandshakeException {
         responderCookie = msg.getResponderCookie();
         for (ISAKMPPayload payload : msg.getPayloads()) {
             switch (payload.getType()) {
                 case SecurityAssociation:
                     securityAssociation = (SecurityAssociationPayload) payload;
+                    if(securityAssociation.getProposalPayloads().size() != 1) {
+                        throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+                    }
+                    ProposalPayload pp = securityAssociation.getProposalPayloads().get(0);
+                    if(pp.getTransformPayloads().size() != 1) {
+                        throw new IKEHandshakeException("Wrong number of transform payloads found. There should only be one.");
+                    }
+                    TransformPayload tp = pp.getTransformPayloads().get(0);
                     break;
                 case KeyExchange:
                     KeyExchangePayload otherKeyExchangePayload = (KeyExchangePayload) payload;
@@ -262,7 +281,7 @@ public class IKEv1Handshake {
         dhSecret = keyAgreement.generateSecret();
     }
 
-    private static String mapHashName(IKEv1Attribute.Hash hash) {
+    private static String mapHashName(HashAttributeEnum hash) {
         switch (hash) {
             case SHA1:
                 return "SHA-1";
