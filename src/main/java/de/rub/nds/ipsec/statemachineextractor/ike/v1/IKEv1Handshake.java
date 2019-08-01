@@ -71,11 +71,7 @@ public class IKEv1Handshake {
     private byte[] identificationPayloadBody = new byte[]{};
     private byte[] otherIdentificationPayloadBody = new byte[]{};
 
-    // The default "ciphersuite"
-    AuthAttributeEnum authMethod = AuthAttributeEnum.PSK;
-    HashAttributeEnum hash = HashAttributeEnum.MD5;
-    IKEDHGroupEnum group = IKEDHGroupEnum.GROUP1_768;
-    int nonceLen = 8;
+    IKEv1Ciphersuite ciphersuite = new IKEv1Ciphersuite();
 
     public IKEv1Handshake(long timeout, InetAddress remoteAddress, int port) {
         this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);
@@ -107,23 +103,28 @@ public class IKEv1Handshake {
             switch (payload.getType()) {
                 case SecurityAssociation:
                     securityAssociation = (SecurityAssociationPayload) payload;
-                    if(securityAssociation.getProposalPayloads().size() != 1) {
+                    if (securityAssociation.getProposalPayloads().size() != 1) {
                         throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
                     }
                     ProposalPayload pp = securityAssociation.getProposalPayloads().get(0);
-                    if(pp.getTransformPayloads().size() != 1) {
+                    if (pp.getTransformPayloads().size() != 1) {
                         throw new IKEHandshakeException("Wrong number of transform payloads found. There should only be one.");
                     }
                     TransformPayload tp = pp.getTransformPayloads().get(0);
+                    for (IKEv1Attribute attr : tp.getAttributes()) {
+                        if (attr instanceof AuthAttributeEnum) {
+                            ciphersuite.setAuthMethod((AuthAttributeEnum)attr);
+                        }
+                    }
                     break;
                 case KeyExchange:
                     KeyExchangePayload otherKeyExchangePayload = (KeyExchangePayload) payload;
                     otherKeyExchangeData = otherKeyExchangePayload.getKeyExchangeData();
-                    if (group.isEC()) {
-                        ECParameterSpec algoSpec = (ECParameterSpec) group.getAlgorithmParameterSpec();
+                    if (ciphersuite.getDhGroup().getDHGroupParameters().isEC()) {
+                        ECParameterSpec algoSpec = (ECParameterSpec) ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec();
                         otherPublicKey = CryptoHelper.createECPublicKeyFromBytes(algoSpec, otherKeyExchangeData);
                     } else {
-                        DHParameterSpec algoSpec = (DHParameterSpec) group.getAlgorithmParameterSpec();
+                        DHParameterSpec algoSpec = (DHParameterSpec) ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec();
                         otherPublicKey = CryptoHelper.createModPPublicKeyFromBytes(algoSpec, otherKeyExchangeData);
                     }
                     break;
@@ -155,7 +156,7 @@ public class IKEv1Handshake {
 
     public KeyExchangePayload prepareKeyExchangePayload() throws GeneralSecurityException {
         KeyExchangePayload result;
-        if (group.isEC()) {
+        if (ciphersuite.getDhGroup().getDHGroupParameters().isEC()) {
             result = prepareKeyExchangePayload("EC");
         } else {
             result = prepareKeyExchangePayload("DiffieHellman");
@@ -166,7 +167,7 @@ public class IKEv1Handshake {
 
     protected KeyExchangePayload prepareKeyExchangePayload(String algoName) throws GeneralSecurityException {
         if (dhKeyPair == null) {
-            dhKeyPair = CryptoHelper.generateKeyPair(algoName, group.getAlgorithmParameterSpec());
+            dhKeyPair = CryptoHelper.generateKeyPair(algoName, ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec());
         }
         KeyExchangePayload result = new KeyExchangePayload();
         result.setKeyExchangeData(CryptoHelper.publicKey2Bytes(dhKeyPair.getPublic()));
@@ -194,7 +195,7 @@ public class IKEv1Handshake {
         NoncePayload result = new NoncePayload();
         if (initiatorNonce == null) {
             SecureRandom random = new SecureRandom();
-            initiatorNonce = new byte[nonceLen];
+            initiatorNonce = new byte[ciphersuite.getNonceLen()];
             random.nextBytes(initiatorNonce);
         }
         result.setNonceData(initiatorNonce);
@@ -205,7 +206,7 @@ public class IKEv1Handshake {
         if (skeyid == null) {
             computeSKEYID();
         }
-        Mac prf = Mac.getInstance("Hmac" + hash.toString());
+        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         prf.init(skeyid);
         prf.update(keyExchangeData);
         prf.update(otherKeyExchangeData);
@@ -220,8 +221,8 @@ public class IKEv1Handshake {
     }
 
     private void computeSKEYID() throws GeneralSecurityException {
-        Mac prf = Mac.getInstance("Hmac" + hash.toString());
-        SecretKeyFactory skf = SecretKeyFactory.getInstance("Hmac" + hash.toString());
+        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
+        SecretKeyFactory skf = SecretKeyFactory.getInstance("Hmac" + ciphersuite.getHash().toString());
         KeySpec spec;
         SecretKey hmacKey;
         byte[] skeyidBytes;
@@ -231,10 +232,10 @@ public class IKEv1Handshake {
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
-        switch (authMethod) {
+        switch (ciphersuite.getAuthMethod()) {
             case RSA_Sig:
             case DSS_Sig: // For signatures: SKEYID = prf(Ni_b | Nr_b, g^xy)
-                spec = new SecretKeySpec(concatNonces, "Hmac" + hash.toString());
+                spec = new SecretKeySpec(concatNonces, "Hmac" + ciphersuite.getHash().toString());
                 hmacKey = skf.generateSecret(spec);
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(dhSecret);
@@ -242,8 +243,8 @@ public class IKEv1Handshake {
 
             case PKE:
             case RevPKE: // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
-                MessageDigest digest = MessageDigest.getInstance(mapHashName(hash));
-                spec = new SecretKeySpec(digest.digest(concatNonces), "Hmac" + hash.toString());
+                MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
+                spec = new SecretKeySpec(digest.digest(concatNonces), "Hmac" + ciphersuite.getHash().toString());
                 hmacKey = skf.generateSecret(spec);
                 prf.init(hmacKey);
                 byte[] concatCookies = new byte[16];
@@ -253,7 +254,7 @@ public class IKEv1Handshake {
                 break;
 
             case PSK: // For pre-shared keys: SKEYID = prf(pre-shared-key, Ni_b | Nr_b)
-                spec = new SecretKeySpec(preSharedKey, "Hmac" + hash.toString());
+                spec = new SecretKeySpec(preSharedKey, "Hmac" + ciphersuite.getHash().toString());
                 hmacKey = skf.generateSecret(spec);
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(concatNonces);
@@ -261,20 +262,20 @@ public class IKEv1Handshake {
             default:
                 throw new UnsupportedOperationException("Unknown authMethod.");
         }
-        spec = new SecretKeySpec(skeyidBytes, "Hmac" + hash.toString());
+        spec = new SecretKeySpec(skeyidBytes, "Hmac" + ciphersuite.getHash().toString());
         skeyid = skf.generateSecret(spec);
     }
 
     private void computeDHSecret() throws GeneralSecurityException {
         String keyAlgoName, dhAlgoName;
-        if (group.isEC()) {
+        if (ciphersuite.getDhGroup().getDHGroupParameters().isEC()) {
             keyAlgoName = "EC";
             dhAlgoName = "ECDH";
         } else {
             keyAlgoName = dhAlgoName = "DiffieHellman";
         }
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance(keyAlgoName);
-        keyPairGen.initialize(group.getAlgorithmParameterSpec());
+        keyPairGen.initialize(ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec());
         KeyAgreement keyAgreement = KeyAgreement.getInstance(dhAlgoName);
         keyAgreement.init(dhKeyPair.getPrivate());
         keyAgreement.doPhase(otherPublicKey, true);

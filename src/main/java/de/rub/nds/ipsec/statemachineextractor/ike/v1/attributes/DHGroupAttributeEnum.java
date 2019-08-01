@@ -39,7 +39,7 @@ public enum DHGroupAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
         IKEv1AttributeFactory.register(this, value);
     }
 
-    public IKEDHGroupEnum getDHGroup() {
+    public IKEDHGroupEnum getDHGroupParameters() {
         return group;
     }
 

@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,6 +73,10 @@ public class TransformPayload extends ISAKMPPayload {
 
     public void addIKEAttribute(IKEv1Attribute attribute) {
         attributes.add(attribute);
+    }
+
+    public List<IKEv1Attribute> getAttributes() {
+        return Collections.unmodifiableList(attributes);
     }
 
     public static TransformPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
