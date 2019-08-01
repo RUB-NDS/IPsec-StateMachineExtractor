@@ -20,7 +20,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttribut
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-class IKEv1Ciphersuite {
+public class IKEv1Ciphersuite {
 
     private AuthAttributeEnum authMethod = AuthAttributeEnum.PSK;
     private CipherAttributeEnum cipher = CipherAttributeEnum.DES_CBC;

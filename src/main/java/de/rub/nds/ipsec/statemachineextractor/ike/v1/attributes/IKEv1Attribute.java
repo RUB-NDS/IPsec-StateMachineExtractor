@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import java.io.ByteArrayOutputStream;
 
@@ -29,4 +30,6 @@ public interface IKEv1Attribute extends ISAKMPSerializable {
     }
 
     public byte[] getBytes();
+    
+    public void configureCiphersuite(IKEv1Ciphersuite ciphersuite);
 }

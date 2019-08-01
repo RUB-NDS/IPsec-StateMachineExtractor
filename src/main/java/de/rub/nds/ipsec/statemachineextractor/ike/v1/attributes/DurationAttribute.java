@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
@@ -49,4 +50,9 @@ public class DurationAttribute implements IKEv1Attribute, ISAKMPSerializable {
             throw new IllegalArgumentException("Duration too large.");
         }
     }    
+
+    @Override
+    public void configureCiphersuite(IKEv1Ciphersuite ciphersuite) {
+        ciphersuite.setDuration(this);
+    }
 }

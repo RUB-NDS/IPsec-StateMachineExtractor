@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 
@@ -41,5 +42,10 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     @Override
     public byte[] getBytes() {
         return bytes.clone();
+    }
+
+    @Override
+    public void configureCiphersuite(IKEv1Ciphersuite ciphersuite) {
+        ciphersuite.setCipher(this);
     }
 }
