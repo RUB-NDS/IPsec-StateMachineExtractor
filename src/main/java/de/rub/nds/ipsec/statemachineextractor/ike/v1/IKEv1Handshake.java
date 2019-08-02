@@ -65,7 +65,7 @@ public final class IKEv1Handshake {
         messages.add(messageToSend);
         byte[] rxData = udpTH.fetchData();
         if (rxData.length == 0) {
-            throw new IOException("No data received within timeout");
+            return null;
         }
         ISAKMPMessage messageReceived = IKEv1MessageBuilder.fromByteArray(rxData);
         messages.add(messageReceived);

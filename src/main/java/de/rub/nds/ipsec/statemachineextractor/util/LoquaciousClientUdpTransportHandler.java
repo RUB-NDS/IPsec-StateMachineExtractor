@@ -39,13 +39,13 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
     private DatagramSocket socket;
 
     public LoquaciousClientUdpTransportHandler(Connection connection) {
-        super(connection.getTimeout(), ConnectionEndType.CLIENT);
+        super(connection.getTimeout(), ConnectionEndType.CLIENT, false);
         this.hostname = connection.getHostname();
         this.port = connection.getPort();
     }
 
     public LoquaciousClientUdpTransportHandler(long timeout, String hostname, int port) {
-        super(timeout, ConnectionEndType.CLIENT);
+        super(timeout, ConnectionEndType.CLIENT, false);
         this.hostname = hostname;
         this.port = port;
     }
@@ -62,7 +62,7 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
         socket = new DatagramSocket();
         socket.connect(new InetSocketAddress(hostname, port));
         socket.setSoTimeout((int) getTimeout());
-        setStreams(new PushbackInputStream(new UdpInputStream(socket)), new UdpOutputStream(socket));
+        setStreams(new PushbackInputStream(new UdpInputStream(socket, false)), new UdpOutputStream(socket));
     }
 
     public int getLocalPort() throws IOException {

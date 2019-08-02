@@ -68,6 +68,9 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetE
 
     @Override
     public IKEAlphabetEnum mapOutput(ISAKMPMessage concreteOutput) {
+        if(concreteOutput == null) {
+            return IKEAlphabetEnum.NO_RESPONSE;
+        }
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
