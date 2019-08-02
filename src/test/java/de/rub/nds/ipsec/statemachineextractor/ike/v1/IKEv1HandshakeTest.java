@@ -49,6 +49,7 @@ public class IKEv1HandshakeTest {
     public void testPrepareKeyExchangePayloadEC() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
         instance.ciphersuite.setDhGroup(DHGroupAttributeEnum.GROUP19);
+        instance.secrets.generateDefaults();
         KeyExchangePayload result = instance.prepareKeyExchangePayload();
         assertEquals(instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4, result.getLength());
     }
