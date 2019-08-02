@@ -15,11 +15,8 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.spec.ECParameterSpec;
-import java.security.spec.KeySpec;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -31,15 +28,15 @@ class IKEv1HandshakeSecrets {
 
     static final int COOKIE_LEN = 8;
 
-    private byte[] preSharedKey = new byte[]{};
-    private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    private byte[] preSharedKey = new byte[]{0x00};
+    private byte[] initiatorCookie;
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private KeyPair dhKeyPair;
     private PublicKey peerPublicKey;
     private byte[] dhSecret;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    private SecretKey skeyid;
+    private SecretKeySpec skeyid;
     private byte[] keyExchangeData;
     private byte[] identificationPayloadBody;
     private byte[] peerKeyExchangeData;
@@ -49,6 +46,15 @@ class IKEv1HandshakeSecrets {
 
     public IKEv1HandshakeSecrets(IKEv1Ciphersuite ciphersuite) {
         this.ciphersuite = ciphersuite;
+    }
+    
+    public void generateDefaults() throws GeneralSecurityException {
+        generateDhKeyPair();
+        setPeerKeyExchangeData(CryptoHelper.publicKey2Bytes(dhKeyPair.getPublic()));
+        computePeerPublicKey();
+        generateDhKeyPair();
+        computeDHSecret();
+        computeSKEYID();
     }
 
     public byte[] getPreSharedKey() {
@@ -164,19 +170,17 @@ class IKEv1HandshakeSecrets {
         this.responderNonce = responderNonce;
     }
 
-    public SecretKey getSKEYID() {
+    public SecretKeySpec getSKEYID() {
         return skeyid;
     }
 
-    public void setSKEYID(SecretKey skeyid) {
+    public void setSKEYID(SecretKeySpec skeyid) {
         this.skeyid = skeyid;
     }
 
-    public SecretKey computeSKEYID() throws GeneralSecurityException {
+    public SecretKeySpec computeSKEYID() throws GeneralSecurityException {
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
-        SecretKeyFactory skf = SecretKeyFactory.getInstance("Hmac" + ciphersuite.getHash().toString());
-        KeySpec spec;
-        SecretKey hmacKey;
+        SecretKeySpec hmacKey;
         byte[] skeyidBytes;
         if (dhSecret == null) {
             computeDHSecret();
@@ -187,8 +191,7 @@ class IKEv1HandshakeSecrets {
         switch (ciphersuite.getAuthMethod()) {
             case RSA_Sig:
             case DSS_Sig: // For signatures: SKEYID = prf(Ni_b | Nr_b, g^xy)
-                spec = new SecretKeySpec(concatNonces, "Hmac" + ciphersuite.getHash().toString());
-                hmacKey = skf.generateSecret(spec);
+                hmacKey = new SecretKeySpec(concatNonces, "Hmac" + ciphersuite.getHash().toString());
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(dhSecret);
                 break;
@@ -196,8 +199,7 @@ class IKEv1HandshakeSecrets {
             case PKE:
             case RevPKE: // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
                 MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
-                spec = new SecretKeySpec(digest.digest(concatNonces), "Hmac" + ciphersuite.getHash().toString());
-                hmacKey = skf.generateSecret(spec);
+                hmacKey = new SecretKeySpec(digest.digest(concatNonces), "Hmac" + ciphersuite.getHash().toString());
                 prf.init(hmacKey);
                 byte[] concatCookies = new byte[COOKIE_LEN * 2];
                 System.arraycopy(initiatorCookie, 0, concatCookies, 0, COOKIE_LEN);
@@ -206,16 +208,14 @@ class IKEv1HandshakeSecrets {
                 break;
 
             case PSK: // For pre-shared keys: SKEYID = prf(pre-shared-key, Ni_b | Nr_b)
-                spec = new SecretKeySpec(preSharedKey, "Hmac" + ciphersuite.getHash().toString());
-                hmacKey = skf.generateSecret(spec);
+                hmacKey = new SecretKeySpec(preSharedKey, "Hmac" + ciphersuite.getHash().toString());
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(concatNonces);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown authMethod.");
         }
-        spec = new SecretKeySpec(skeyidBytes, "Hmac" + ciphersuite.getHash().toString());
-        skeyid = skf.generateSecret(spec);
+        skeyid = new SecretKeySpec(skeyidBytes, "Hmac" + ciphersuite.getHash().toString());
         return skeyid;
     }
 

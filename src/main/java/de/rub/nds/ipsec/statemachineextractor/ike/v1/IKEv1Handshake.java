@@ -35,7 +35,7 @@ import javax.crypto.Mac;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1Handshake {
+public final class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
     IKEv1Ciphersuite ciphersuite = new IKEv1Ciphersuite();
@@ -43,8 +43,12 @@ public class IKEv1Handshake {
     List<ISAKMPMessage> messages = new ArrayList<>();
     SecurityAssociationPayload lastReceivedSAPayload;
 
-    public IKEv1Handshake(long timeout, InetAddress remoteAddress, int port) {
+    public IKEv1Handshake(long timeout, InetAddress remoteAddress, int port) throws IOException, GeneralSecurityException {
         this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);
+        prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
+        secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
+        secrets.generateDefaults();
+        lastReceivedSAPayload = SecurityAssociationPayloadFactory.PSK_DES_MD5_G1;
     }
 
     public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {

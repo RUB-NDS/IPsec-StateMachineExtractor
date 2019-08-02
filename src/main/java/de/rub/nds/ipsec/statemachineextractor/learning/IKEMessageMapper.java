@@ -12,7 +12,6 @@ import de.learnlib.api.exception.SULException;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.mapper.api.SULMapper;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
@@ -22,9 +21,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -57,8 +53,7 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetE
                         break;
                     case IKEv1_MM_HASH:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-                        HashPayload hashPayload = new HashPayload();
-                        handshake.prepareHashPayload();
+                        HashPayload hashPayload = handshake.prepareHashPayload();
                         msg.addPayload(hashPayload);
                         break;
                     default:

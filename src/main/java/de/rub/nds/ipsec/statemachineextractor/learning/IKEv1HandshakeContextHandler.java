@@ -13,6 +13,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +44,11 @@ public class IKEv1HandshakeContextHandler implements ContextHandler<IKEv1Handsha
     /** {@inheritDoc} */
     @Override
     public IKEv1Handshake createContext() {
-        return new IKEv1Handshake(timeout, remoteAddress, port);
+        try {
+            return new IKEv1Handshake(timeout, remoteAddress, port);
+        } catch (IOException | GeneralSecurityException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /** {@inheritDoc} */
