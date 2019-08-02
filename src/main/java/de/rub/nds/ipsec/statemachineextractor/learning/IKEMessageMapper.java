@@ -29,19 +29,19 @@ import java.security.GeneralSecurityException;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetEnum, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
+public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutputAlphabetEnum, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
 
     @Override
-    public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(IKEAlphabetEnum abstractInput) {
+    public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(IKEInputAlphabetEnum abstractInput) {
         return (IKEv1Handshake handshake) -> {
             ISAKMPMessage msg = new ISAKMPMessage();
             try {
                 switch (abstractInput) {
-                    case IKEv1_MM_SA_PKE:
+                    case IKEv1_MM_SA:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(SecurityAssociationPayloadFactory.PKE_AES128_SHA1_G5);
                         break;
-                    case IKEv1_MM_KEX_PKE:
+                    case IKEv1_MM_KEX:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         KeyExchangePayload keyExchangePayload = handshake.prepareKeyExchangePayload();
                         msg.addPayload(keyExchangePayload);
@@ -67,11 +67,45 @@ public class IKEMessageMapper implements SULMapper<IKEAlphabetEnum, IKEAlphabetE
     }
 
     @Override
-    public IKEAlphabetEnum mapOutput(ISAKMPMessage concreteOutput) {
+    public IKEOutputAlphabetEnum mapOutput(ISAKMPMessage concreteOutput) {
         if(concreteOutput == null) {
-            return IKEAlphabetEnum.NO_RESPONSE;
+            return IKEOutputAlphabetEnum.NO_RESPONSE;
         }
-        throw new UnsupportedOperationException("Not supported yet.");
+        StringBuilder name = new StringBuilder();
+        if (concreteOutput.getVersion() == 0x10) {
+            name.append("IKEv1");
+        } else {
+            name.append("IKEv2");
+        }
+        name.append("_");
+        switch(concreteOutput.getExchangeType()) {
+            case IdentityProtection:
+                name.append("MM");
+                break;
+            case Aggressive:
+                name.append("AM");
+                break;
+            case Informational:
+                name.append("ERR");
+                break;
+            default:
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
+        name.append("_");
+        switch(concreteOutput.getNextPayload()) {
+            case SecurityAssociation:
+                name.append("SA");
+                break;
+            case KeyExchange:
+                name.append("KEX");
+                break;
+            case Hash:
+                name.append("HASH");
+                break;
+            default:
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
+        return IKEOutputAlphabetEnum.valueOf(name.toString());
     }
     
 }

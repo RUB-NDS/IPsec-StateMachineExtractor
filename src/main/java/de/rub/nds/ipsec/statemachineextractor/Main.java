@@ -11,7 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor;
 import de.rub.nds.ipsec.statemachineextractor.learning.IKEMessageMapper;
 import de.learnlib.algorithms.lstar.mealy.ExtensibleLStarMealyBuilder;
 import de.learnlib.api.query.DefaultQuery;
-import de.rub.nds.ipsec.statemachineextractor.learning.IKEAlphabetEnum;
+import de.rub.nds.ipsec.statemachineextractor.learning.IKEOutputAlphabetEnum;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;
@@ -31,6 +31,7 @@ import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOrac
 import de.learnlib.oracle.membership.SULOracle;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.learning.IKEInputAlphabetEnum;
 import de.rub.nds.ipsec.statemachineextractor.learning.IKEv1HandshakeContextHandler;
 import de.rub.nds.tlsattacker.util.UnlimitedStrengthEnabler;
 import java.io.File;
@@ -53,35 +54,35 @@ public class Main {
         Security.insertProviderAt(new BouncyCastleProvider(), 1);
     }
 
-    private static final long timeout = 100;
+    private static final long timeout = 1000;
     private static final String host = "10.0.3.2";
     private static final int port = 500;
     
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
-        Alphabet<IKEAlphabetEnum> alphabet = Alphabets.fromEnum(IKEAlphabetEnum.class);
+        Alphabet<IKEInputAlphabetEnum> inputAlphabet = Alphabets.fromEnum(IKEInputAlphabetEnum.class);
         final IKEv1HandshakeContextHandler contextHandler = new IKEv1HandshakeContextHandler(timeout, host, port);
         final ContextExecutableInputSUL<ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage, IKEv1Handshake> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
-        SUL<IKEAlphabetEnum, IKEAlphabetEnum> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
-        SULOracle<IKEAlphabetEnum, IKEAlphabetEnum> oracle = new SULOracle<>(sul);
-        MealyCacheOracle<IKEAlphabetEnum, IKEAlphabetEnum> mqOracle = MealyCacheOracle.createDAGCacheOracle(alphabet, null, oracle);
+        SUL<IKEInputAlphabetEnum, IKEOutputAlphabetEnum> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
+        SULOracle<IKEInputAlphabetEnum, IKEOutputAlphabetEnum> oracle = new SULOracle<>(sul);
+        MealyCacheOracle<IKEInputAlphabetEnum, IKEOutputAlphabetEnum> mqOracle = MealyCacheOracle.createDAGCacheOracle(inputAlphabet, oracle);
 
-        MealyLearner<IKEAlphabetEnum, IKEAlphabetEnum> learner;
-        learner = new ExtensibleLStarMealyBuilder<IKEAlphabetEnum, IKEAlphabetEnum>().withAlphabet(alphabet).withOracle(mqOracle).create();
+        MealyLearner<IKEInputAlphabetEnum, IKEOutputAlphabetEnum> learner;
+        learner = new ExtensibleLStarMealyBuilder<IKEInputAlphabetEnum, IKEOutputAlphabetEnum>().withAlphabet(inputAlphabet).withOracle(mqOracle).create();
 
         learner.startLearning();
-        MealyMachine<?, IKEAlphabetEnum, ?, IKEAlphabetEnum> hypothesis = learner.getHypothesisModel();
+        MealyMachine<?, IKEInputAlphabetEnum, ?, IKEOutputAlphabetEnum> hypothesis = learner.getHypothesisModel();
 
-        MealyEquivalenceOracle<IKEAlphabetEnum, IKEAlphabetEnum> eqOracle = new MealyRandomWordsEQOracle<>(
+        MealyEquivalenceOracle<IKEInputAlphabetEnum, IKEOutputAlphabetEnum> eqOracle = new MealyRandomWordsEQOracle<>(
                 mqOracle,
                 1, // minLength
                 4, //maxLength
                 50, // maxTests
                 new Random(1));
 
-        DefaultQuery<IKEAlphabetEnum, Word<IKEAlphabetEnum>> ce;
-        while ((ce = eqOracle.findCounterExample(hypothesis, alphabet)) != null) {
+        DefaultQuery<IKEInputAlphabetEnum, Word<IKEOutputAlphabetEnum>> ce;
+        while ((ce = eqOracle.findCounterExample(hypothesis, inputAlphabet)) != null) {
             System.err.println("Found counterexample " + ce);
             System.err.println("Current hypothesis has " + hypothesis.getStates().size() + " states");
 
@@ -95,18 +96,18 @@ public class Main {
         System.err.println("duration " + duration);
 
         try {
-            writeDotModel(hypothesis, alphabet, "test.dot");
+            writeDotModel(hypothesis, inputAlphabet, "test.dot");
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public static <I> void writeDotModel(MealyMachine<?, I, ?, I> model, Alphabet<I> alphabet, String filename) throws IOException, InterruptedException {
+    public static <I> void writeDotModel(MealyMachine<?, I, ?, ?> model, Alphabet<I> alphabet, String filename) throws IOException, InterruptedException {
         MealyMachine.MealyGraphView mealyGraphView = new MealyMachine.MealyGraphView(model, alphabet);
         File dotFile = new File(filename);
         try (PrintStream psDotFile = new PrintStream(dotFile)) {
             GraphDOT.write(mealyGraphView, psDotFile);
         }
-        Runtime.getRuntime().exec("dot -Tpdf -O " + filename);
+        Runtime.getRuntime().exec("dot -Tpdf -O " + filename); // requires graphviz
     }
 }

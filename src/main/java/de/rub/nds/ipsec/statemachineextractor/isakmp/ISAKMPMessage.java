@@ -131,6 +131,13 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         payloads.add(payload);
     }
 
+    public PayloadTypeEnum getNextPayload() {
+        if (payloads.isEmpty()) {
+            return PayloadTypeEnum.NONE;
+        }
+        return payloads.get(0).getType();
+    }
+
     @Override
     public int getLength() {
         int length = ISAKMP_HEADER_LEN;
@@ -144,11 +151,7 @@ public class ISAKMPMessage implements ISAKMPSerializable {
     public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(getInitiatorCookie(), 0, 8);
         baos.write(responderCookie, 0, 8);
-        if (payloads.isEmpty()) {
-            baos.write(PayloadTypeEnum.NONE.getValue());
-        } else {
-            baos.write(payloads.get(0).getType().getValue());
-        }
+        baos.write(getNextPayload().getValue());
         baos.write(version);
         baos.write(exchangeType.getValue());
         baos.write(getFlags());
