@@ -54,7 +54,7 @@ public class Main {
         Security.insertProviderAt(new BouncyCastleProvider(), 1);
     }
 
-    private static final long timeout = 1000;
+    private static final long timeout = 100;
     private static final String host = "10.0.3.2";
     private static final int port = 500;
     

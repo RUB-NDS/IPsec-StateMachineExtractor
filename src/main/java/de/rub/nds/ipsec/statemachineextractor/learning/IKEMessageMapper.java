@@ -37,6 +37,9 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
             ISAKMPMessage msg = new ISAKMPMessage();
             try {
                 switch (abstractInput) {
+                    case RESET:
+                        handshake.reset();
+                        return null;
                     case IKEv1_MM_SA:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(SecurityAssociationPayloadFactory.PKE_AES128_SHA1_G5);

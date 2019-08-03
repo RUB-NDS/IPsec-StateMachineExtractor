@@ -28,6 +28,7 @@ import java.net.InetAddress;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.crypto.Mac;
 
@@ -38,17 +39,20 @@ import javax.crypto.Mac;
 public final class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
-    IKEv1Ciphersuite ciphersuite = new IKEv1Ciphersuite();
-    IKEv1HandshakeSecrets secrets = new IKEv1HandshakeSecrets(ciphersuite);
-    List<ISAKMPMessage> messages = new ArrayList<>();
+    IKEv1Ciphersuite ciphersuite;
+    IKEv1HandshakeSecrets secrets;
+    List<ISAKMPMessage> messages;
     SecurityAssociationPayload lastReceivedSAPayload;
+    final long timeout;
+    final InetAddress remoteAddress;
+    final int remotePort;
+    byte[] lastMsg;
 
-    public IKEv1Handshake(long timeout, InetAddress remoteAddress, int port) throws IOException, GeneralSecurityException {
-        this.udpTH = new LoquaciousClientUdpTransportHandler(timeout, remoteAddress.getHostAddress(), port);
-        prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
-        secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
-        secrets.generateDefaults();
-        lastReceivedSAPayload = SecurityAssociationPayloadFactory.PSK_DES_MD5_G1;
+    public IKEv1Handshake(long timeout, InetAddress remoteAddress, int remotePort) throws IOException, GeneralSecurityException {
+        this.timeout = timeout;
+        this.remoteAddress = remoteAddress;
+        this.remotePort = remotePort;
+        reset();
     }
 
     public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
@@ -67,6 +71,10 @@ public final class IKEv1Handshake {
         if (rxData.length == 0) {
             return null;
         }
+        if (Arrays.equals(rxData, lastMsg)) {
+            return null; //only a retransmission
+        }
+        lastMsg = rxData;
         ISAKMPMessage messageReceived = IKEv1MessageBuilder.fromByteArray(rxData);
         messages.add(messageReceived);
         extractProperties(messageReceived);
@@ -105,6 +113,20 @@ public final class IKEv1Handshake {
                     throw new UnsupportedOperationException("Not supported yet: " + payload.getType().toString());
             }
         }
+    }
+
+    public void reset() throws IOException, GeneralSecurityException {
+        ciphersuite = new IKEv1Ciphersuite();
+        secrets = new IKEv1HandshakeSecrets(ciphersuite);
+        messages = new ArrayList<>();
+        if (this.udpTH != null) {
+            dispose();
+        }
+        this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
+        prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
+        secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
+        secrets.generateDefaults();
+        lastReceivedSAPayload = SecurityAssociationPayloadFactory.PSK_DES_MD5_G1;
     }
 
     public void dispose() throws IOException {
