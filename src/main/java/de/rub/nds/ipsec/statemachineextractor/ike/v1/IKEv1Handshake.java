@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
@@ -30,6 +31,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.crypto.Cipher;
 import javax.crypto.Mac;
 
 /**
@@ -40,7 +42,8 @@ public final class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
     IKEv1Ciphersuite ciphersuite;
-    IKEv1HandshakeSecrets secrets;
+    IKEv1HandshakeLongtermSecrets ltsecrets;
+    IKEv1HandshakeSessionSecrets secrets;
     List<ISAKMPMessage> messages;
     SecurityAssociationPayload lastReceivedSAPayload;
     final long timeout;
@@ -117,7 +120,8 @@ public final class IKEv1Handshake {
 
     public void reset() throws IOException, GeneralSecurityException {
         ciphersuite = new IKEv1Ciphersuite();
-        secrets = new IKEv1HandshakeSecrets(ciphersuite);
+        ltsecrets = new IKEv1HandshakeLongtermSecrets();
+        secrets = new IKEv1HandshakeSessionSecrets(ciphersuite, ltsecrets);
         messages = new ArrayList<>();
         if (this.udpTH != null) {
             dispose();
@@ -136,6 +140,9 @@ public final class IKEv1Handshake {
     }
 
     public KeyExchangePayload prepareKeyExchangePayload() throws GeneralSecurityException {
+        if (secrets.getInternalDHGroup() != ciphersuite.getDhGroup()) {
+            secrets.generateDhKeyPair();
+        }
         KeyExchangePayload result = new KeyExchangePayload();
         result.setKeyExchangeData(secrets.generateKeyExchangeData());
         return result;
@@ -158,7 +165,7 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public NoncePayload prepareNoncePayload() {
+    public NoncePayload prepareNoncePayload() throws GeneralSecurityException {
         NoncePayload result = new NoncePayload();
         if (secrets.getInitiatorNonce() == null) {
             SecureRandom random = new SecureRandom();
@@ -166,7 +173,15 @@ public final class IKEv1Handshake {
             random.nextBytes(initiatorNonce);
             secrets.setInitiatorNonce(initiatorNonce);
         }
-        result.setNonceData(secrets.getInitiatorNonce());
+        if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
+            // these authentication methods encrypt the nonce using the public key of the peer
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, ltsecrets.getPeerPublicKey());
+            byte[] encryptedNonce = cipher.doFinal(secrets.getInitiatorNonce());
+            result.setNonceData(encryptedNonce);
+        } else {
+            result.setNonceData(secrets.getInitiatorNonce());
+        }
         return result;
     }
 

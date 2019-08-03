@@ -48,8 +48,8 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         KeyExchangePayload keyExchangePayload = handshake.prepareKeyExchangePayload();
                         msg.addPayload(keyExchangePayload);
-                        IdentificationPayload identificationPayload = handshake.prepareIdentificationPayload();
-                        msg.addPayload(identificationPayload);
+//                        IdentificationPayload identificationPayload = handshake.prepareIdentificationPayload();
+//                        msg.addPayload(identificationPayload);
                         NoncePayload noncePayload = handshake.prepareNoncePayload();
                         msg.addPayload(noncePayload);
                         msg.addPayload(VendorIDPayload.DeadPeerDetection);

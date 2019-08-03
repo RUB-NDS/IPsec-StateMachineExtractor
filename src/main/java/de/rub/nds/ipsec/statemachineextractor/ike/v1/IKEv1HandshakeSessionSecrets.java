@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
@@ -24,16 +25,16 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-class IKEv1HandshakeSecrets {
+class IKEv1HandshakeSessionSecrets {
 
     static final int COOKIE_LEN = 8;
 
-    private byte[] preSharedKey = new byte[]{0x00};
     private byte[] initiatorCookie;
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private KeyPair dhKeyPair;
     private PublicKey peerPublicKey;
     private byte[] dhSecret;
+    private DHGroupAttributeEnum internalDHGroup;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private SecretKeySpec skeyid;
@@ -43,9 +44,11 @@ class IKEv1HandshakeSecrets {
     private byte[] peerIdentificationPayloadBody;
 
     private final IKEv1Ciphersuite ciphersuite;
+    private final IKEv1HandshakeLongtermSecrets ltsecrets;
 
-    public IKEv1HandshakeSecrets(IKEv1Ciphersuite ciphersuite) {
+    public IKEv1HandshakeSessionSecrets(IKEv1Ciphersuite ciphersuite, IKEv1HandshakeLongtermSecrets ltsecrets) {
         this.ciphersuite = ciphersuite;
+        this.ltsecrets = ltsecrets;
     }
     
     public void generateDefaults() throws GeneralSecurityException {
@@ -55,14 +58,6 @@ class IKEv1HandshakeSecrets {
         generateDhKeyPair();
         computeDHSecret();
         computeSKEYID();
-    }
-
-    public byte[] getPreSharedKey() {
-        return preSharedKey;
-    }
-
-    public void setPreSharedKey(byte[] preSharedKey) {
-        this.preSharedKey = preSharedKey;
     }
 
     public byte[] getInitiatorCookie() {
@@ -81,6 +76,10 @@ class IKEv1HandshakeSecrets {
         this.responderCookie = responderCookie;
     }
 
+    public DHGroupAttributeEnum getInternalDHGroup() {
+        return internalDHGroup;
+    }
+
     public KeyPair getDhKeyPair() {
         return dhKeyPair;
     }
@@ -96,6 +95,7 @@ class IKEv1HandshakeSecrets {
         } else {
             algoName = "DiffieHellman";
         }
+        this.internalDHGroup = ciphersuite.getDhGroup();
         this.dhKeyPair = CryptoHelper.generateKeyPair(algoName, ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec());
         return dhKeyPair;
     }
@@ -132,7 +132,10 @@ class IKEv1HandshakeSecrets {
 
     public byte[] computeDHSecret() throws GeneralSecurityException, IllegalStateException {
         if (dhKeyPair == null) {
-            throw new IllegalStateException("No keypair generated; use generateDhKeyPair() first!");
+            throw new IllegalStateException("No key pair generated; use generateDhKeyPair() first!");
+        }
+        if (this.internalDHGroup != ciphersuite.getDhGroup()) {
+            throw new IllegalStateException("The existing key pair does not match the ciphersuite!");
         }
         if (peerPublicKey == null) {
             try {
@@ -208,7 +211,7 @@ class IKEv1HandshakeSecrets {
                 break;
 
             case PSK: // For pre-shared keys: SKEYID = prf(pre-shared-key, Ni_b | Nr_b)
-                hmacKey = new SecretKeySpec(preSharedKey, "Hmac" + ciphersuite.getHash().toString());
+                hmacKey = new SecretKeySpec(ltsecrets.getPreSharedKey(), "Hmac" + ciphersuite.getHash().toString());
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(concatNonces);
                 break;
