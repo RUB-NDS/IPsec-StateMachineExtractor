@@ -8,6 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.Main;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.shims.CiscoPKEIdentificationPayload;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -81,6 +83,9 @@ public class IdentificationPayload extends ISAKMPPayload {
     }
 
     public static IdentificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        if (Main.isCisco) {
+            return CiscoPKEIdentificationPayload.fromStream(bais);
+        }
         IdentificationPayload identificationPayload = new IdentificationPayload();
         int length = identificationPayload.fillGenericPayloadHeaderFromStream(bais);
         byte[] buffer = read4ByteFromStream(bais);

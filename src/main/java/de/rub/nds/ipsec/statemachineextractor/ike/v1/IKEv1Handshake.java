@@ -21,6 +21,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -111,6 +112,8 @@ public final class IKEv1Handshake {
                     break;
                 case Nonce:
                     secrets.setResponderNonce(((NoncePayload) payload).getNonceData());
+                    break;
+                case VendorID:
                     break;
                 default:
                     throw new UnsupportedOperationException("Not supported yet: " + payload.getType().toString());

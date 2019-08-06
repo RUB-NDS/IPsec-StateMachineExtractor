@@ -8,9 +8,13 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.shims;
 
+import de.rub.nds.ipsec.statemachineextractor.Main;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.*;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  *
@@ -70,4 +74,20 @@ public class CiscoPKEIdentificationPayload extends IdentificationPayload {
         baos.write(identificationData, 0, identificationData.length);
     }
 
+    public static CiscoPKEIdentificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        CiscoPKEIdentificationPayload identificationPayload = new CiscoPKEIdentificationPayload();
+        int length = identificationPayload.fillGenericPayloadHeaderFromStream(bais);
+        byte[] buffer = new byte[length - ISAKMP_PAYLOAD_HEADER_LEN];
+        int readBytes;
+        try {
+            readBytes = bais.read(buffer);
+        } catch (IOException ex) {
+            throw new ISAKMPParsingException(ex);
+        }
+        if (readBytes != length - ISAKMP_PAYLOAD_HEADER_LEN) {
+            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - ID_HEADER_LEN) + "bytes)!");
+        }
+        identificationPayload.setIdentificationData(buffer);
+        return identificationPayload;
+    }
 }
