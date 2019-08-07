@@ -151,20 +151,30 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public IdentificationPayload prepareIdentificationPayload() throws IOException {
+    public IdentificationPayload prepareIdentificationPayload() throws IOException, GeneralSecurityException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
         InetAddress addr = udpTH.getLocalAddress();
-        IdentificationPayload result = new IdentificationPayload();
+        IdentificationPayload result = IdentificationPayload.getInstance();
         if (addr instanceof Inet6Address) {
             result.setIdType(IDTypeEnum.ID_IPV6_ADDR);
-            result.setIdentificationData(addr.getAddress());
         } else if (addr instanceof Inet4Address) {
             result.setIdType(IDTypeEnum.ID_IPV4_ADDR);
-            result.setIdentificationData(addr.getAddress());
         }
+        result.setIdentificationData(addr.getAddress());
         secrets.setIdentificationPayloadBody(result.getBody());
+        if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
+            // this authentication method encrypts the identification using the public key of the peer
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, ltsecrets.getPeerPublicKey());
+            byte[] encryptedIdentification = cipher.doFinal(secrets.getIdentificationPayloadBody());
+            result.setIdentificationData(encryptedIdentification);
+        }
+        if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
+            // this authentication method encrypts the identification using a derived key
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
         return result;
     }
 

@@ -6,20 +6,24 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1.shims;
+package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import org.junit.AfterClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class CiscoPKEIdentificationPayloadTest {
+    
+    private static boolean isCiscoPriorValue;
     
     private static final String TESTDATA = "50e6b66c8dc322e863066bcd77fa1986a6"
             + "7c3de6b131d69105fb8b71127c7ba96edf64b5f5727e650353b3f3ec573247a"
@@ -37,18 +41,42 @@ public class CiscoPKEIdentificationPayloadTest {
         return instance;
     }
     
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        isCiscoPriorValue = IdentificationPayload.isCisco;
+        IdentificationPayload.isCisco = true;
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+        IdentificationPayload.isCisco = isCiscoPriorValue;
+    }
+    
     /**
-     * Test of writeBytes method, of class IdentificationPayloadCiscoPKE.
+     * Test of writeBytes method, of class CiscoPKEIdentificationPayload.
      */
     @Test
     public void testWriteBytes() {
         IdentificationPayload instance = getTestCiscoPKEIdentificationPayload();
-        instance.setIdentificationData(DatatypeHelper.hexDumpToByteArray(TESTDATA));
         byte[] expResult = DatatypeHelper.hexDumpToByteArray("00000104" + TESTDATA);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
+    }
+    
+    /**
+     * Test of fromStream method, of class CiscoPKEIdentificationPayload.
+     */
+    @Test
+    public void testFromStream() throws Exception {
+        CiscoPKEIdentificationPayload origInstance = getTestCiscoPKEIdentificationPayload();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        origInstance.writeBytes(baos);        
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        IdentificationPayload newInstance = IdentificationPayload.fromStream(bais);
+        assertArrayEquals(origInstance.getIdentificationData(), newInstance.getIdentificationData());
+        assertEquals(0, bais.available());
     }
     
 }

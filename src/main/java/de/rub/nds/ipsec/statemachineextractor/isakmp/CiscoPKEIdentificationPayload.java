@@ -6,15 +6,11 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1.shims;
+package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.Main;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.*;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  *
@@ -28,18 +24,8 @@ public class CiscoPKEIdentificationPayload extends IdentificationPayload {
     }
 
     @Override
-    public void setIdType(IDTypeEnum idType) {
-        throw new IllegalStateException("With Cisco PKE, this byte contains a part of the ciphertext. Use setIdentificationData() to set the full ciphertext.");
-    }
-
-    @Override
     public byte getProtocolID() {
         throw new IllegalStateException("With Cisco PKE, this byte contains a part of the ciphertext. Use getIdentificationData() to get the full ciphertext.");
-    }
-
-    @Override
-    public void setProtocolID(byte protocolID) {
-        throw new IllegalStateException("With Cisco PKE, this byte contains a part of the ciphertext. Use setIdentificationData() to set the full ciphertext.");
     }
 
     @Override
@@ -48,31 +34,32 @@ public class CiscoPKEIdentificationPayload extends IdentificationPayload {
     }
 
     @Override
-    public void setPort(byte[] port) {
-        throw new IllegalStateException("With Cisco PKE, this byte contains a part of the ciphertext. Use setIdentificationData() to set the full ciphertext.");
-    }
-
-    @Override
-    public byte[] getIdentificationData() {
-        return super.getIdentificationData();
-    }
-
-    @Override
-    public void setIdentificationData(byte[] identificationData) {
-        super.setIdentificationData(identificationData);
-    }
-
-    @Override
     public int getLength() {
         return super.getLength() - 4;
     }
 
+    /*
+     * In contrast to the superclass implementation, this one omits the four bytes for ID type, protocol ID, and port
+     */
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(getGenericPayloadHeader(), 0, ISAKMP_PAYLOAD_HEADER_LEN);
         byte[] identificationData = getIdentificationData();
         baos.write(identificationData, 0, identificationData.length);
     }
+
+    /*
+     * The body before encryption however contains the four bytes for ID type, protocol ID, and port
+     */
+    @Override
+    public byte[] getBody() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        super.writeBytes(baos);
+        byte[] bytes = baos.toByteArray();
+        byte[] result = new byte[bytes.length - ISAKMP_PAYLOAD_HEADER_LEN];
+        System.arraycopy(bytes, ISAKMP_PAYLOAD_HEADER_LEN, result, 0, result.length);
+        return result;
+    }   
 
     public static CiscoPKEIdentificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         CiscoPKEIdentificationPayload identificationPayload = new CiscoPKEIdentificationPayload();

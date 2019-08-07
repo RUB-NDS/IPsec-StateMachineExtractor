@@ -9,7 +9,6 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.Main;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.shims.CiscoPKEIdentificationPayload;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,14 +22,22 @@ import java.util.Arrays;
 public class IdentificationPayload extends ISAKMPPayload {
 
     protected static final int ID_HEADER_LEN = 8;
+    
+    static boolean isCisco = Main.isCisco;
 
     private IDTypeEnum idType = IDTypeEnum.RESERVED;
     private byte protocolID = 0x00;
     private byte[] port = new byte[2];
     private byte[] identificationData = new byte[0];
 
-    public IdentificationPayload() {
+    IdentificationPayload() {
         super(PayloadTypeEnum.Identification);
+    }
+    
+    public static IdentificationPayload getInstance() {
+        if (isCisco)
+            return new CiscoPKEIdentificationPayload();
+        return new IdentificationPayload();
     }
 
     public IDTypeEnum getIdType() {
@@ -83,7 +90,7 @@ public class IdentificationPayload extends ISAKMPPayload {
     }
 
     public static IdentificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-        if (Main.isCisco) {
+        if (isCisco) {
             return CiscoPKEIdentificationPayload.fromStream(bais);
         }
         IdentificationPayload identificationPayload = new IdentificationPayload();

@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.shims.CiscoPKEIdentificationPayloadTest;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayloadTest.getTestSecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
