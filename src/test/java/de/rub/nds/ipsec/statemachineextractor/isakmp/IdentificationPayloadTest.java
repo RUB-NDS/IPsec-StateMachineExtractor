@@ -10,9 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import org.junit.AfterClass;
 import static org.junit.Assert.*;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -20,19 +18,6 @@ import org.junit.Test;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class IdentificationPayloadTest {
-
-    private static boolean isCiscoPriorValue;
-    
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-        isCiscoPriorValue = IdentificationPayload.isCisco;
-        IdentificationPayload.isCisco = false;
-    }
-
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-        IdentificationPayload.isCisco = isCiscoPriorValue;
-    }
     
     /**
      * Test of setPort method, of class IdentificationPayload.

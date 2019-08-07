@@ -14,6 +14,8 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayloadPKE;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayloadRevPKE;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
@@ -33,7 +35,7 @@ public class IKEv1MessageBuilder {
     private IKEv1MessageBuilder() {
     }
 
-    public static ISAKMPMessage fromByteArray(byte[] bytes) throws ISAKMPParsingException {
+    public static ISAKMPMessage fromByteArray(byte[] bytes, IKEv1Ciphersuite ciphersuite) throws ISAKMPParsingException {
         if (bytes.length < ISAKMPMessage.ISAKMP_HEADER_LEN) {
             throw new ISAKMPParsingException("Not enough bytes supplied to build an ISAKMPMessage!");
         }
@@ -64,7 +66,17 @@ public class IKEv1MessageBuilder {
                     payload = KeyExchangePayload.fromStream(bais);
                     break;
                 case Identification:
-                    payload = IdentificationPayload.fromStream(bais);
+                    switch (ciphersuite.getAuthMethod()) {
+                        case PKE:
+                            payload = IdentificationPayloadPKE.fromStream(bais);
+                            break;
+                        case RevPKE:
+                            payload = IdentificationPayloadRevPKE.fromStream(bais);
+                            break;
+                        default:
+                            payload = IdentificationPayload.fromStream(bais);
+                            break;
+                    }
                     break;
                 case Hash:
                     payload = HashPayload.fromStream(bais);

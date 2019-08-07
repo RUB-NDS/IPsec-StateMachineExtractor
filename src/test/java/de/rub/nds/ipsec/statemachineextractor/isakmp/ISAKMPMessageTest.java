@@ -60,7 +60,7 @@ public class ISAKMPMessageTest {
         instance.setResponderCookie(DatatypeHelper.hexDumpToByteArray("a7f9df47256e976b"));
         instance.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         instance.addPayload(KeyExchangePayloadTest.getTestKeyExchangePayload());
-        instance.addPayload(CiscoPKEIdentificationPayloadTest.getTestCiscoPKEIdentificationPayload());
+        instance.addPayload(IdentificationPayloadPKETest.getTestStaticIdentificationPayloadPKE());
         instance.addPayload(NoncePayloadTest.getTestNoncePayload());
         instance.addPayload(VendorIDPayload.DeadPeerDetection);
         return instance;
