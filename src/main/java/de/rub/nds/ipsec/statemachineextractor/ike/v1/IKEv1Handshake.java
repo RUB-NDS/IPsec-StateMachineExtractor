@@ -16,10 +16,9 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayloadPKE;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayloadRevPKE;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
@@ -80,7 +79,7 @@ public final class IKEv1Handshake {
             return null; //only a retransmission
         }
         lastMsg = rxData;
-        ISAKMPMessage messageReceived = IKEv1MessageBuilder.fromByteArray(rxData, ciphersuite);
+        ISAKMPMessage messageReceived = IKEv1MessageBuilder.fromByteArray(rxData, ciphersuite, ltsecrets);
         messages.add(messageReceived);
         extractProperties(messageReceived);
         return messageReceived;
@@ -152,35 +151,22 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public IdentificationPayload prepareIdentificationPayload() throws IOException, GeneralSecurityException {
+    public ISAKMPPayload prepareIdentificationPayload() throws IOException, GeneralSecurityException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
         InetAddress addr = udpTH.getLocalAddress();
-        IdentificationPayload result;
-        switch(ciphersuite.getAuthMethod()) {
-            case PKE:
-                result = new IdentificationPayloadPKE();
-                break;
-            case RevPKE:
-                result = new IdentificationPayloadRevPKE();
-                break;
-            default:
-                result = new IdentificationPayload();
-        }
+        IdentificationPayload result = new IdentificationPayload();
         if (addr instanceof Inet6Address) {
             result.setIdType(IDTypeEnum.ID_IPV6_ADDR);
         } else if (addr instanceof Inet4Address) {
             result.setIdType(IDTypeEnum.ID_IPV4_ADDR);
         }
         result.setIdentificationData(addr.getAddress());
-        secrets.setIdentificationPayloadBody(result.getBody());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
-            IdentificationPayloadPKE pke = (IdentificationPayloadPKE) result;
-            // this authentication method encrypts the identification using the public key of the peer
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, ltsecrets.getPeerPublicKey());
-            pke.setEncryptedBody(cipher.doFinal(pke.getBody()));
+            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyKeyPair(), ltsecrets.getPeerPublicKey());
+            pke.encrypt();
+            return pke;
         }
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // this authentication method encrypts the identification using a derived key

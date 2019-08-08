@@ -10,6 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -18,7 +19,7 @@ import java.util.Base64;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-class IKEv1HandshakeLongtermSecrets {
+public class IKEv1HandshakeLongtermSecrets {
 
     private byte[] preSharedKey = new byte[]{0x00};
     private PublicKey peerPublicKey;
@@ -48,6 +49,10 @@ class IKEv1HandshakeLongtermSecrets {
 //    }
     public PublicKey getPeerPublicKey() {
         return peerPublicKey;
+    }
+
+    public KeyPair getMyKeyPair() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

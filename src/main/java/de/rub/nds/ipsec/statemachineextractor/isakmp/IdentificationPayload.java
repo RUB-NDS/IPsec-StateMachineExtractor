@@ -82,23 +82,32 @@ public class IdentificationPayload extends ISAKMPPayload {
 
     public static IdentificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         IdentificationPayload identificationPayload = new IdentificationPayload();
-        int length = identificationPayload.fillGenericPayloadHeaderFromStream(bais);
-        byte[] buffer = read4ByteFromStream(bais);
-        identificationPayload.setIdType(IDTypeEnum.get(buffer[0]));
-        identificationPayload.setProtocolID(buffer[1]);
-        identificationPayload.setPort(Arrays.copyOfRange(buffer, 2, 4));
-        buffer = new byte[length - ID_HEADER_LEN];
+        identificationPayload.fillFromStream(bais);
+        return identificationPayload;
+    }
+
+    @Override
+    protected void setBody(byte[] body) throws ISAKMPParsingException {
+        this.setIdType(IDTypeEnum.get(body[0]));
+        this.setProtocolID(body[1]);
+        this.setPort(Arrays.copyOfRange(body, 2, 4));
+        this.setIdentificationData(Arrays.copyOfRange(body, 4, body.length));
+    }
+    
+    @Override
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        int length = this.fillGenericPayloadHeaderFromStream(bais);
+        byte[] buffer = new byte[length - ISAKMP_PAYLOAD_HEADER_LEN];
         int readBytes;
         try {
             readBytes = bais.read(buffer);
         } catch (IOException ex) {
             throw new ISAKMPParsingException(ex);
         }
-        if (readBytes != length - ID_HEADER_LEN) {
-            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - ID_HEADER_LEN) + "bytes)!");
+        if (readBytes != length - ISAKMP_PAYLOAD_HEADER_LEN) {
+            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - ISAKMP_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
-        identificationPayload.setIdentificationData(buffer);
-        return identificationPayload;
+        this.setBody(buffer);
     }
 
 }

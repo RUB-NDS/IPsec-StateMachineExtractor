@@ -90,20 +90,30 @@ public class ProposalPayload extends ISAKMPPayload {
 
     public static ProposalPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         ProposalPayload proposalPayload = new ProposalPayload();
-        int length = proposalPayload.fillGenericPayloadHeaderFromStream(bais);
+        proposalPayload.fillFromStream(bais);
+        return proposalPayload;
+    }
+
+    @Override
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        int length = this.fillGenericPayloadHeaderFromStream(bais);
         byte[] buffer = read4ByteFromStream(bais);
-        proposalPayload.setProposalNumber(buffer[0]);
-        proposalPayload.setProtocolId(buffer[1]);
+        this.setProposalNumber(buffer[0]);
+        this.setProtocolId(buffer[1]);
         if (buffer[2] != 0) {
             throw new ISAKMPParsingException("SPI Size is not zero!");
         }
         for(byte i = 0; i < buffer[3]; i++) {
-            proposalPayload.addTransform(TransformPayload.fromStream(bais));
+            this.addTransform(TransformPayload.fromStream(bais));
         }
-        if (length != proposalPayload.getLength()) {
-            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + proposalPayload.getLength() + "vs. Received: " + length + "!");
+        if (length != this.getLength()) {
+            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");
         }
-        return proposalPayload;
+    }
+
+    @Override
+    protected void setBody(byte[] body) throws ISAKMPParsingException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

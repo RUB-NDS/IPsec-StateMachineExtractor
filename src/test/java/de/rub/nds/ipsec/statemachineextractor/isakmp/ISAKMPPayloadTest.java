@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -62,6 +63,16 @@ public class ISAKMPPayloadTest {
                 -128, 0x04, 0x00, 0x05, -128, 0x03, 0x00, 0x04,
                 -128, 0x0b, 0x00, 0x01, -128, 0x0c, 0x70, -128
             }, 0, getLength() - ISAKMP_PAYLOAD_HEADER_LEN);
+        }
+
+        @Override
+        protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        protected void setBody(byte[] body) throws ISAKMPParsingException {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
     }
 }

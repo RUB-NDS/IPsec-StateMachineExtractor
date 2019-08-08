@@ -52,6 +52,10 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
         System.arraycopy(bytes, ISAKMP_PAYLOAD_HEADER_LEN, result, 0, result.length);
         return result;
     }
+    
+    protected abstract void setBody(byte[] body) throws ISAKMPParsingException;
+    
+    protected abstract void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException;
 
     public PayloadTypeEnum getNextPayload() {
         return nextPayload;
@@ -67,13 +71,13 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
             throw new IllegalStateException("Payload too large");
         }
         byte[] genericPayloadHeader = DatatypeHelper.intTo4ByteArray(length);
-        genericPayloadHeader[0] = nextPayload.getValue();
+        genericPayloadHeader[0] = this.getNextPayload().getValue();
         return genericPayloadHeader;
     }
 
     protected int fillGenericPayloadHeaderFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         byte[] genericPayloadHeader = read4ByteFromStream(bais);
-        nextPayload = PayloadTypeEnum.get((byte)genericPayloadHeader[0]);
+        this.setNextPayload(PayloadTypeEnum.get((byte)genericPayloadHeader[0]));
         return ((genericPayloadHeader[2] & 0xff) << 8) | (genericPayloadHeader[3] & 0xff);
     }
     

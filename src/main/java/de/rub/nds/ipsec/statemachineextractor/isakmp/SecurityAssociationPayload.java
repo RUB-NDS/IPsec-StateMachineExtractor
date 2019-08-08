@@ -95,17 +95,27 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
 
     public static SecurityAssociationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
-        int length = securityAssociationPayload.fillGenericPayloadHeaderFromStream(bais);
-        securityAssociationPayload.setDomainOfInterpretation(ByteBuffer.wrap(read4ByteFromStream(bais)).getInt());
-        byte[] buffer = read4ByteFromStream(bais);
-        securityAssociationPayload.setIdentityOnlyFlag((buffer[3] & 1) > 0);
-        securityAssociationPayload.setSecrecyFlag((buffer[3] & 2) > 0);
-        securityAssociationPayload.setIntegrityFlag((buffer[3] & 4) > 0);
-        securityAssociationPayload.addProposalPayload(ProposalPayload.fromStream(bais));
-        if (length != securityAssociationPayload.getLength()) {
-            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + securityAssociationPayload.getLength() + "vs. Received: " + length + "!");
-        }
+        securityAssociationPayload.fillFromStream(bais);
         return securityAssociationPayload;
+    }
+
+    @Override
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        int length = this.fillGenericPayloadHeaderFromStream(bais);
+        this.setDomainOfInterpretation(ByteBuffer.wrap(read4ByteFromStream(bais)).getInt());
+        byte[] buffer = read4ByteFromStream(bais);
+        this.setIdentityOnlyFlag((buffer[3] & 1) > 0);
+        this.setSecrecyFlag((buffer[3] & 2) > 0);
+        this.setIntegrityFlag((buffer[3] & 4) > 0);
+        this.addProposalPayload(ProposalPayload.fromStream(bais));
+        if (length != this.getLength()) {
+            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");
+        }
+    }
+
+    @Override
+    protected void setBody(byte[] body) throws ISAKMPParsingException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

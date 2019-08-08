@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1MessageBuilder;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import java.io.ByteArrayOutputStream;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class IKEv1MessageBuilderTest {
     public void testFromByteArray_IKEv1MainModeSecurityAssociationMessage() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         getTestIKEv1MainModeSecurityAssociationMessage().writeBytes(baos);
-        ISAKMPMessage instance = IKEv1MessageBuilder.fromByteArray(baos.toByteArray(), new IKEv1Ciphersuite());
+        ISAKMPMessage instance = IKEv1MessageBuilder.fromByteArray(baos.toByteArray(), new IKEv1Ciphersuite(), new IKEv1HandshakeLongtermSecrets());
         assertEquals(1, instance.getPayloads().size());
     }
     
@@ -43,7 +42,7 @@ public class IKEv1MessageBuilderTest {
     @Test
     public void testFromByteArray_IKEv1PayloadMalformedNotification() throws Exception {
         byte[] wiresharkDump = DatatypeHelper.hexDumpToByteArray("00574fee41e8f80a3287d995d890aaed0b100500d9ac8bc0000000280000000c0000000101000010");
-        ISAKMPMessage instance = IKEv1MessageBuilder.fromByteArray(wiresharkDump, new IKEv1Ciphersuite());
+        ISAKMPMessage instance = IKEv1MessageBuilder.fromByteArray(wiresharkDump, new IKEv1Ciphersuite(), new IKEv1HandshakeLongtermSecrets());
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("3287d995d890aaed"), instance.getResponderCookie());
         assertEquals(ExchangeTypeEnum.Informational, instance.getExchangeType());
         assertEquals(1, instance.getPayloads().size());

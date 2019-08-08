@@ -81,18 +81,28 @@ public class TransformPayload extends ISAKMPPayload {
 
     public static TransformPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         TransformPayload transformPayload = new TransformPayload();
-        int length = transformPayload.fillGenericPayloadHeaderFromStream(bais);
+        transformPayload.fillFromStream(bais);
+        return transformPayload;
+    }
+
+    @Override
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        int length = this.fillGenericPayloadHeaderFromStream(bais);
         byte[] buffer = read4ByteFromStream(bais);
-        transformPayload.setTransformNumber(buffer[0]);
-        transformPayload.setTransformId(buffer[1]);
+        this.setTransformNumber(buffer[0]);
+        this.setTransformId(buffer[1]);
         if ((length - TRANSFORM_PAYLOAD_HEADER_LEN) % 4 != 0) {
             throw new ISAKMPParsingException("Parsing variable length attributes is not supported.");
         }
         for (int i = 0; i < (length - TRANSFORM_PAYLOAD_HEADER_LEN) / 4; i++) {
             int value = ByteBuffer.wrap(read4ByteFromStream(bais)).getInt();
             IKEv1Attribute attr = IKEv1AttributeFactory.fromInt(value);
-            transformPayload.addIKEAttribute(attr);
+            this.addIKEAttribute(attr);
         }
-        return transformPayload;
+    }
+
+    @Override
+    protected void setBody(byte[] body) throws ISAKMPParsingException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

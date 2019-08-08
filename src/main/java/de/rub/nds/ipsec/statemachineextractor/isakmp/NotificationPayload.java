@@ -98,12 +98,18 @@ public class NotificationPayload extends ISAKMPPayload {
     }
 
     public static NotificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-        NotificationPayload notificationPayload = new NotificationPayload();
-        int length = notificationPayload.fillGenericPayloadHeaderFromStream(bais);
-        notificationPayload.setDomainOfInterpretation(ByteBuffer.wrap(read4ByteFromStream(bais)).getInt());
+        NotificationPayload notificationPayload = new NotificationPayload();        
+        notificationPayload.fillFromStream(bais);
+        return notificationPayload;
+    }
+
+    @Override
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException{
+        int length = this.fillGenericPayloadHeaderFromStream(bais);
+        this.setDomainOfInterpretation(ByteBuffer.wrap(read4ByteFromStream(bais)).getInt());
         byte[] buffer = read4ByteFromStream(bais);
-        notificationPayload.setProtocolID(buffer[0]);
-        notificationPayload.setNotifyMessageType(NotifyMessageTypeEnum.get(Arrays.copyOfRange(buffer, 2, 4)));
+        this.setProtocolID(buffer[0]);
+        this.setNotifyMessageType(NotifyMessageTypeEnum.get(Arrays.copyOfRange(buffer, 2, 4)));
         if (buffer[1] > 16 || buffer[1] < 0) {
             throw new ISAKMPParsingException("Security Parameter Index (SPI) length may be from zero (0) to sixteen (16)");
         }
@@ -130,9 +136,13 @@ public class NotificationPayload extends ISAKMPPayload {
             if (readBytes != buffer.length) {
                 throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + buffer.length + "bytes)!");
             }
-            notificationPayload.setNotificationData(buffer);
+            this.setNotificationData(buffer);
         }
-        return notificationPayload;
+    }
+
+    @Override
+    protected void setBody(byte[] body) throws ISAKMPParsingException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

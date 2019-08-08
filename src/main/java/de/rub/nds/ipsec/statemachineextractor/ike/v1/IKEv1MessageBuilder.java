@@ -14,11 +14,10 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayloadPKE;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayloadRevPKE;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
@@ -31,11 +30,11 @@ import java.util.Arrays;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class IKEv1MessageBuilder {
-
+    
     private IKEv1MessageBuilder() {
     }
 
-    public static ISAKMPMessage fromByteArray(byte[] bytes, IKEv1Ciphersuite ciphersuite) throws ISAKMPParsingException {
+    public static ISAKMPMessage fromByteArray(byte[] bytes, IKEv1Ciphersuite ciphersuite, IKEv1HandshakeLongtermSecrets ltsecrets) throws ISAKMPParsingException {
         if (bytes.length < ISAKMPMessage.ISAKMP_HEADER_LEN) {
             throw new ISAKMPParsingException("Not enough bytes supplied to build an ISAKMPMessage!");
         }
@@ -68,11 +67,11 @@ public class IKEv1MessageBuilder {
                 case Identification:
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
-                            payload = IdentificationPayloadPKE.fromStream(bais);
+                            payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyKeyPair(), ltsecrets.getPeerPublicKey());
                             break;
                         case RevPKE:
-                            payload = IdentificationPayloadRevPKE.fromStream(bais);
-                            break;
+                            throw new UnsupportedOperationException("Not supported yet.");
+                            //break;
                         default:
                             payload = IdentificationPayload.fromStream(bais);
                             break;

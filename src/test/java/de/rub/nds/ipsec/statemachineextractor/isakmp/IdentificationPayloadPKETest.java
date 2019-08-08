@@ -43,15 +43,13 @@ public class IdentificationPayloadPKETest {
         }
     }
 
-    public static IdentificationPayloadPKE getTestIdentificationPayloadPKE() {
-        IdentificationPayloadPKE instance = new IdentificationPayloadPKE();
-        instance.setIdType(IDTypeEnum.ID_IPV4_ADDR);
-        instance.setIdentificationData(new byte[]{10, 0, 0, 0});
+    public static PKCS1EncryptedISAKMPPayload getTestIdentificationPayloadPKE() {
+        IdentificationPayload idPayload = new IdentificationPayload();
+        idPayload.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+        idPayload.setIdentificationData(new byte[]{10, 0, 0, 0});
+        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(idPayload, TESTKEYPAIR, TESTKEYPAIR.getPublic());
         try {
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, TESTKEYPAIR.getPublic());
-            byte[] encryptedIdentification = cipher.doFinal(instance.getBody());
-            instance.setEncryptedBody(encryptedIdentification);
+            instance.encrypt();
         } catch (GeneralSecurityException ex) {
             throw new RuntimeException(ex);
         }
@@ -68,9 +66,10 @@ public class IdentificationPayloadPKETest {
             + "ec782b4b1dad3ce13a04e6664e038f842ce86d3337de94ca195ec95fc6731e4"
             + "8bbc02258cc6199214efd147701302d9bb61d";
     
-    public static IdentificationPayloadPKE getTestStaticIdentificationPayloadPKE() {
-        IdentificationPayloadPKE instance = new IdentificationPayloadPKE();
-        instance.setEncryptedBody(hexDumpToByteArray(TESTDATA));
+    public static PKCS1EncryptedISAKMPPayload getTestStaticIdentificationPayloadPKE() {
+        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(new IdentificationPayload(), TESTKEYPAIR, TESTKEYPAIR.getPublic());
+        instance.encryptedBody = hexDumpToByteArray(TESTDATA);
+        instance.isInSync = true;
         return instance;
     }
 
@@ -79,10 +78,11 @@ public class IdentificationPayloadPKETest {
      */
     @Test
     public void testWriteBytes() {
-        IdentificationPayload instance = getTestIdentificationPayloadPKE();
+        PKCS1EncryptedISAKMPPayload instance = getTestIdentificationPayloadPKE();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
+        assertEquals((TESTKEYPAIR_BITLEN / 8) + 4, result[3] & 0xFF);
         assertEquals((TESTKEYPAIR_BITLEN / 8) + 4, result.length);
     }
 
@@ -91,16 +91,14 @@ public class IdentificationPayloadPKETest {
      */
     @Test
     public void testFromStream() throws Exception {
-        IdentificationPayloadPKE origInstance = getTestIdentificationPayloadPKE();
+        PKCS1EncryptedISAKMPPayload origInstance = getTestIdentificationPayloadPKE();
+        IdentificationPayload plainOrigInstance = (IdentificationPayload) origInstance.getPlainPayload();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         origInstance.writeBytes(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        IdentificationPayloadPKE newInstance = IdentificationPayloadPKE.fromStream(bais);
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, TESTKEYPAIR.getPrivate());
-        byte[] plainBody = cipher.doFinal(newInstance.getEncryptedBody());
-        newInstance.setPropertiesFromPlaintext(plainBody);
-        assertArrayEquals(origInstance.getIdentificationData(), newInstance.getIdentificationData());
+        PKCS1EncryptedISAKMPPayload newInstance = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, TESTKEYPAIR, TESTKEYPAIR.getPublic());
+        IdentificationPayload newPlainPayload = (IdentificationPayload) newInstance.getPlainPayload();
+        assertArrayEquals(plainOrigInstance.getIdentificationData(), newPlainPayload.getIdentificationData());
         assertEquals(0, bais.available());
     }
 

@@ -46,7 +46,18 @@ public abstract class SimpleBinaryPayload extends ISAKMPPayload {
     }
     
     protected static SimpleBinaryPayload fromStream(ByteArrayInputStream bais, SimpleBinaryPayload payload) throws ISAKMPParsingException {
-        int length = payload.fillGenericPayloadHeaderFromStream(bais);
+        payload.fillFromStream(bais);
+        return payload;
+    }
+
+    @Override
+    protected void setBody(byte[] body) throws ISAKMPParsingException {
+        this.setBinaryData(body);
+    }
+    
+    @Override
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        int length = this.fillGenericPayloadHeaderFromStream(bais);
         byte[] buffer = new byte[length - HEADER_LEN];
         int readBytes;
         try {
@@ -57,10 +68,10 @@ public abstract class SimpleBinaryPayload extends ISAKMPPayload {
         if (readBytes != length - HEADER_LEN) {
             throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - HEADER_LEN) + "bytes)!");
         }
-        payload.setBinaryData(buffer);
-        if (length != payload.getLength()) {
-            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + payload.getLength() + "vs. Received: " + length + "!");
+        this.setBody(buffer);
+        if (length != this.getLength()) {
+            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + "vs. Received: " + length + "!");
         }
-        return payload;
     }
+    
 }

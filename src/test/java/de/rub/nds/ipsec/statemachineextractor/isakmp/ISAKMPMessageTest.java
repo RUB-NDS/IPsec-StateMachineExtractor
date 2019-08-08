@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayloadTest.getTestSecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
+import java.security.GeneralSecurityException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -70,7 +71,7 @@ public class ISAKMPMessageTest {
      * Test of addPayload method, of class IKEv1MainModeKeyExchangeMessage.
      */
     @Test
-    public void testFullMessage() {
+    public void testFullMessage() throws GeneralSecurityException, ISAKMPParsingException {
         ISAKMPMessage instance = getTestIKEv1MainModeKeyExchangeMessage();
         byte[] expResult = DatatypeHelper.hexDumpToByteArray(TESTDATA);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
