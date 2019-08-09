@@ -29,7 +29,7 @@ class IKEv1HandshakeSessionSecrets {
 
     static final int COOKIE_LEN = 8;
 
-    private byte[] initiatorCookie;
+    private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private KeyPair dhKeyPair;
     private PublicKey peerPublicKey;
@@ -38,7 +38,7 @@ class IKEv1HandshakeSessionSecrets {
     private boolean internalIsPeerPublicKeyActual = false;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    private SecretKeySpec skeyid;
+    private SecretKeySpec skeyid, skeyid_d, skeyid_a, skeyid_e;
     private byte[] keyExchangeData;
     private byte[] identificationPayloadBody;
     private byte[] peerKeyExchangeData;
@@ -58,7 +58,7 @@ class IKEv1HandshakeSessionSecrets {
         computePeerPublicKey();
         generateDhKeyPair();
         computeDHSecret();
-        computeSKEYID();
+        computeSecretKeys();
     }
 
     public byte[] getInitiatorCookie() {
@@ -182,20 +182,31 @@ class IKEv1HandshakeSessionSecrets {
         return skeyid;
     }
 
-    public void setSKEYID(SecretKeySpec skeyid) {
-        this.skeyid = skeyid;
+    public SecretKeySpec getSKEYID_d() {
+        return skeyid_d;
     }
 
-    public SecretKeySpec computeSKEYID() throws GeneralSecurityException {
+    public SecretKeySpec getSKEYID_a() {
+        return skeyid_a;
+    }
+
+    public SecretKeySpec getSKEYID_e() {
+        return skeyid_e;
+    }
+
+    public void computeSecretKeys() throws GeneralSecurityException {
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         SecretKeySpec hmacKey;
-        byte[] skeyidBytes;
+        byte[] skeyidBytes, skeyid_dBytes, skeyid_aBytes, skeyid_eBytes;
         if (dhSecret == null) {
             computeDHSecret();
         }
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
+        byte[] concatCookies = new byte[COOKIE_LEN * 2];
+        System.arraycopy(initiatorCookie, 0, concatCookies, 0, COOKIE_LEN);
+        System.arraycopy(responderNonce, 0, concatCookies, COOKIE_LEN, COOKIE_LEN);
         switch (ciphersuite.getAuthMethod()) {
             case RSA_Sig:
             case DSS_Sig: // For signatures: SKEYID = prf(Ni_b | Nr_b, g^xy)
@@ -209,9 +220,6 @@ class IKEv1HandshakeSessionSecrets {
                 MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
                 hmacKey = new SecretKeySpec(digest.digest(concatNonces), "Hmac" + ciphersuite.getHash().toString());
                 prf.init(hmacKey);
-                byte[] concatCookies = new byte[COOKIE_LEN * 2];
-                System.arraycopy(initiatorCookie, 0, concatCookies, 0, COOKIE_LEN);
-                System.arraycopy(responderNonce, 0, concatCookies, 8, COOKIE_LEN);
                 skeyidBytes = prf.doFinal(concatCookies);
                 break;
 
@@ -220,11 +228,29 @@ class IKEv1HandshakeSessionSecrets {
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(concatNonces);
                 break;
+
             default:
                 throw new UnsupportedOperationException("Unknown authMethod.");
         }
         skeyid = new SecretKeySpec(skeyidBytes, "Hmac" + ciphersuite.getHash().toString());
-        return skeyid;
+        prf.init(skeyid);
+        prf.update(this.getDHSecret());
+        prf.update(concatCookies);
+        prf.update((byte)0);
+        skeyid_dBytes = prf.doFinal();
+        prf.update(skeyid_dBytes);
+        prf.update(this.getDHSecret());
+        prf.update(concatCookies);
+        prf.update((byte)1);
+        skeyid_aBytes = prf.doFinal();
+        prf.update(skeyid_aBytes);
+        prf.update(this.getDHSecret());
+        prf.update(concatCookies);
+        prf.update((byte)2);
+        skeyid_eBytes = prf.doFinal();
+        skeyid_d = new SecretKeySpec(skeyid_dBytes, "Hmac" + ciphersuite.getHash().toString());
+        skeyid_a = new SecretKeySpec(skeyid_aBytes, "Hmac" + ciphersuite.getHash().toString());
+        skeyid_e = new SecretKeySpec(skeyid_eBytes, "Hmac" + ciphersuite.getHash().toString());
     }
 
     public byte[] getKeyExchangeData() {

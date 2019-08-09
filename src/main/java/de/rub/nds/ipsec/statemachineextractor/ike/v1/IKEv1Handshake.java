@@ -204,7 +204,7 @@ public final class IKEv1Handshake {
 
     public HashPayload prepareHashPayload() throws GeneralSecurityException, IOException {
         if (secrets.getSKEYID() == null) {
-            secrets.computeSKEYID();
+            secrets.computeSecretKeys();
         }
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         prf.init(secrets.getSKEYID());

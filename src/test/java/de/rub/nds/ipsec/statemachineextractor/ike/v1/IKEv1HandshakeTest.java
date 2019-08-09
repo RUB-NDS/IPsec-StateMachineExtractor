@@ -13,7 +13,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import java.net.InetAddress;
 import java.security.Security;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
