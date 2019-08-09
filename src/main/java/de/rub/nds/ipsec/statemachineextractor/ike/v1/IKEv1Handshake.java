@@ -33,7 +33,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.crypto.Cipher;
 import javax.crypto.Mac;
 
 /**
@@ -116,6 +115,10 @@ public final class IKEv1Handshake {
                     secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
                     break;
                 case Nonce:
+                    if (payload instanceof EncryptedISAKMPPayload) {
+                        EncryptedISAKMPPayload encPayload = (EncryptedISAKMPPayload) payload;
+                        payload = encPayload.getPlainPayload();
+                    }
                     secrets.setResponderNonce(((NoncePayload) payload).getNonceData());
                     break;
                 case VendorID:
@@ -169,6 +172,7 @@ public final class IKEv1Handshake {
         }
         result.setIdentificationData(addr.getAddress());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
+            // this authentication method encrypts the identification using the public key of the peer
             PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
             pke.encrypt();
             return pke;
@@ -180,7 +184,7 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public NoncePayload prepareNoncePayload() throws GeneralSecurityException {
+    public ISAKMPPayload prepareNoncePayload() throws GeneralSecurityException {
         NoncePayload result = new NoncePayload();
         if (secrets.getInitiatorNonce() == null) {
             SecureRandom random = new SecureRandom();
@@ -188,14 +192,12 @@ public final class IKEv1Handshake {
             random.nextBytes(initiatorNonce);
             secrets.setInitiatorNonce(initiatorNonce);
         }
+        result.setNonceData(secrets.getInitiatorNonce());            
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // these authentication methods encrypt the nonce using the public key of the peer
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, ltsecrets.getPeerPublicKey());
-            byte[] encryptedNonce = cipher.doFinal(secrets.getInitiatorNonce());
-            result.setNonceData(encryptedNonce);
-        } else {
-            result.setNonceData(secrets.getInitiatorNonce());
+            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+            pke.encrypt();
+            return pke;
         }
         return result;
     }

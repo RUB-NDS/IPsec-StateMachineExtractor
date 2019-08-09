@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import java.net.InetAddress;
@@ -59,7 +60,7 @@ public class IKEv1HandshakeTest {
     @Test
     public void testPrepareNoncePayload() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        NoncePayload result = instance.prepareNoncePayload();
+        ISAKMPPayload result = instance.prepareNoncePayload();
         assertEquals(instance.ciphersuite.getNonceLen() + 4, result.getLength());
     }
 

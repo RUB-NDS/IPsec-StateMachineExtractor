@@ -30,7 +30,7 @@ import java.util.Arrays;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class IKEv1MessageBuilder {
-    
+
     private IKEv1MessageBuilder() {
     }
 
@@ -81,7 +81,15 @@ public class IKEv1MessageBuilder {
                     payload = HashPayload.fromStream(bais);
                     break;
                 case Nonce:
-                    payload = NoncePayload.fromStream(bais);
+                    switch (ciphersuite.getAuthMethod()) {
+                        case PKE:
+                        case RevPKE:
+                            payload = PKCS1EncryptedISAKMPPayload.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                            break;
+                        default:
+                            payload = NoncePayload.fromStream(bais);
+                            break;
+                    }
                     break;
                 case VendorID:
                     payload = VendorIDPayload.fromStream(bais);
