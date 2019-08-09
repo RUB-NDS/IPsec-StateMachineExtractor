@@ -164,7 +164,7 @@ public final class IKEv1Handshake {
         }
         result.setIdentificationData(addr.getAddress());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
-            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyKeyPair(), ltsecrets.getPeerPublicKey());
+            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
             pke.encrypt();
             return pke;
         }

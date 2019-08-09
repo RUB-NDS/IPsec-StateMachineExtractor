@@ -67,7 +67,7 @@ public class IKEv1MessageBuilder {
                 case Identification:
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
-                            payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyKeyPair(), ltsecrets.getPeerPublicKey());
+                            payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
                             break;
                         case RevPKE:
                             throw new UnsupportedOperationException("Not supported yet.");

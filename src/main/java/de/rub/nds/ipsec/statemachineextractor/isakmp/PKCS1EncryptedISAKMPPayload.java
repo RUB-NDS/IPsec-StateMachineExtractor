@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -23,15 +24,15 @@ import javax.crypto.Cipher;
  */
 public class PKCS1EncryptedISAKMPPayload extends EncryptedISAKMPPayload {
 
-    private final KeyPair myKeyPair;
+    private final PrivateKey myPrivateKey;
     private final PublicKey peerPublicKey;
 
-    public PKCS1EncryptedISAKMPPayload(ISAKMPPayload payload, KeyPair myKeyPair, PublicKey peerPublicKey) {
+    public PKCS1EncryptedISAKMPPayload(ISAKMPPayload payload, PrivateKey myPrivateKey, PublicKey peerPublicKey) {
         super(payload);
-        if(!(myKeyPair.getPrivate() instanceof RSAPrivateKey && myKeyPair.getPublic() instanceof RSAPublicKey && peerPublicKey instanceof RSAPublicKey)) {
+        if(!(myPrivateKey instanceof RSAPrivateKey && peerPublicKey instanceof RSAPublicKey)) {
             throw new IllegalArgumentException("PKCS#1 v1.5 encryption in IPsec only works with RSA!");
         }
-        this.myKeyPair = myKeyPair;
+        this.myPrivateKey = myPrivateKey;
         this.peerPublicKey = peerPublicKey;
         this.isInSync = false;
     }
@@ -47,18 +48,18 @@ public class PKCS1EncryptedISAKMPPayload extends EncryptedISAKMPPayload {
     @Override
     public void decrypt() throws GeneralSecurityException, ISAKMPParsingException {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, this.myKeyPair.getPrivate());
+        cipher.init(Cipher.DECRYPT_MODE, this.myPrivateKey);
         byte[] plaintext = cipher.doFinal(this.encryptedBody);
         this.setBody(plaintext);
         this.isInSync = true;
     }
     
-    public static <T extends ISAKMPPayload> PKCS1EncryptedISAKMPPayload fromStream(Class<T> payloadType, ByteArrayInputStream bais, KeyPair myKeyPair, PublicKey peerPublicKey) throws ISAKMPParsingException {
+    public static <T extends ISAKMPPayload> PKCS1EncryptedISAKMPPayload fromStream(Class<T> payloadType, ByteArrayInputStream bais, PrivateKey myPrivateKey, PublicKey peerPublicKey) throws ISAKMPParsingException {
         try {
             T payload = payloadType.getConstructor((Class<?>[]) null).newInstance((Object[]) null);
-            PKCS1EncryptedISAKMPPayload encPayload = new PKCS1EncryptedISAKMPPayload(payload, myKeyPair, peerPublicKey);
+            PKCS1EncryptedISAKMPPayload encPayload = new PKCS1EncryptedISAKMPPayload(payload, myPrivateKey, peerPublicKey);
             int length = encPayload.fillGenericPayloadHeaderFromStream(bais);
-            byte[] buffer = new byte[bais.available()];
+            byte[] buffer = new byte[length - ISAKMP_PAYLOAD_HEADER_LEN];
             bais.read(buffer);
             encPayload.encryptedBody = buffer;
             encPayload.decrypt();

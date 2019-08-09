@@ -47,7 +47,7 @@ public class IdentificationPayloadPKETest {
         IdentificationPayload idPayload = new IdentificationPayload();
         idPayload.setIdType(IDTypeEnum.ID_IPV4_ADDR);
         idPayload.setIdentificationData(new byte[]{10, 0, 0, 0});
-        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(idPayload, TESTKEYPAIR, TESTKEYPAIR.getPublic());
+        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(idPayload, TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
         try {
             instance.encrypt();
         } catch (GeneralSecurityException ex) {
@@ -67,7 +67,7 @@ public class IdentificationPayloadPKETest {
             + "8bbc02258cc6199214efd147701302d9bb61d";
     
     public static PKCS1EncryptedISAKMPPayload getTestStaticIdentificationPayloadPKE() {
-        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(new IdentificationPayload(), TESTKEYPAIR, TESTKEYPAIR.getPublic());
+        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(new IdentificationPayload(), TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
         instance.encryptedBody = hexDumpToByteArray(TESTDATA);
         instance.isInSync = true;
         return instance;
@@ -96,7 +96,7 @@ public class IdentificationPayloadPKETest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         origInstance.writeBytes(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        PKCS1EncryptedISAKMPPayload newInstance = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, TESTKEYPAIR, TESTKEYPAIR.getPublic());
+        PKCS1EncryptedISAKMPPayload newInstance = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
         IdentificationPayload newPlainPayload = (IdentificationPayload) newInstance.getPlainPayload();
         assertArrayEquals(plainOrigInstance.getIdentificationData(), newPlainPayload.getIdentificationData());
         assertEquals(0, bais.available());
