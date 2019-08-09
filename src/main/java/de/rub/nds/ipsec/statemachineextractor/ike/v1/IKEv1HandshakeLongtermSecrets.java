@@ -24,10 +24,10 @@ import java.util.Base64;
 public class IKEv1HandshakeLongtermSecrets {
 
     private byte[] preSharedKey = new byte[]{0x00};
-    private PublicKey peerPublicKey;
-    private PrivateKey myPrivateKey;
+    private final PublicKey peerPublicKey;
+    private final PrivateKey myPrivateKey;
 
-    private String CSR1PrivPEM
+    private final String CSR1PrivPEM
             = "MIIEpQIBAAKCAQEA1VnMrbauriqEy+hGC8HvXJRnoIu7lIOERAg7gQXh/4PN1zvN"
             + "vtSKbndOCCBL2eH6U+NYu8wMy9zButuiVALq45HHdnklPuViQTLZK8VO11xOBKZ2"
             + "f8G0RJUtWfWTArFjaKI0t4DXuEXewyEDyYuuz5WKiTSFTNhEoyGKrkWne31nwJiD"
@@ -54,7 +54,7 @@ public class IKEv1HandshakeLongtermSecrets {
             + "8CwcNhgDHLCa3gOvHWptQeM4iG6aAty1F0dVXS+QGLBFq9HFPBn5Nj0eWjCV6+QZ"
             + "YuuKKgdda6kh4/eFa7Ko9uCSmCJyNouo6l21a3I4LeKfsSuddZK6sio=";
 
-    private String CSR2PubPEM
+    private final String CSR2PubPEM
             = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxWJ9sySuB3FKqYRwTIPC"
             + "08zDntEo0ywCnRWNSY9bknJ2zBU4F1YliiH5//Li9DdR/j/Ls+ipH5M/ZOFrVuZW"
             + "bbkaqcF5aWmy8LcA/IykimzcgfR3wy+gjtxjP4Igjm/NvHVV3/x3x4Zu4bi34X+G"

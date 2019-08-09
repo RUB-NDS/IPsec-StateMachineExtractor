@@ -10,6 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
@@ -108,6 +109,10 @@ public final class IKEv1Handshake {
                     secrets.computeDHSecret();
                     break;
                 case Identification:
+                    if (payload instanceof EncryptedISAKMPPayload) {
+                        EncryptedISAKMPPayload encPayload = (EncryptedISAKMPPayload) payload;
+                        payload = encPayload.getPlainPayload();
+                    }
                     secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
                     break;
                 case Nonce:
