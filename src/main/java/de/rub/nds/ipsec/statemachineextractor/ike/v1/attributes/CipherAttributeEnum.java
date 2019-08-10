@@ -11,6 +11,8 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.security.GeneralSecurityException;
+import javax.crypto.Cipher;
 
 /**
  *
@@ -28,6 +30,7 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
 
     private final boolean isFixedKeySize;
     private final byte[] bytes;
+    private int blockSize;
     
     private CipherAttributeEnum(int value, boolean isFixedKeySize) {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
@@ -71,5 +74,12 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     
     public String modeOfOperationJCEName() {
         return "CBC"; // it's as simple as that ¯\_(ツ)_/¯
+    }
+    
+    public int getBlockSize() throws GeneralSecurityException {
+        if (blockSize == 0) {
+            blockSize = Cipher.getInstance(cipherJCEName()).getBlockSize();
+        }
+        return blockSize;
     }
 }

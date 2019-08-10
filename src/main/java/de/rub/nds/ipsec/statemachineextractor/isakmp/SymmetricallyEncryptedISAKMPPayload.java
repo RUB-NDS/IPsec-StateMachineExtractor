@@ -36,7 +36,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends EncryptedISAKMPPayload 
     
     public SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, SecretKey secretKey, CipherAttributeEnum mode) throws GeneralSecurityException {
         this(payload, secretKey, Cipher.getInstance(mode.cipherJCEName() + '/' + mode.modeOfOperationJCEName() + "/NoPadding"));
-        this.IV = new IvParameterSpec(new byte[this.cipher.getBlockSize()]);
+        this.IV = new IvParameterSpec(new byte[mode.getBlockSize()]);
     }
     
     private SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, SecretKey secretKey, Cipher cipher) throws GeneralSecurityException {

@@ -34,6 +34,7 @@ class IKEv1HandshakeSessionSecrets {
     private KeyPair dhKeyPair;
     private PublicKey peerPublicKey;
     private byte[] dhSecret;
+    private byte[] iv;
     private DHGroupAttributeEnum internalDHGroup;
     private boolean internalIsPeerPublicKeyActual = false;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -237,23 +238,25 @@ class IKEv1HandshakeSessionSecrets {
         prf.init(skeyid);
         prf.update(this.getDHSecret());
         prf.update(concatCookies);
-        prf.update((byte)0);
+        prf.update((byte) 0);
         skeyid_dBytes = prf.doFinal();
         prf.update(skeyid_dBytes);
         prf.update(this.getDHSecret());
         prf.update(concatCookies);
-        prf.update((byte)1);
+        prf.update((byte) 1);
         skeyid_aBytes = prf.doFinal();
         prf.update(skeyid_aBytes);
         prf.update(this.getDHSecret());
         prf.update(concatCookies);
-        prf.update((byte)2);
+        prf.update((byte) 2);
         skeyid_eBytes = prf.doFinal();
-        skeyid_d = new SecretKeySpec(skeyid_dBytes, "Hmac" + ciphersuite.getHash().toString());
-        skeyid_a = new SecretKeySpec(skeyid_aBytes, "Hmac" + ciphersuite.getHash().toString());
-        skeyid_e = new SecretKeySpec(skeyid_eBytes, "Hmac" + ciphersuite.getHash().toString());
+        skeyid_d = new SecretKeySpec(skeyid_dBytes, "Hmac" + ciphersuite.getHash().toString()); // FIXME:
+        skeyid_a = new SecretKeySpec(skeyid_aBytes, "Hmac" + ciphersuite.getHash().toString()); // FIXME:
+        byte[] skeyid_eBytesBlockSize = new byte[ciphersuite.getCipher().getBlockSize()];
+        System.arraycopy(skeyid_eBytes, 0, skeyid_eBytesBlockSize, 0, skeyid_eBytesBlockSize.length);
+        skeyid_e = new SecretKeySpec(skeyid_eBytesBlockSize, ciphersuite.getCipher().cipherJCEName());
     }
-    
+
     public byte[] getHASH_I() throws GeneralSecurityException {
         if (this.getSKEYID() == null) {
             this.computeSecretKeys();
@@ -267,7 +270,7 @@ class IKEv1HandshakeSessionSecrets {
         prf.update(this.securityAssociationOfferBody);
         return prf.doFinal(this.getIdentificationPayloadBody());
     }
-    
+
     public byte[] getHASH_R() throws GeneralSecurityException {
         if (this.getSKEYID() == null) {
             this.computeSecretKeys();
@@ -280,6 +283,27 @@ class IKEv1HandshakeSessionSecrets {
         prf.update(this.getInitiatorCookie());
         prf.update(this.securityAssociationOfferBody);
         return prf.doFinal(this.getPeerIdentificationPayloadBody());
+    }
+
+    public byte[] getIV() throws GeneralSecurityException {
+        if (this.iv == null) {
+            int blockSize = ciphersuite.getCipher().getBlockSize();
+            try {
+                MessageDigest digest = MessageDigest.getInstance(ciphersuite.getHash().toString());
+                digest.update(this.getKeyExchangeData());
+                digest.update(this.getPeerKeyExchangeData());
+                byte[] hash = digest.digest();
+                this.iv = new byte[blockSize];
+                System.arraycopy(hash, 0, this.iv, 0, blockSize);
+            } catch (NullPointerException ex) {
+                return new byte[blockSize];
+            }
+        }
+        return this.iv;
+    }
+
+    public void setIV(byte[] iv) {
+        this.iv = iv.clone();
     }
 
     public void setSAOfferBody(byte[] securityAssociationOfferBody) {

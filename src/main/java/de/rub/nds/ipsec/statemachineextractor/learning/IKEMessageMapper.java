@@ -15,7 +15,6 @@ import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
@@ -50,8 +49,7 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
                         break;
                     case IKEv1_MM_HASH:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-                        HashPayload hashPayload = handshake.prepareHashPayload();
-                        msg.addPayload(hashPayload);
+                        msg.addPayload(handshake.prepareHashPayload());
                         break;
                     default:
                         throw new UnsupportedOperationException("Not supported yet.");

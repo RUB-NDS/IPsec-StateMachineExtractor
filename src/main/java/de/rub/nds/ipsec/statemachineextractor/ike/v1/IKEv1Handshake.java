@@ -23,6 +23,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
@@ -204,9 +205,11 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public HashPayload prepareHashPayload() throws GeneralSecurityException, IOException {    
+    public ISAKMPPayload prepareHashPayload() throws GeneralSecurityException, IOException {    
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(secrets.getHASH_I());
-        return hashPayload;
+        SymmetricallyEncryptedISAKMPPayload encPayload = new SymmetricallyEncryptedISAKMPPayload(hashPayload, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV());
+        encPayload.encrypt();
+        return encPayload;
     }
 }
