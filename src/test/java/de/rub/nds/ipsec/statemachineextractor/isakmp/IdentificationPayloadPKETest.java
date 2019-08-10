@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.hexDumpToByteArray;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,9 +16,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
-import javax.crypto.Cipher;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,9 +29,10 @@ public class IdentificationPayloadPKETest {
     public static final int TESTKEYPAIR_BITLEN = 1024;
 
     static {
-        if (!(Security.getProviders()[0] instanceof BouncyCastleProvider)) {
-            Security.insertProviderAt(new BouncyCastleProvider(), 1);
-        }
+        CryptoHelper.prepare();
+    }
+    
+    static {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(TESTKEYPAIR_BITLEN);

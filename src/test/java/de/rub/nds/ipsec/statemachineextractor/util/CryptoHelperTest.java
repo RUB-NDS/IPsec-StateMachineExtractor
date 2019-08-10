@@ -10,12 +10,10 @@ package de.rub.nds.ipsec.statemachineextractor.util;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import java.security.KeyPair;
-import java.security.Security;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -25,10 +23,8 @@ import static org.junit.Assert.*;
  */
 public class CryptoHelperTest {
 
-    public CryptoHelperTest() {
-        if (!(Security.getProviders()[0] instanceof BouncyCastleProvider)) {
-            Security.insertProviderAt(new BouncyCastleProvider(), 1);
-        }
+    static {
+        CryptoHelper.prepare();
     }
 
     /**

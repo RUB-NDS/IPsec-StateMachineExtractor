@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.util;
 
+import de.rub.nds.tlsattacker.util.UnlimitedStrengthEnabler;
 import static java.lang.Math.ceil;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
@@ -17,6 +18,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.ECParameterSpec;
@@ -26,6 +28,7 @@ import java.security.spec.InvalidKeySpecException;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.DHPublicKeySpec;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  *
@@ -34,6 +37,14 @@ import javax.crypto.spec.DHPublicKeySpec;
 public class CryptoHelper {
 
     private CryptoHelper() {
+    }
+
+    public static void prepare() {
+        UnlimitedStrengthEnabler.enable();
+        if (!(Security.getProviders()[0] instanceof BouncyCastleProvider)) {
+            BouncyCastleProvider bouncyCastleProvider = new BouncyCastleProvider();
+            Security.insertProviderAt(bouncyCastleProvider, 1);
+        }
     }
 
     public static KeyPair generateKeyPair(String algoName, AlgorithmParameterSpec algoSpec) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {

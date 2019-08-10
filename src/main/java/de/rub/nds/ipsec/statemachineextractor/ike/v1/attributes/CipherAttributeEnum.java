@@ -48,4 +48,28 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     public void configureCiphersuite(IKEv1Ciphersuite ciphersuite) {
         ciphersuite.setCipher(this);
     }
+    
+    public String cipherJCEName() {
+        switch(this) {
+            case DES_CBC:
+                return "DES";
+            case IDEA_CBC:
+                return "IDEA";
+            case Blowfish_CBC:
+                return "Blowfish";
+            case RC5_R16_B64_CBC:
+                return "RC5-64";
+            case TRIPPLEDES_CBC:
+                return "DESede";
+            case CAST_CBC:
+                return "CAST5";
+            case AES_CBC:
+                return "AES";
+        }
+        throw new UnsupportedOperationException("Impossible unless you extend the enum!");
+    }
+    
+    public String modeOfOperationJCEName() {
+        return "CBC"; // it's as simple as that ¯\_(ツ)_/¯
+    }
 }

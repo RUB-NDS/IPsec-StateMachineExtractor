@@ -39,6 +39,7 @@ class IKEv1HandshakeSessionSecrets {
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private SecretKeySpec skeyid, skeyid_d, skeyid_a, skeyid_e;
+    private byte[] securityAssociationOfferBody;
     private byte[] keyExchangeData;
     private byte[] identificationPayloadBody;
     private byte[] peerKeyExchangeData;
@@ -251,6 +252,38 @@ class IKEv1HandshakeSessionSecrets {
         skeyid_d = new SecretKeySpec(skeyid_dBytes, "Hmac" + ciphersuite.getHash().toString());
         skeyid_a = new SecretKeySpec(skeyid_aBytes, "Hmac" + ciphersuite.getHash().toString());
         skeyid_e = new SecretKeySpec(skeyid_eBytes, "Hmac" + ciphersuite.getHash().toString());
+    }
+    
+    public byte[] getHASH_I() throws GeneralSecurityException {
+        if (this.getSKEYID() == null) {
+            this.computeSecretKeys();
+        }
+        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
+        prf.init(this.getSKEYID());
+        prf.update(this.getKeyExchangeData());
+        prf.update(this.getPeerKeyExchangeData());
+        prf.update(this.getInitiatorCookie());
+        prf.update(this.getResponderCookie());
+        prf.update(this.securityAssociationOfferBody);
+        return prf.doFinal(this.getIdentificationPayloadBody());
+    }
+    
+    public byte[] getHASH_R() throws GeneralSecurityException {
+        if (this.getSKEYID() == null) {
+            this.computeSecretKeys();
+        }
+        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
+        prf.init(this.getSKEYID());
+        prf.update(this.getPeerKeyExchangeData());
+        prf.update(this.getKeyExchangeData());
+        prf.update(this.getResponderCookie());
+        prf.update(this.getInitiatorCookie());
+        prf.update(this.securityAssociationOfferBody);
+        return prf.doFinal(this.getPeerIdentificationPayloadBody());
+    }
+
+    public void setSAOfferBody(byte[] securityAssociationOfferBody) {
+        this.securityAssociationOfferBody = securityAssociationOfferBody;
     }
 
     public byte[] getKeyExchangeData() {

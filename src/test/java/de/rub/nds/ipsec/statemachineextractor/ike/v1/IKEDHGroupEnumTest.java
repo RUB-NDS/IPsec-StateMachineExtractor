@@ -9,12 +9,12 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.Security;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
@@ -22,7 +22,6 @@ import java.security.spec.ECPoint;
 import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.ECPublicKeySpec;
 import javax.crypto.KeyAgreement;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
 
@@ -33,10 +32,8 @@ import org.junit.Test;
  */
 public class IKEDHGroupEnumTest {
 
-    public IKEDHGroupEnumTest() {
-        if (!(Security.getProviders()[0] instanceof BouncyCastleProvider)) {
-            Security.insertProviderAt(new BouncyCastleProvider(), 1);
-        }
+    static {
+        CryptoHelper.prepare();
     }
 
     @Test

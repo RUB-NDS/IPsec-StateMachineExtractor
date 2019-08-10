@@ -33,16 +33,14 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.learning.IKEInputAlphabetEnum;
 import de.rub.nds.ipsec.statemachineextractor.learning.IKEv1HandshakeContextHandler;
-import de.rub.nds.tlsattacker.util.UnlimitedStrengthEnabler;
+import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.UnknownHostException;
-import java.security.Security;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.automatalib.serialization.dot.GraphDOT;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
@@ -50,8 +48,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 public class Main {
     
     static {
-        UnlimitedStrengthEnabler.enable();
-        Security.insertProviderAt(new BouncyCastleProvider(), 1);
+        CryptoHelper.prepare();
     }
 
     private static final long timeout = 200;

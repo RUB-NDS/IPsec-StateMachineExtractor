@@ -13,9 +13,8 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
+import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.net.InetAddress;
-import java.security.Security;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -25,10 +24,8 @@ import static org.junit.Assert.*;
  */
 public class IKEv1HandshakeTest {
 
-    public IKEv1HandshakeTest() {
-        if (!(Security.getProviders()[0] instanceof BouncyCastleProvider)) {
-            Security.insertProviderAt(new BouncyCastleProvider(), 1);
-        }
+    static {
+        CryptoHelper.prepare();
     }
 
     /**

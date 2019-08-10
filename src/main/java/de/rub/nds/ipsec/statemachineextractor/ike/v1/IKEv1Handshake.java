@@ -20,6 +20,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
@@ -33,7 +34,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.crypto.Mac;
 
 /**
  *
@@ -46,7 +46,6 @@ public final class IKEv1Handshake {
     IKEv1HandshakeLongtermSecrets ltsecrets;
     IKEv1HandshakeSessionSecrets secrets;
     List<ISAKMPMessage> messages;
-    SecurityAssociationPayload lastReceivedSAPayload;
     final long timeout;
     final InetAddress remoteAddress;
     final int remotePort;
@@ -69,6 +68,9 @@ public final class IKEv1Handshake {
             messageToSend.setInitiatorCookie(secrets.getInitiatorCookie());
         }
         messageToSend.setResponderCookie(secrets.getResponderCookie());
+        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation) {
+            secrets.setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
+        }
         udpTH.sendData(messageToSend.getBytes());
         messages.add(messageToSend);
         byte[] rxData = udpTH.fetchData();
@@ -90,11 +92,11 @@ public final class IKEv1Handshake {
         for (ISAKMPPayload payload : msg.getPayloads()) {
             switch (payload.getType()) {
                 case SecurityAssociation:
-                    lastReceivedSAPayload = (SecurityAssociationPayload) payload;
-                    if (lastReceivedSAPayload.getProposalPayloads().size() != 1) {
+                    SecurityAssociationPayload receivedSAPayload = (SecurityAssociationPayload) payload;
+                    if (receivedSAPayload.getProposalPayloads().size() != 1) {
                         throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
                     }
-                    ProposalPayload pp = lastReceivedSAPayload.getProposalPayloads().get(0);
+                    ProposalPayload pp = receivedSAPayload.getProposalPayloads().get(0);
                     if (pp.getTransformPayloads().size() != 1) {
                         throw new IKEHandshakeException("Wrong number of transform payloads found. There should only be one.");
                     }
@@ -140,8 +142,8 @@ public final class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
         prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
         secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
+        secrets.setSAOfferBody(SecurityAssociationPayloadFactory.PSK_DES_MD5_G1.getBody());
         secrets.generateDefaults();
-        lastReceivedSAPayload = SecurityAssociationPayloadFactory.PSK_DES_MD5_G1;
     }
 
     public void dispose() throws IOException {
@@ -202,20 +204,9 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public HashPayload prepareHashPayload() throws GeneralSecurityException, IOException {
-        if (secrets.getSKEYID() == null) {
-            secrets.computeSecretKeys();
-        }
-        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
-        prf.init(secrets.getSKEYID());
-        prf.update(secrets.getKeyExchangeData());
-        prf.update(secrets.getPeerKeyExchangeData());
-        prf.update(secrets.getInitiatorCookie());
-        prf.update(secrets.getResponderCookie());
-        prf.update(lastReceivedSAPayload.getBody());
-        byte[] initiatorHash = prf.doFinal(secrets.getIdentificationPayloadBody());
-        HashPayload result = new HashPayload();
-        result.setHashData(initiatorHash);
-        return result;
+    public HashPayload prepareHashPayload() throws GeneralSecurityException, IOException {    
+        HashPayload hashPayload = new HashPayload();
+        hashPayload.setHashData(secrets.getHASH_I());
+        return hashPayload;
     }
 }

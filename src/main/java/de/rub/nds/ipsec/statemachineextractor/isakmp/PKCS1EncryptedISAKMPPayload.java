@@ -28,7 +28,7 @@ public class PKCS1EncryptedISAKMPPayload extends EncryptedISAKMPPayload {
 
     public PKCS1EncryptedISAKMPPayload(ISAKMPPayload payload, PrivateKey myPrivateKey, PublicKey peerPublicKey) {
         super(payload);
-        if(!(myPrivateKey instanceof RSAPrivateKey && peerPublicKey instanceof RSAPublicKey)) {
+        if (!(myPrivateKey instanceof RSAPrivateKey && peerPublicKey instanceof RSAPublicKey)) {
             throw new IllegalArgumentException("PKCS#1 v1.5 encryption in IPsec only works with RSA!");
         }
         this.myPrivateKey = myPrivateKey;
@@ -52,7 +52,7 @@ public class PKCS1EncryptedISAKMPPayload extends EncryptedISAKMPPayload {
         this.setBody(plaintext);
         this.isInSync = true;
     }
-    
+
     public static <T extends ISAKMPPayload> PKCS1EncryptedISAKMPPayload fromStream(Class<T> payloadType, ByteArrayInputStream bais, PrivateKey myPrivateKey, PublicKey peerPublicKey) throws ISAKMPParsingException {
         try {
             T payload = payloadType.getConstructor((Class<?>[]) null).newInstance((Object[]) null);
