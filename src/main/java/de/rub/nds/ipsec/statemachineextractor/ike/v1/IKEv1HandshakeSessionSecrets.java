@@ -12,6 +12,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttribute
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.PublicKey;
@@ -29,6 +30,7 @@ class IKEv1HandshakeSessionSecrets {
 
     static final int COOKIE_LEN = 8;
 
+    private boolean isInitiatorCookieChosen = false;
     private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private KeyPair dhKeyPair;
@@ -37,6 +39,7 @@ class IKEv1HandshakeSessionSecrets {
     private byte[] iv;
     private DHGroupAttributeEnum internalDHGroup;
     private boolean internalIsPeerPublicKeyActual = false;
+    private boolean isInitiatorNonceChosen = false;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private SecretKeySpec skeyid, skeyid_d, skeyid_a, skeyid_e;
@@ -64,11 +67,15 @@ class IKEv1HandshakeSessionSecrets {
     }
 
     public byte[] getInitiatorCookie() {
+        if (!isInitiatorCookieChosen) {
+            return null;
+        }
         return initiatorCookie;
     }
 
     public void setInitiatorCookie(byte[] initiatorCookie) {
         this.initiatorCookie = initiatorCookie;
+        isInitiatorCookieChosen = true;
     }
 
     public byte[] getResponderCookie() {
@@ -110,7 +117,6 @@ class IKEv1HandshakeSessionSecrets {
     public void setPeerPublicKey(PublicKey peerPublicKey) {
         this.peerPublicKey = peerPublicKey;
         internalIsPeerPublicKeyActual = true;
-
     }
 
     public PublicKey computePeerPublicKey() throws GeneralSecurityException {
@@ -125,7 +131,6 @@ class IKEv1HandshakeSessionSecrets {
             peerPublicKey = CryptoHelper.createModPPublicKeyFromBytes(algoSpec, this.peerKeyExchangeData);
         }
         internalIsPeerPublicKeyActual = true;
-        peerKeyExchangeData = null;
         return this.peerPublicKey;
     }
 
@@ -144,12 +149,10 @@ class IKEv1HandshakeSessionSecrets {
         if (this.internalDHGroup != ciphersuite.getDhGroup()) {
             throw new IllegalStateException("The existing key pair does not match the ciphersuite!");
         }
-        if (peerPublicKey == null | internalIsPeerPublicKeyActual == false) {
-            try {
-                computePeerPublicKey();
-            } catch (IllegalStateException ex) {
-                throw new IllegalStateException("No public key for peer; use setPeerPublicKey() or setPeerKeyExchangeData() first!", ex);
-            }
+        try {
+            computePeerPublicKey();
+        } catch (IllegalStateException ex) {
+            throw new IllegalStateException("No public key for peer; use setPeerPublicKey() or setPeerKeyExchangeData() first!", ex);
         }
         String dhAlgoName;
         if (ciphersuite.getDhGroup().getDHGroupParameters().isEC()) {
@@ -160,16 +163,21 @@ class IKEv1HandshakeSessionSecrets {
         KeyAgreement keyAgreement = KeyAgreement.getInstance(dhAlgoName);
         keyAgreement.init(dhKeyPair.getPrivate());
         keyAgreement.doPhase(peerPublicKey, true);
+        
         this.dhSecret = keyAgreement.generateSecret();
         return this.dhSecret;
     }
 
     public byte[] getInitiatorNonce() {
+        if (!isInitiatorNonceChosen) {
+            return null;
+        }
         return initiatorNonce;
     }
 
     public void setInitiatorNonce(byte[] initiatorNonce) {
         this.initiatorNonce = initiatorNonce;
+        isInitiatorNonceChosen = true;
     }
 
     public byte[] getResponderNonce() {
@@ -200,9 +208,7 @@ class IKEv1HandshakeSessionSecrets {
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         SecretKeySpec hmacKey;
         byte[] skeyidBytes, skeyid_dBytes, skeyid_aBytes, skeyid_eBytes;
-        if (dhSecret == null) {
-            computeDHSecret();
-        }
+        computeDHSecret();
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
@@ -265,8 +271,8 @@ class IKEv1HandshakeSessionSecrets {
         prf.init(this.getSKEYID());
         prf.update(this.getKeyExchangeData());
         prf.update(this.getPeerKeyExchangeData());
-        prf.update(this.getInitiatorCookie());
-        prf.update(this.getResponderCookie());
+        prf.update(this.initiatorCookie);
+        prf.update(this.responderCookie);
         prf.update(this.securityAssociationOfferBody);
         return prf.doFinal(this.getIdentificationPayloadBody());
     }
@@ -289,7 +295,7 @@ class IKEv1HandshakeSessionSecrets {
         if (this.iv == null) {
             int blockSize = ciphersuite.getCipher().getBlockSize();
             try {
-                MessageDigest digest = MessageDigest.getInstance(ciphersuite.getHash().toString());
+                MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
                 digest.update(this.getKeyExchangeData());
                 digest.update(this.getPeerKeyExchangeData());
                 byte[] hash = digest.digest();

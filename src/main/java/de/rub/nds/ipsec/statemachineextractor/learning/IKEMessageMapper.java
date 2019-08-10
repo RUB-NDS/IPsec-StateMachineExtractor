@@ -50,6 +50,7 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
                     case IKEv1_MM_HASH:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(handshake.prepareHashPayload());
+                        msg.setEncryptedFlag(true);
                         break;
                     default:
                         throw new UnsupportedOperationException("Not supported yet.");

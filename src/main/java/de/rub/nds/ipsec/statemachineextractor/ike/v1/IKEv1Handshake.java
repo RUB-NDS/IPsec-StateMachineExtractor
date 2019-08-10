@@ -105,6 +105,7 @@ public final class IKEv1Handshake {
                     tp.getAttributes().forEach((attr) -> {
                         attr.configureCiphersuite(ciphersuite);
                     });
+                    secrets.generateDhKeyPair();
                     break;
                 case KeyExchange:
                     secrets.setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
@@ -116,6 +117,7 @@ public final class IKEv1Handshake {
                         payload = encPayload.getPlainPayload();
                     }
                     secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
+                    secrets.computeSecretKeys();
                     break;
                 case Nonce:
                     if (payload instanceof EncryptedISAKMPPayload) {
@@ -123,6 +125,7 @@ public final class IKEv1Handshake {
                         payload = encPayload.getPlainPayload();
                     }
                     secrets.setResponderNonce(((NoncePayload) payload).getNonceData());
+                    secrets.computeSecretKeys();
                     break;
                 case VendorID:
                     break;
@@ -205,7 +208,8 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public ISAKMPPayload prepareHashPayload() throws GeneralSecurityException, IOException {    
+    public ISAKMPPayload prepareHashPayload() throws GeneralSecurityException, IOException {
+        secrets.computeSecretKeys();
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(secrets.getHASH_I());
         SymmetricallyEncryptedISAKMPPayload encPayload = new SymmetricallyEncryptedISAKMPPayload(hashPayload, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV());
