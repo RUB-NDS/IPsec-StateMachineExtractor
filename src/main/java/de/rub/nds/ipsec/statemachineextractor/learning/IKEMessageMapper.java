@@ -17,6 +17,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadF
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -51,6 +52,16 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(handshake.prepareHashPayload());
                         msg.setEncryptedFlag(true);
+                        break;
+                    case IKEv1_AM_SA_KEX:
+                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+                        SecurityAssociationPayload sa = SecurityAssociationPayloadFactory.PKE_AES128_SHA1_G5;
+                        msg.addPayload(sa);
+                        handshake.adjustCiphersuite(sa);
+                        msg.addPayload(handshake.prepareKeyExchangePayload());
+                        msg.addPayload(handshake.prepareIdentificationPayload());
+                        msg.addPayload(handshake.prepareNoncePayload());
+                        msg.addPayload(VendorIDPayload.DeadPeerDetection);
                         break;
                     default:
                         throw new UnsupportedOperationException("Not supported yet.");

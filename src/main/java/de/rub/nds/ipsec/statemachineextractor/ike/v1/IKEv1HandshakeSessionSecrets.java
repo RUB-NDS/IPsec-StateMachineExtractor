@@ -12,7 +12,6 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttribute
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.PublicKey;

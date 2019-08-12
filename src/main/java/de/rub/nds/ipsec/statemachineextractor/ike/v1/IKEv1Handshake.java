@@ -94,18 +94,7 @@ public final class IKEv1Handshake {
             switch (payload.getType()) {
                 case SecurityAssociation:
                     SecurityAssociationPayload receivedSAPayload = (SecurityAssociationPayload) payload;
-                    if (receivedSAPayload.getProposalPayloads().size() != 1) {
-                        throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
-                    }
-                    ProposalPayload pp = receivedSAPayload.getProposalPayloads().get(0);
-                    if (pp.getTransformPayloads().size() != 1) {
-                        throw new IKEHandshakeException("Wrong number of transform payloads found. There should only be one.");
-                    }
-                    TransformPayload tp = pp.getTransformPayloads().get(0);
-                    tp.getAttributes().forEach((attr) -> {
-                        attr.configureCiphersuite(ciphersuite);
-                    });
-                    secrets.generateDhKeyPair();
+                    adjustCiphersuite(receivedSAPayload);
                     break;
                 case KeyExchange:
                     secrets.setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
@@ -148,6 +137,21 @@ public final class IKEv1Handshake {
         secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
         secrets.setSAOfferBody(SecurityAssociationPayloadFactory.PSK_DES_MD5_G1.getBody());
         secrets.generateDefaults();
+    }
+
+    public void adjustCiphersuite(SecurityAssociationPayload payload) throws GeneralSecurityException, IKEHandshakeException {
+        if (payload.getProposalPayloads().size() != 1) {
+            throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+        }
+        ProposalPayload pp = payload.getProposalPayloads().get(0);
+        if (pp.getTransformPayloads().size() != 1) {
+            throw new IKEHandshakeException("Wrong number of transform payloads found. There should only be one.");
+        }
+        TransformPayload tp = pp.getTransformPayloads().get(0);
+        tp.getAttributes().forEach((attr) -> {
+            attr.configureCiphersuite(ciphersuite);
+        });
+        secrets.generateDhKeyPair();
     }
 
     public void dispose() throws IOException {
@@ -198,7 +202,7 @@ public final class IKEv1Handshake {
             random.nextBytes(initiatorNonce);
             secrets.setInitiatorNonce(initiatorNonce);
         }
-        result.setNonceData(secrets.getInitiatorNonce());            
+        result.setNonceData(secrets.getInitiatorNonce());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // these authentication methods encrypt the nonce using the public key of the peer
             PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());

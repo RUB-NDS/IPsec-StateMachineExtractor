@@ -16,5 +16,6 @@ public enum IKEInputAlphabetEnum {
     RESET,
     IKEv1_MM_SA,
     IKEv1_MM_KEX,
-    IKEv1_MM_HASH;
+    IKEv1_MM_HASH,
+    IKEv1_AM_SA_KEX;
 }
