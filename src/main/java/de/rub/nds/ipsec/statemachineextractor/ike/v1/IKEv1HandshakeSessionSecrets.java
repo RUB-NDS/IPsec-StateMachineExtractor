@@ -204,13 +204,12 @@ public class IKEv1HandshakeSessionSecrets {
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         SecretKeySpec hmacKey;
         byte[] skeyidBytes, skeyid_dBytes, skeyid_aBytes, skeyid_eBytes;
-        computeDHSecret();
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
         byte[] concatCookies = new byte[COOKIE_LEN * 2];
         System.arraycopy(initiatorCookie, 0, concatCookies, 0, COOKIE_LEN);
-        System.arraycopy(responderNonce, 0, concatCookies, COOKIE_LEN, COOKIE_LEN);
+        System.arraycopy(responderCookie, 0, concatCookies, COOKIE_LEN, COOKIE_LEN);
         switch (ciphersuite.getAuthMethod()) {
             case RSA_Sig:
             case DSS_Sig: // For signatures: SKEYID = prf(Ni_b | Nr_b, g^xy)
@@ -252,11 +251,12 @@ public class IKEv1HandshakeSessionSecrets {
         prf.update(concatCookies);
         prf.update((byte) 2);
         skeyid_eBytes = prf.doFinal();
-        skeyid_d = new SecretKeySpec(skeyid_dBytes, "Hmac" + ciphersuite.getHash().toString()); // FIXME:
-        skeyid_a = new SecretKeySpec(skeyid_aBytes, "Hmac" + ciphersuite.getHash().toString()); // FIXME:
-        byte[] skeyid_eBytesBlockSize = new byte[ciphersuite.getCipher().getBlockSize()];
-        System.arraycopy(skeyid_eBytes, 0, skeyid_eBytesBlockSize, 0, skeyid_eBytesBlockSize.length);
-        skeyid_e = new SecretKeySpec(skeyid_eBytesBlockSize, ciphersuite.getCipher().cipherJCEName());
+        skeyid_d = new SecretKeySpec(skeyid_dBytes, "Hmac" + ciphersuite.getHash().toString());
+        skeyid_a = new SecretKeySpec(skeyid_aBytes, "Hmac" + ciphersuite.getHash().toString());
+        skeyid_e = new SecretKeySpec(skeyid_eBytes, "Hmac" + ciphersuite.getHash().toString());
+//        byte[] skeyid_eBytesBlockSize = new byte[ciphersuite.getCipher().getBlockSize()];
+//        System.arraycopy(skeyid_eBytes, 0, skeyid_eBytesBlockSize, 0, skeyid_eBytesBlockSize.length);
+//        skeyid_e = new SecretKeySpec(skeyid_eBytesBlockSize, "Hmac" + ciphersuite.getHash().toString());
     }
 
     public byte[] getHASH_I() throws GeneralSecurityException {
