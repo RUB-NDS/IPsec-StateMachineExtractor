@@ -42,11 +42,11 @@ public class IdentificationPayloadPKETest {
         }
     }
 
-    public static PKCS1EncryptedISAKMPPayload getTestIdentificationPayloadPKE() {
+    public static ISAKMPPayloadWithPKCS1EncryptedBody getTestIdentificationPayloadPKE() {
         IdentificationPayload idPayload = new IdentificationPayload();
         idPayload.setIdType(IDTypeEnum.ID_IPV4_ADDR);
         idPayload.setIdentificationData(new byte[]{10, 0, 0, 0});
-        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(idPayload, TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
+        ISAKMPPayloadWithPKCS1EncryptedBody instance = new ISAKMPPayloadWithPKCS1EncryptedBody(idPayload, TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
         try {
             instance.encrypt();
         } catch (GeneralSecurityException ex) {
@@ -65,8 +65,8 @@ public class IdentificationPayloadPKETest {
             + "ec782b4b1dad3ce13a04e6664e038f842ce86d3337de94ca195ec95fc6731e4"
             + "8bbc02258cc6199214efd147701302d9bb61d";
     
-    public static PKCS1EncryptedISAKMPPayload getTestStaticIdentificationPayloadPKE() {
-        PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(new IdentificationPayload(), TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
+    public static ISAKMPPayloadWithPKCS1EncryptedBody getTestStaticIdentificationPayloadPKE() {
+        ISAKMPPayloadWithPKCS1EncryptedBody instance = new ISAKMPPayloadWithPKCS1EncryptedBody(new IdentificationPayload(), TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
         instance.encryptedBody = hexDumpToByteArray(TESTDATA);
         instance.isInSync = true;
         return instance;
@@ -77,7 +77,7 @@ public class IdentificationPayloadPKETest {
      */
     @Test
     public void testWriteBytes() {
-        PKCS1EncryptedISAKMPPayload instance = getTestIdentificationPayloadPKE();
+        ISAKMPPayloadWithPKCS1EncryptedBody instance = getTestIdentificationPayloadPKE();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         instance.writeBytes(baos);
         byte[] result = baos.toByteArray();
@@ -90,13 +90,13 @@ public class IdentificationPayloadPKETest {
      */
     @Test
     public void testFromStream() throws Exception {
-        PKCS1EncryptedISAKMPPayload origInstance = getTestIdentificationPayloadPKE();
-        IdentificationPayload plainOrigInstance = (IdentificationPayload) origInstance.getPlainPayload();
+        ISAKMPPayloadWithPKCS1EncryptedBody origInstance = getTestIdentificationPayloadPKE();
+        IdentificationPayload plainOrigInstance = (IdentificationPayload) origInstance.getUnderlyingPayload();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         origInstance.writeBytes(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        PKCS1EncryptedISAKMPPayload newInstance = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
-        IdentificationPayload newPlainPayload = (IdentificationPayload) newInstance.getPlainPayload();
+        ISAKMPPayloadWithPKCS1EncryptedBody newInstance = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(IdentificationPayload.class, bais, TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
+        IdentificationPayload newPlainPayload = (IdentificationPayload) newInstance.getUnderlyingPayload();
         assertArrayEquals(plainOrigInstance.getIdentificationData(), newPlainPayload.getIdentificationData());
         assertEquals(0, bais.available());
     }

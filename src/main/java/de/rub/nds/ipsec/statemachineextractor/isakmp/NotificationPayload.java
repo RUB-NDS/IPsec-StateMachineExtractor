@@ -114,16 +114,17 @@ public class NotificationPayload extends ISAKMPPayload {
             throw new ISAKMPParsingException("Security Parameter Index (SPI) length may be from zero (0) to sixteen (16)");
         }
         if (buffer[1] > 0) {
-            byte[] spi = new byte[buffer[1]];
+            byte[] spidata = new byte[buffer[1]];
             int readBytes;
             try {
-                readBytes = bais.read(spi);
+                readBytes = bais.read(spidata);
             } catch (IOException ex) {
                 throw new ISAKMPParsingException(ex);
             }
-            if (readBytes != spi.length) {
-                throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + spi.length + "bytes)!");
+            if (readBytes != spidata.length) {
+                throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + spidata.length + "bytes)!");
             }
+            this.setSpi(spidata);
         }
         buffer = new byte[length - NOTIFICATION_HEADER_LEN - buffer[1]];
         if (buffer.length > 0) {

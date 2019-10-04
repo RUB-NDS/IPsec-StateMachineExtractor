@@ -8,6 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1HandshakeLongtermSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1HandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -112,6 +115,18 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         this.flags.set(2, value);
     }
 
+    public boolean isEncryptedFlag() {
+        return this.flags.get(0);
+    }
+
+    public boolean isCommitFlag() {
+        return this.flags.get(1);
+    }
+
+    public boolean isAuthenticationOnlyFlag() {
+        return this.flags.get(2);
+    }
+
     public byte[] getMessageId() {
         return messageId.clone();
     }
@@ -149,11 +164,16 @@ public class ISAKMPMessage implements ISAKMPSerializable {
 
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
+        writeBytes(baos, null, null, null);
+    }
+
+    private void writeBytes(ByteArrayOutputStream baos, IKEv1Ciphersuite ciphersuite, IKEv1HandshakeLongtermSecrets ltsecrets, IKEv1HandshakeSessionSecrets secrets) {
         baos.write(getInitiatorCookie(), 0, 8);
         baos.write(responderCookie, 0, 8);
         baos.write(getNextPayload().getValue());
         baos.write(version);
         baos.write(exchangeType.getValue());
+        this.setEncryptedFlag(ciphersuite != null);
         baos.write(getFlags());
         baos.write(messageId, 0, 4);
         baos.write(DatatypeHelper.intTo4ByteArray(getLength()), 0, 4);
@@ -171,7 +191,13 @@ public class ISAKMPMessage implements ISAKMPSerializable {
 
     public byte[] getBytes() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        writeBytes(baos);
+        writeBytes(baos, null, null, null);
+        return baos.toByteArray();
+    }
+
+    public byte[] getEncryptedBytes(IKEv1Ciphersuite ciphersuite, IKEv1HandshakeLongtermSecrets ltsecrets, IKEv1HandshakeSessionSecrets secrets) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        writeBytes(baos, ciphersuite, ltsecrets, secrets);
         return baos.toByteArray();
     }
 }

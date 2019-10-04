@@ -51,8 +51,8 @@ public class Main {
         CryptoHelper.prepare();
     }
 
-    private static final long timeout = 200;
-    private static final String host = "10.0.3.2";
+    private static final long timeout = 500;
+    private static final String host = "10.0.3.10";
     private static final int port = 500;
     
     public static void main(String[] args) throws UnknownHostException {

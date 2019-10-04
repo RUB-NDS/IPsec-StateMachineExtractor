@@ -8,10 +8,17 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.util;
 
+import com.sun.org.apache.xpath.internal.operations.And;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import java.math.BigInteger;
+import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPublicKeySpec;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
 import org.junit.Test;
@@ -73,4 +80,18 @@ public class CryptoHelperTest {
         }
     }
 
+    /**
+     * Test of createECPublicKeyFromBytes method, of class CryptoHelper.
+     */
+    @Test
+    public void testEcPublicKey2BytesWithShortValues() throws Exception {
+        ECParameterSpec algoSpec = (ECParameterSpec) IKEDHGroupEnum.GROUP19_256.getAlgorithmParameterSpec();
+        BigInteger x = new BigInteger("754f8d9282cac51410fc7bbe801dcfb1251db62498fa5e6a407cd51f43a951", 16);
+        BigInteger y = new BigInteger("aeddbbe5d4a0242dea4f6a8229d9f99362c85d4e3f8c61fefe33c685b1233ee6", 16);
+        ECPoint ecPoint = new ECPoint(x, y);
+        ECPublicKeySpec keySpec = new ECPublicKeySpec(ecPoint, algoSpec);
+        KeyFactory kf = KeyFactory.getInstance("EC");
+        PublicKey publicKey = kf.generatePublic(keySpec);
+        CryptoHelper.publicKey2Bytes(publicKey);
+    }
 }

@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class SymmetricallyEncryptedISAKMPPayloadTest {
+public class SymmetricallyEncryptedISAKMPSerializableTest {
 
     static {
         CryptoHelper.prepare();
@@ -34,9 +34,8 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
     private static final SecretKey TEST_KEY_AES = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"), "AES");
     private static final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("1A1A1A1A1A1B1C1D");
     private static final byte[] TEST_HASH = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABBCCDD");
-    private static final String TEST_HASH_ENC_HEX = "0AE7097DDF4EABE455028CFAF36400CD";
+    private static final String TEST_HASH_ENC_HEX = "B2DC4A2A3989056E19A76390DF2CC3C1";
     private static final byte[] TEST_HASH_ENC = DatatypeHelper.hexDumpToByteArray(TEST_HASH_ENC_HEX);
-    private static final byte[] TEST_HASH_PAYLOAD = DatatypeHelper.hexDumpToByteArray("00000014" + TEST_HASH_ENC_HEX);
     
     /**
      * Test of encrypt method, of class SymmetricallyEncryptedISAKMPPayload.
@@ -45,9 +44,9 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
     public void testEncrypt() throws Exception {
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(TEST_HASH);
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(hashPayload, TEST_KEY_DES, CipherAttributeEnum.DES_CBC, TEST_IV);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(hashPayload, TEST_KEY_DES, CipherAttributeEnum.DES_CBC, TEST_IV);
         instance.encrypt();
-        assertArrayEquals(TEST_HASH_ENC, instance.encryptedBody);
+        assertArrayEquals(TEST_HASH_ENC, instance.ciphertext);
     }
     
 
@@ -56,12 +55,10 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test
     public void testDecrypt() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC, TEST_IV);
-        instance.encryptedBody = TEST_HASH_ENC;
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC, TEST_IV);
+        instance.ciphertext = TEST_HASH_ENC;
         instance.decrypt();
-        assertArrayEquals(TEST_HASH, ((HashPayload) instance.getPlainPayload()).getHashData());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        instance.getPlainPayload().writeBytes(baos);
+        assertArrayEquals(TEST_HASH, ((HashPayload) instance.getUnderlyingPayload()).getHashData());
     }
     
     /**
@@ -70,7 +67,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test
     public void testAddRFC2409PaddingB64() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFF");
@@ -105,7 +102,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test
     public void testAddRFC2409PaddingB128() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_AES, CipherAttributeEnum.AES_CBC);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_AES, CipherAttributeEnum.AES_CBC);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -140,7 +137,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test
     public void testRemoveRFC2409PaddingB64() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFF00");
@@ -175,7 +172,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test
     public void testRemoveRFC2409PaddingB128() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_AES, CipherAttributeEnum.AES_CBC);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_AES, CipherAttributeEnum.AES_CBC);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00");
@@ -214,7 +211,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test(expected = IllegalBlockSizeException.class)
     public void testRemoveRFC2409PaddingWrongPadding1() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABBCC");
@@ -227,7 +224,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test(expected = BadPaddingException.class)
     public void testRemoveRFC2409PaddingWrongPadding2() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABBCCDD");
@@ -240,7 +237,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test(expected = BadPaddingException.class)
     public void testRemoveRFC2409PaddingWrongPadding3() throws Exception {
-        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
+        SymmetricallyEncryptedISAKMPSerializable instance = new SymmetricallyEncryptedISAKMPSerializable(new HashPayload(), TEST_KEY_DES, CipherAttributeEnum.DES_CBC);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABB0101");
@@ -253,9 +250,9 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
      */
     @Test
     public void testFromStream() throws Exception {
-        ByteArrayInputStream bais = new ByteArrayInputStream(TEST_HASH_PAYLOAD);
-        SymmetricallyEncryptedISAKMPPayload newInstance = SymmetricallyEncryptedISAKMPPayload.fromStream(HashPayload.class, bais, TEST_KEY_DES, CipherAttributeEnum.DES_CBC, TEST_IV);
-        HashPayload newPlainPayload = (HashPayload) newInstance.getPlainPayload();
+        ByteArrayInputStream bais = new ByteArrayInputStream(TEST_HASH_ENC);
+        SymmetricallyEncryptedISAKMPSerializable newInstance = SymmetricallyEncryptedISAKMPSerializable.fromStream(HashPayload.class, bais, TEST_KEY_DES, CipherAttributeEnum.DES_CBC, TEST_IV);
+        HashPayload newPlainPayload = (HashPayload) newInstance.getUnderlyingPayload();
         assertArrayEquals(TEST_HASH, newPlainPayload.getHashData());
         assertEquals(0, bais.available());
     }

@@ -22,24 +22,24 @@ import javax.crypto.spec.IvParameterSpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class SymmetricallyEncryptedISAKMPPayload extends EncryptedISAKMPPayload {
+public class SymmetricallyEncryptedISAKMPSerializable extends EncryptedISAKMPSerializable {
 
     private final SecretKey secretKey;
     private IvParameterSpec IV;
     private byte[] nextIV = new byte[0];
     private final Cipher cipher;
     
-    public SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, SecretKey secretKey, CipherAttributeEnum mode, byte[] IV) throws GeneralSecurityException {
+    public SymmetricallyEncryptedISAKMPSerializable(ISAKMPPayload payload, SecretKey secretKey, CipherAttributeEnum mode, byte[] IV) throws GeneralSecurityException {
         this(payload, secretKey, Cipher.getInstance(mode.cipherJCEName() + '/' + mode.modeOfOperationJCEName() + "/NoPadding"));
         this.IV = new IvParameterSpec(IV);
     }
     
-    public SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, SecretKey secretKey, CipherAttributeEnum mode) throws GeneralSecurityException {
+    public SymmetricallyEncryptedISAKMPSerializable(ISAKMPPayload payload, SecretKey secretKey, CipherAttributeEnum mode) throws GeneralSecurityException {
         this(payload, secretKey, Cipher.getInstance(mode.cipherJCEName() + '/' + mode.modeOfOperationJCEName() + "/NoPadding"));
         this.IV = new IvParameterSpec(new byte[mode.getBlockSize()]);
     }
     
-    private SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, SecretKey secretKey, Cipher cipher) throws GeneralSecurityException {
+    private SymmetricallyEncryptedISAKMPSerializable(ISAKMPPayload payload, SecretKey secretKey, Cipher cipher) throws GeneralSecurityException {
         super(payload);
         this.secretKey = secretKey;
         this.isInSync = false;
@@ -48,19 +48,20 @@ public class SymmetricallyEncryptedISAKMPPayload extends EncryptedISAKMPPayload 
 
     @Override
     public void encrypt() throws GeneralSecurityException {
-        byte[] padded = addRFC2409Padding(this.getBody());
+        byte[] padded = addRFC2409Padding(this.getPlaintextFromUnderlyingPayload());
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, IV);
-        this.encryptedBody = cipher.doFinal(padded);
+        this.ciphertext = cipher.doFinal(padded);
         this.isInSync = true;
     }
 
     @Override
     public void decrypt() throws GeneralSecurityException, ISAKMPParsingException {
         cipher.init(Cipher.DECRYPT_MODE, secretKey, IV);
-        byte[] plaintext = removeRFC2409Padding(cipher.doFinal(encryptedBody));
-        this.setBody(plaintext);
+        byte[] plaintext = removeRFC2409Padding(cipher.doFinal(this.ciphertext));
+        ByteArrayInputStream bais = new ByteArrayInputStream(plaintext);
+        this.getUnderlyingPayload().fillFromStream(bais);
         this.nextIV = new byte[cipher.getBlockSize()];
-        System.arraycopy(encryptedBody, encryptedBody.length - cipher.getBlockSize(), this.nextIV, 0, cipher.getBlockSize());
+        System.arraycopy(this.ciphertext, this.ciphertext.length - cipher.getBlockSize(), this.nextIV, 0, cipher.getBlockSize());
         this.isInSync = true;
     }
     
@@ -99,14 +100,13 @@ public class SymmetricallyEncryptedISAKMPPayload extends EncryptedISAKMPPayload 
         return nextIV.clone();
     }
 
-    public static <T extends ISAKMPPayload> SymmetricallyEncryptedISAKMPPayload fromStream(Class<T> payloadType, ByteArrayInputStream bais, SecretKey secretKey, CipherAttributeEnum mode, byte[] IV) throws ISAKMPParsingException {
+    public static <T extends ISAKMPPayload> SymmetricallyEncryptedISAKMPSerializable fromStream(Class<T> payloadType, ByteArrayInputStream bais, SecretKey secretKey, CipherAttributeEnum mode, byte[] IV) throws ISAKMPParsingException {
         try {
             T payload = payloadType.getConstructor((Class<?>[]) null).newInstance((Object[]) null);
-            SymmetricallyEncryptedISAKMPPayload encPayload = new SymmetricallyEncryptedISAKMPPayload(payload, secretKey, mode, IV);
-            int length = encPayload.fillGenericPayloadHeaderFromStream(bais);
-            byte[] buffer = new byte[length - ISAKMP_PAYLOAD_HEADER_LEN];
+            SymmetricallyEncryptedISAKMPSerializable encPayload = new SymmetricallyEncryptedISAKMPSerializable(payload, secretKey, mode, IV);
+            byte[] buffer = new byte[bais.available()];
             bais.read(buffer);
-            encPayload.encryptedBody = buffer;
+            encPayload.ciphertext = buffer;
             encPayload.decrypt();
             return encPayload;
         } catch (ReflectiveOperationException | SecurityException | IOException | GeneralSecurityException ex) {

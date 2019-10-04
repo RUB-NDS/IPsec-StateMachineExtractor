@@ -25,7 +25,7 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-class IKEv1HandshakeSessionSecrets {
+public class IKEv1HandshakeSessionSecrets {
 
     static final int COOKIE_LEN = 8;
 
@@ -37,7 +37,6 @@ class IKEv1HandshakeSessionSecrets {
     private byte[] dhSecret;
     private byte[] iv;
     private DHGroupAttributeEnum internalDHGroup;
-    private boolean internalIsPeerPublicKeyActual = false;
     private boolean isInitiatorNonceChosen = false;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -115,7 +114,6 @@ class IKEv1HandshakeSessionSecrets {
 
     public void setPeerPublicKey(PublicKey peerPublicKey) {
         this.peerPublicKey = peerPublicKey;
-        internalIsPeerPublicKeyActual = true;
     }
 
     public PublicKey computePeerPublicKey() throws GeneralSecurityException {
@@ -129,7 +127,6 @@ class IKEv1HandshakeSessionSecrets {
             DHParameterSpec algoSpec = (DHParameterSpec) ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec();
             peerPublicKey = CryptoHelper.createModPPublicKeyFromBytes(algoSpec, this.peerKeyExchangeData);
         }
-        internalIsPeerPublicKeyActual = true;
         return this.peerPublicKey;
     }
 
@@ -345,7 +342,6 @@ class IKEv1HandshakeSessionSecrets {
 
     public void setPeerKeyExchangeData(byte[] peerKeyExchangeData) {
         this.peerKeyExchangeData = peerKeyExchangeData;
-        internalIsPeerPublicKeyActual = false;
     }
 
     public byte[] getPeerIdentificationPayloadBody() {

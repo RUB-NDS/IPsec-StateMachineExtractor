@@ -49,6 +49,7 @@ public class SecurityAssociationPayloadFactory {
     }
     
     public static final SecurityAssociationPayload PSK_DES_MD5_G1     = create(AuthAttributeEnum.PSK, CipherAttributeEnum.DES_CBC, null, HashAttributeEnum.MD5, DHGroupAttributeEnum.GROUP1, LifeTypeAttributeEnum.SECONDS, DurationAttribute.get(28800));
+    public static final SecurityAssociationPayload PSK_AES128_SHA1_G2 = create(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP2, LifeTypeAttributeEnum.SECONDS, DurationAttribute.get(28800));
     public static final SecurityAssociationPayload PSK_AES128_SHA1_G5 = create(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, DurationAttribute.get(28800));
     public static final SecurityAssociationPayload PKE_AES128_SHA1_G5 = create(AuthAttributeEnum.PKE, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, DurationAttribute.get(28800));
 }

@@ -29,6 +29,7 @@ import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.DHPublicKeySpec;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.cryptomator.siv.org.bouncycastle.util.Arrays;
 
 /**
  *
@@ -80,9 +81,15 @@ public class CryptoHelper {
         byte[] publicKeyBytes = new byte[pointSize];
         ECPoint w = pubkey.getW();
         byte[] wx = w.getAffineX().toByteArray();
+        while(wx.length < paramLen) {
+            wx = Arrays.prepend(wx, (byte)0x00);
+        }
         int start = (wx[0] == 0 && wx.length == paramLen + 1) ? 1 : 0;
         System.arraycopy(wx, start, publicKeyBytes, 0, paramLen);
         byte[] wy = w.getAffineY().toByteArray();
+        while(wy.length < paramLen) {
+            wy = Arrays.prepend(wy, (byte)0x00);
+        }
         start = (wy[0] == 0 && wy.length == paramLen + 1) ? 1 : 0;
         System.arraycopy(wy, start, publicKeyBytes, paramLen, paramLen);
         return publicKeyBytes;

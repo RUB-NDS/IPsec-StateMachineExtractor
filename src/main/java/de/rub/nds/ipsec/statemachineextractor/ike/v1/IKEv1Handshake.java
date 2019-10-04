@@ -10,23 +10,28 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayloadWithPKCS1EncryptedBody;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -82,46 +87,119 @@ public final class IKEv1Handshake {
             return null; //only a retransmission
         }
         lastMsg = rxData;
-        ISAKMPMessage messageReceived = IKEv1MessageBuilder.fromByteArray(rxData, ciphersuite, ltsecrets);
+        ISAKMPMessage messageReceived = ISAKMPMessageFromByteArray(rxData);
         messages.add(messageReceived);
-        extractProperties(messageReceived);
         return messageReceived;
     }
 
-    void extractProperties(ISAKMPMessage msg) throws GeneralSecurityException, IKEHandshakeException {
-        secrets.setResponderCookie(msg.getResponderCookie());
-        for (ISAKMPPayload payload : msg.getPayloads()) {
-            switch (payload.getType()) {
-                case SecurityAssociation:
-                    SecurityAssociationPayload receivedSAPayload = (SecurityAssociationPayload) payload;
-                    adjustCiphersuite(receivedSAPayload);
-                    break;
-                case KeyExchange:
-                    secrets.setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
-                    secrets.computeDHSecret();
-                    break;
-                case Identification:
-                    if (payload instanceof EncryptedISAKMPPayload) {
-                        EncryptedISAKMPPayload encPayload = (EncryptedISAKMPPayload) payload;
-                        payload = encPayload.getPlainPayload();
-                    }
-                    secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
-                    secrets.computeSecretKeys();
-                    break;
-                case Nonce:
-                    if (payload instanceof EncryptedISAKMPPayload) {
-                        EncryptedISAKMPPayload encPayload = (EncryptedISAKMPPayload) payload;
-                        payload = encPayload.getPlainPayload();
-                    }
-                    secrets.setResponderNonce(((NoncePayload) payload).getNonceData());
-                    secrets.computeSecretKeys();
-                    break;
-                case VendorID:
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Not supported yet: " + payload.getType().toString());
+    ISAKMPMessage ISAKMPMessageFromByteArray(byte[] bytes) throws ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
+        if (bytes.length < ISAKMPMessage.ISAKMP_HEADER_LEN) {
+            throw new ISAKMPParsingException("Not enough bytes supplied to build an ISAKMPMessage!");
+        }
+        switch (ExchangeTypeEnum.get(bytes[18])) {
+            case Aggressive:
+            case IdentityProtection:
+            case Informational:
+                break;
+            default:
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
+        ISAKMPMessage message = new ISAKMPMessage();
+        message.setInitiatorCookie(Arrays.copyOfRange(bytes, 0, 8));
+        message.setResponderCookie(Arrays.copyOfRange(bytes, 8, 16));
+        message.setVersion(bytes[17]);
+        message.setExchangeType(ExchangeTypeEnum.get(bytes[18]));
+        message.setEncryptedFlag((bytes[19] & 1) > 0);
+        message.setCommitFlag((bytes[19] & 2) > 0);
+        message.setAuthenticationOnlyFlag((bytes[19] & 4) > 0);
+        message.setMessageId(Arrays.copyOfRange(bytes, 20, 24));
+        int messageLength = new BigInteger(Arrays.copyOfRange(bytes, 24, 28)).intValue();
+        secrets.setResponderCookie(message.getResponderCookie());
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        bais.skip(ISAKMPMessage.ISAKMP_HEADER_LEN);
+        PayloadTypeEnum nextPayload = PayloadTypeEnum.get(bytes[16]);
+        if (message.isEncryptedFlag()) {
+            while (nextPayload != PayloadTypeEnum.NONE) {
+                ISAKMPPayload payload;
+                switch (nextPayload) {
+                    case Hash:
+                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(HashPayload.class, bais, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
+                        break;
+                    case Notification:
+                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(NotificationPayload.class, bais, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("Not supported yet.");
+                }
+                nextPayload = payload.getNextPayload();
+                message.addPayload(payload);
+            }
+        } else {
+            while (nextPayload != PayloadTypeEnum.NONE) {
+                ISAKMPPayload payload;
+                switch (nextPayload) {
+                    case SecurityAssociation:
+                        payload = SecurityAssociationPayload.fromStream(bais);
+                        SecurityAssociationPayload receivedSAPayload = (SecurityAssociationPayload) payload;
+                        adjustCiphersuite(receivedSAPayload);
+                        break;
+                    case KeyExchange:
+                        payload = KeyExchangePayload.fromStream(bais);
+                        secrets.setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                        secrets.computeDHSecret();
+                        break;
+                    case Identification:
+                        switch (ciphersuite.getAuthMethod()) {
+                            case PKE:
+                                payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
+                                break;
+                            case RevPKE:
+                                throw new UnsupportedOperationException("Not supported yet.");
+                            //break;
+                            default:
+                                payload = IdentificationPayload.fromStream(bais);
+                                break;
+                        }
+                        secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
+                        secrets.computeSecretKeys();
+                        break;
+                    case Hash:
+                        payload = HashPayload.fromStream(bais);
+                        if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
+                            throw new IKEHandshakeException("Responder Hashes do not match!");
+                        }
+                        break;
+                    case Nonce:
+                        switch (ciphersuite.getAuthMethod()) {
+                            case PKE:
+                            case RevPKE:
+                                payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
+                                break;
+                            default:
+                                payload = NoncePayload.fromStream(bais);
+                                break;
+                        }
+                        secrets.setResponderNonce(((NoncePayload) payload).getNonceData());
+                        secrets.computeSecretKeys();
+                        break;
+                    case VendorID:
+                        payload = VendorIDPayload.fromStream(bais);
+                        break;
+                    case Notification:
+                        payload = NotificationPayload.fromStream(bais);
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("Not supported yet.");
+                }
+                nextPayload = payload.getNextPayload();
+                message.addPayload(payload);
             }
         }
+        if (messageLength != message.getLength()) {
+            throw new ISAKMPParsingException("Message lengths differ - Computed: " + message.getLength() + " vs. Received: " + messageLength + "!");
+        }
+        return message;
     }
 
     public void reset() throws IOException, GeneralSecurityException {
@@ -151,7 +229,6 @@ public final class IKEv1Handshake {
         tp.getAttributes().forEach((attr) -> {
             attr.configureCiphersuite(ciphersuite);
         });
-        secrets.generateDhKeyPair();
     }
 
     public void dispose() throws IOException {
@@ -183,7 +260,7 @@ public final class IKEv1Handshake {
         result.setIdentificationData(addr.getAddress());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
             // this authentication method encrypts the identification using the public key of the peer
-            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+            ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
             pke.encrypt();
             return pke;
         }
@@ -205,18 +282,18 @@ public final class IKEv1Handshake {
         result.setNonceData(secrets.getInitiatorNonce());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // these authentication methods encrypt the nonce using the public key of the peer
-            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+            ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
             pke.encrypt();
             return pke;
         }
         return result;
     }
 
-    public ISAKMPPayload prepareHashPayload() throws GeneralSecurityException, IOException {
+    public ISAKMPSerializable prepareHashPayload() throws GeneralSecurityException, IOException {
         secrets.computeSecretKeys();
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(secrets.getHASH_I());
-        SymmetricallyEncryptedISAKMPPayload encPayload = new SymmetricallyEncryptedISAKMPPayload(hashPayload, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV());
+        SymmetricallyEncryptedISAKMPSerializable encPayload = new SymmetricallyEncryptedISAKMPSerializable(hashPayload, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV());
         encPayload.encrypt();
         return encPayload;
     }
