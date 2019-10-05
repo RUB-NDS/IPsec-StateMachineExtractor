@@ -41,6 +41,7 @@ public class IKEv1HandshakeSessionSecrets {
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private SecretKeySpec skeyid, skeyid_d, skeyid_a, skeyid_e;
+    private SecretKeySpec ka;
     private byte[] securityAssociationOfferBody;
     private byte[] keyExchangeData;
     private byte[] identificationPayloadBody;
@@ -200,8 +201,13 @@ public class IKEv1HandshakeSessionSecrets {
         return skeyid_e;
     }
 
+    public SecretKeySpec getKa() {
+        return ka;
+    }
+
     public void computeSecretKeys() throws GeneralSecurityException {
-        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
+        final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
+        Mac prf = Mac.getInstance(HmacIdentifier);
         SecretKeySpec hmacKey;
         byte[] skeyidBytes, skeyid_dBytes, skeyid_aBytes, skeyid_eBytes;
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
@@ -213,7 +219,7 @@ public class IKEv1HandshakeSessionSecrets {
         switch (ciphersuite.getAuthMethod()) {
             case RSA_Sig:
             case DSS_Sig: // For signatures: SKEYID = prf(Ni_b | Nr_b, g^xy)
-                hmacKey = new SecretKeySpec(concatNonces, "Hmac" + ciphersuite.getHash().toString());
+                hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(dhSecret);
                 break;
@@ -221,13 +227,13 @@ public class IKEv1HandshakeSessionSecrets {
             case PKE:
             case RevPKE: // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
                 MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
-                hmacKey = new SecretKeySpec(digest.digest(concatNonces), "Hmac" + ciphersuite.getHash().toString());
+                hmacKey = new SecretKeySpec(digest.digest(concatNonces), HmacIdentifier);
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(concatCookies);
                 break;
 
             case PSK: // For pre-shared keys: SKEYID = prf(pre-shared-key, Ni_b | Nr_b)
-                hmacKey = new SecretKeySpec(ltsecrets.getPreSharedKey(), "Hmac" + ciphersuite.getHash().toString());
+                hmacKey = new SecretKeySpec(ltsecrets.getPreSharedKey(), HmacIdentifier);
                 prf.init(hmacKey);
                 skeyidBytes = prf.doFinal(concatNonces);
                 break;
@@ -235,7 +241,7 @@ public class IKEv1HandshakeSessionSecrets {
             default:
                 throw new UnsupportedOperationException("Unknown authMethod.");
         }
-        skeyid = new SecretKeySpec(skeyidBytes, "Hmac" + ciphersuite.getHash().toString());
+        skeyid = new SecretKeySpec(skeyidBytes, HmacIdentifier);
         prf.init(skeyid);
         prf.update(this.getDHSecret());
         prf.update(concatCookies);
@@ -251,12 +257,15 @@ public class IKEv1HandshakeSessionSecrets {
         prf.update(concatCookies);
         prf.update((byte) 2);
         skeyid_eBytes = prf.doFinal();
-        skeyid_d = new SecretKeySpec(skeyid_dBytes, "Hmac" + ciphersuite.getHash().toString());
-        skeyid_a = new SecretKeySpec(skeyid_aBytes, "Hmac" + ciphersuite.getHash().toString());
-        skeyid_e = new SecretKeySpec(skeyid_eBytes, "Hmac" + ciphersuite.getHash().toString());
-//        byte[] skeyid_eBytesBlockSize = new byte[ciphersuite.getCipher().getBlockSize()];
-//        System.arraycopy(skeyid_eBytes, 0, skeyid_eBytesBlockSize, 0, skeyid_eBytesBlockSize.length);
-//        skeyid_e = new SecretKeySpec(skeyid_eBytesBlockSize, "Hmac" + ciphersuite.getHash().toString());
+        skeyid_d = new SecretKeySpec(skeyid_dBytes, HmacIdentifier);
+        skeyid_a = new SecretKeySpec(skeyid_aBytes, HmacIdentifier);
+        skeyid_e = new SecretKeySpec(skeyid_eBytes, HmacIdentifier);
+        if (skeyid_eBytes.length < ciphersuite.getCipher().getBlockSize()) {
+            throw new UnsupportedOperationException("Not enough keying material. Additional PRF runs needed.");
+        }
+        byte[] skeyid_eBytesBlockSize = new byte[ciphersuite.getCipher().getBlockSize()];
+        System.arraycopy(skeyid_eBytes, 0, skeyid_eBytesBlockSize, 0, skeyid_eBytesBlockSize.length);
+        ka = new SecretKeySpec(skeyid_eBytesBlockSize, HmacIdentifier);
     }
 
     public byte[] getHASH_I() throws GeneralSecurityException {

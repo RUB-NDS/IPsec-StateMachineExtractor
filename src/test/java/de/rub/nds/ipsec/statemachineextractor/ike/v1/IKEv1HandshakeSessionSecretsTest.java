@@ -24,8 +24,8 @@ public class IKEv1HandshakeSessionSecretsTest {
         CryptoHelper.prepare();
     }
 
-    private static final String TESTDHSECRET = 
-              "19B67B23EB5F792EC9D7E11D16501CA2"
+    private static final String TESTDHSECRET
+            = "19B67B23EB5F792EC9D7E11D16501CA2"
             + "0F2A2D0B230D525CD824DFB16867B515"
             + "DC2CE9560B20B2149BFB360C1662C26A"
             + "5AD7FE1FAA86E66213238C80B2ED46CC"
@@ -47,12 +47,21 @@ public class IKEv1HandshakeSessionSecretsTest {
         instance.setResponderCookie(DatatypeHelper.hexDumpToByteArray("047ad6f8b3d0abb7"));
         instance.setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("4654fdd74594982a"));
         instance.setResponderNonce(DatatypeHelper.hexDumpToByteArray("3673e64987b4956dbb8b933399251a5abf88f557a723b802b345f838667e9a4e"));
+        instance.setKeyExchangeData(DatatypeHelper.hexDumpToByteArray("75fb75db0749d4b15d9bb067b63399f790246dd7919d0c0a88fc34dd76eb9ad204e162b261914c0966a2d32d05178d4c0f0ec3817692fca675678f2fd2a6869188b943e33ad44cc859a5af98d6d5332c538cff4174ee737c8624de910cc40bd953f7940d1b2d8a681cee03c85199fbe773bfa100ffea5fcb82eed25a399b0b3e"));
+        instance.setPeerKeyExchangeData(DatatypeHelper.hexDumpToByteArray("2096a31ff922e5224d9d19f06a41e2d9aebe1180d4e5cbc3d6ea166e2b8810d5ddd048375025ae9bf895ad40c508cd8b9398bded0d00ae7e77c1a1eb31930495106892630152a926a45037606cda4651340082fc10558786b4d8c4e6d72222d580d9a30d9c3b7fe9c348a6eadc5e79a24fe4b4364297b5ff71914ef8a6980e73"));
+        instance.setSAOfferBody(DatatypeHelper.hexDumpToByteArray("00000001000000010000002c01010001000000240101000080010007800e0080800200028004000280030001800b0001800c7080"));
+        instance.setPeerIdentificationPayloadBody(DatatypeHelper.hexDumpToByteArray("010000000a00030a"));
         instance.setDHSecret(DatatypeHelper.hexDumpToByteArray(TESTDHSECRET));
+
         instance.computeSecretKeys();
+
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("49856BC53F30DB8CE55F5BEFAE9E42431279550C"), instance.getSKEYID().getEncoded());
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("E5D7368180A8766F09C90CC9AC15182D3CD492EE"), instance.getSKEYID_d().getEncoded());
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("92DE109FE83047C95812B600820F1476CD24AA49"), instance.getSKEYID_a().getEncoded());
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("DE5D24679AD21491E63E2D7173017769CD7B9BC5"), instance.getSKEYID_e().getEncoded());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("DE5D24679AD21491E63E2D7173017769"), instance.getKa().getEncoded());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("139568606DF1337CBCBC8FA7D201C8A8"), instance.getIV());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("BA8C49CFD796BDC78E63FF6B5A858FC289DAD933"), instance.getHASH_R());
     }
 
 }
