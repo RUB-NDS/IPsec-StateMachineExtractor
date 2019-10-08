@@ -14,8 +14,9 @@ package de.rub.nds.ipsec.statemachineextractor.learning;
  */
 public enum IKEInputAlphabetEnum {
     RESET,
-//    IKEv1_MM_SA,
-//    IKEv1_MM_KE,
-//    IKEv1_MM_HASH,
-    IKEv1_AM_PSK_SA_KE_No_ID;
+//    v1_MM_SA,
+//    v1_MM_KE,
+//    v1_MM_HASH,
+    v1_AM_PSK_SA_KE_No_ID,
+    v1_AM_HASH;
 }

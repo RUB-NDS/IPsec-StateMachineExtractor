@@ -16,7 +16,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
@@ -40,6 +39,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -74,7 +74,7 @@ public final class IKEv1Handshake {
             messageToSend.setInitiatorCookie(secrets.getInitiatorCookie());
         }
         messageToSend.setResponderCookie(secrets.getResponderCookie());
-        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation) {
+        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation && secrets.getSAOfferBody() != null) {
             secrets.setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
         udpTH.sendData(messageToSend.getBytes());
@@ -124,10 +124,10 @@ public final class IKEv1Handshake {
                 ISAKMPPayload payload;
                 switch (nextPayload) {
                     case Hash:
-                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(HashPayload.class, bais, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
+                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(HashPayload.class, bais, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
                         break;
                     case Notification:
-                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(NotificationPayload.class, bais, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
+                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(NotificationPayload.class, bais, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
                         break;
                     default:
                         throw new UnsupportedOperationException("Not supported yet.");
@@ -268,6 +268,7 @@ public final class IKEv1Handshake {
             // this authentication method encrypts the identification using a derived key
             throw new UnsupportedOperationException("Not supported yet.");
         }
+        secrets.setIdentificationPayloadBody(result.getBody());
         return result;
     }
 
@@ -289,12 +290,13 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public ISAKMPSerializable prepareHashPayload() throws GeneralSecurityException, IOException {
+    public ISAKMPPayload prepareHashPayload() throws GeneralSecurityException, IOException {
         secrets.computeSecretKeys();
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(secrets.getHASH_I());
-        SymmetricallyEncryptedISAKMPSerializable encPayload = new SymmetricallyEncryptedISAKMPSerializable(hashPayload, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV());
-        encPayload.encrypt();
-        return encPayload;
+//        SymmetricallyEncryptedISAKMPSerializable encPayload = new SymmetricallyEncryptedISAKMPSerializable(hashPayload, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV());
+//        encPayload.encrypt();
+//        return encPayload;
+        return hashPayload;
     }
 }

@@ -46,11 +46,11 @@ public class IKEv1HandshakeSessionSecretsTest {
 
         instance.computeSecretKeys();
 
-        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("49856BC53F30DB8CE55F5BEFAE9E42431279550C"), instance.getSKEYID().getEncoded());
-        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("E5D7368180A8766F09C90CC9AC15182D3CD492EE"), instance.getSKEYID_d().getEncoded());
-        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("92DE109FE83047C95812B600820F1476CD24AA49"), instance.getSKEYID_a().getEncoded());
-        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("DE5D24679AD21491E63E2D7173017769CD7B9BC5"), instance.getSKEYID_e().getEncoded());
-        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("DE5D24679AD21491E63E2D7173017769"), instance.getKa().getEncoded());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("49856BC53F30DB8CE55F5BEFAE9E42431279550C"), instance.getSKEYID());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("E5D7368180A8766F09C90CC9AC15182D3CD492EE"), instance.getSKEYID_d());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("92DE109FE83047C95812B600820F1476CD24AA49"), instance.getSKEYID_a());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("DE5D24679AD21491E63E2D7173017769CD7B9BC5"), instance.getSKEYID_e());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("DE5D24679AD21491E63E2D7173017769"), instance.getKa());
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("139568606DF1337CBCBC8FA7D201C8A8"), instance.getIV());
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("BA8C49CFD796BDC78E63FF6B5A858FC289DAD933"), instance.getHASH_R());
     }

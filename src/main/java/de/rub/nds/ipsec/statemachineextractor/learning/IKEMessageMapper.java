@@ -19,11 +19,11 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -31,6 +31,8 @@ import java.security.GeneralSecurityException;
  */
 public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutputAlphabetEnum, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
 
+    static final ISAKMPMessage PARSING_ERROR = new ISAKMPMessage();
+    
     @Override
     public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(IKEInputAlphabetEnum abstractInput) {
         return (IKEv1Handshake handshake) -> {
@@ -40,23 +42,23 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
                     case RESET:
                         handshake.reset();
                         return null;
-//                    case IKEv1_MM_SA:
+//                    case v1_MM_SA:
 //                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
 //                        msg.addPayload(SecurityAssociationPayloadFactory.PKE_AES128_SHA1_G5);
 //                        break;
-//                    case IKEv1_MM_KE:
+//                    case v1_MM_KE:
 //                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
 //                        msg.addPayload(handshake.prepareKeyExchangePayload());
 //                        msg.addPayload(handshake.prepareIdentificationPayload());
 //                        msg.addPayload(handshake.prepareNoncePayload());
 //                        msg.addPayload(VendorIDPayload.DeadPeerDetection);
 //                        break;
-//                    case IKEv1_MM_HASH:
+//                    case v1_MM_HASH:
 //                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
 //                        msg.addPayload(handshake.prepareHashPayload());
 //                        msg.setEncryptedFlag(true);
 //                        break; 
-                    case IKEv1_AM_PSK_SA_KE_No_ID:
+                    case v1_AM_PSK_SA_KE_No_ID:
                         msg.setExchangeType(ExchangeTypeEnum.Aggressive);
                         SecurityAssociationPayload sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
                         msg.addPayload(sa);
@@ -65,12 +67,18 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
                         msg.addPayload(handshake.prepareNoncePayload());
                         msg.addPayload(handshake.prepareIdentificationPayload());
                         break;
+                    case v1_AM_HASH:
+                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+                        msg.addPayload(handshake.prepareHashPayload());
+                        break;
                     default:
                         throw new UnsupportedOperationException("Not supported yet.");
                 }
                 return handshake.exchangeMessage(msg);
-            } catch (IOException | ISAKMPParsingException | IKEHandshakeException | GeneralSecurityException ex) {
+            } catch (IOException | IKEHandshakeException | GeneralSecurityException ex) {
                 throw new SULException(ex);
+            } catch (ISAKMPParsingException ex) {
+                return PARSING_ERROR;
             }
         };
     }
@@ -80,11 +88,14 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
         if (concreteOutput == null) {
             return IKEOutputAlphabetEnum.NO_RESPONSE;
         }
+        if (concreteOutput == PARSING_ERROR) {
+            return IKEOutputAlphabetEnum.PARSING_ERROR;
+        }
         StringBuilder name = new StringBuilder();
         if (concreteOutput.getVersion() == 0x10) {
-            name.append("IKEv1");
+            name.append("v1");
         } else {
-            name.append("IKEv2");
+            name.append("v2");
         }
         name.append("_");
         switch (concreteOutput.getExchangeType()) {

@@ -43,7 +43,7 @@ public class IKEv1HandshakeTest {
         KeyExchangePayload result = instance.prepareKeyExchangePayload();
         assertTrue(result.getLength() <= instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4);
     }
-    
+
     /**
      * Test of prepareKeyExchangePayload method, of class IKEv1Handshake.
      */
@@ -65,7 +65,7 @@ public class IKEv1HandshakeTest {
         ISAKMPPayload result = instance.prepareNoncePayload();
         assertEquals(instance.ciphersuite.getNonceLen() + 4, result.getLength());
     }
-    
+
     /**
      * Test of fromByteArray method, of class IKEv1MessageBuilder.
      */
@@ -77,7 +77,7 @@ public class IKEv1HandshakeTest {
         ISAKMPMessage instance = handshake.ISAKMPMessageFromByteArray(baos.toByteArray());
         assertEquals(1, instance.getPayloads().size());
     }
-    
+
     /**
      * Test of fromByteArray method, of class IKEv1MessageBuilder.
      */
@@ -90,6 +90,6 @@ public class IKEv1HandshakeTest {
         assertEquals(ExchangeTypeEnum.Informational, instance.getExchangeType());
         assertEquals(1, instance.getPayloads().size());
         assertEquals(PayloadTypeEnum.Notification, instance.getPayloads().get(0).getType());
-        assertEquals(NotifyMessageTypeEnum.PayloadMalformed, ((NotificationPayload)instance.getPayloads().get(0)).getNotifyMessageType());
+        assertEquals(NotifyMessageTypeEnum.PayloadMalformed, ((NotificationPayload) instance.getPayloads().get(0)).getNotifyMessageType());
     }
 }
