@@ -11,11 +11,15 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.spec.ECParameterSpec;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.spec.DHParameterSpec;
@@ -36,6 +40,7 @@ public class IKEv1HandshakeSessionSecrets {
     private PublicKey peerPublicKey;
     private byte[] dhSecret;
     private byte[] iv;
+    private final Map<String, byte[]> infIVs = new HashMap<>();
     private DHGroupAttributeEnum internalDHGroup;
     private boolean isInitiatorNonceChosen = false;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -159,7 +164,7 @@ public class IKEv1HandshakeSessionSecrets {
         KeyAgreement keyAgreement = KeyAgreement.getInstance(dhAlgoName);
         keyAgreement.init(dhKeyPair.getPrivate());
         keyAgreement.doPhase(peerPublicKey, true);
-        
+
         this.dhSecret = keyAgreement.generateSecret();
         return this.dhSecret;
     }
@@ -294,13 +299,30 @@ public class IKEv1HandshakeSessionSecrets {
                 digest.update(this.getKeyExchangeData());
                 digest.update(this.getPeerKeyExchangeData());
                 byte[] hash = digest.digest();
-                this.iv = new byte[blockSize];
-                System.arraycopy(hash, 0, this.iv, 0, blockSize);
+                this.iv = Arrays.copyOf(hash, blockSize);
             } catch (NullPointerException ex) {
                 return new byte[blockSize];
             }
         }
         return this.iv;
+    }
+
+    public byte[] getInformationalIV(byte[] msgID) throws GeneralSecurityException {
+        String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
+        if (!this.infIVs.containsKey(msgIDStr)) {
+            int blockSize = ciphersuite.getCipher().getBlockSize();
+            try {
+                MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
+                digest.update(this.getIV());
+                digest.update(msgID);
+                byte[] hash = digest.digest();
+                byte[] infiv = Arrays.copyOf(hash, blockSize);
+                this.infIVs.put(msgIDStr, infiv);
+            } catch (NullPointerException ex) {
+                return new byte[blockSize];
+            }
+        }
+        return this.infIVs.get(msgIDStr);
     }
 
     public void setIV(byte[] iv) {
@@ -310,7 +332,7 @@ public class IKEv1HandshakeSessionSecrets {
     public byte[] getSAOfferBody() {
         return this.securityAssociationOfferBody;
     }
-    
+
     public void setSAOfferBody(byte[] securityAssociationOfferBody) {
         this.securityAssociationOfferBody = securityAssociationOfferBody;
     }

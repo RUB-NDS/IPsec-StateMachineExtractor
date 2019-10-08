@@ -8,19 +8,26 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest.getTestIKEv1MainModeSecurityAssociationMessage;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotifyMessageTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.security.GeneralSecurityException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -91,5 +98,31 @@ public class IKEv1HandshakeTest {
         assertEquals(1, instance.getPayloads().size());
         assertEquals(PayloadTypeEnum.Notification, instance.getPayloads().get(0).getType());
         assertEquals(NotifyMessageTypeEnum.PayloadMalformed, ((NotificationPayload) instance.getPayloads().get(0)).getNotifyMessageType());
+    }
+
+    @Test
+    public void testAggressiveHandhake() {
+        try {
+            IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.10"), 500);
+            ISAKMPMessage msg = new ISAKMPMessage();
+            msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+            SecurityAssociationPayload sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+            msg.addPayload(sa);
+            handshake.adjustCiphersuite(sa);
+            msg.addPayload(handshake.prepareKeyExchangePayload());
+            msg.addPayload(handshake.prepareNoncePayload());
+            msg.addPayload(handshake.prepareIdentificationPayload());
+            ISAKMPMessage answer = handshake.exchangeMessage(msg);
+            msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+            sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+            msg.addPayload(sa);
+            handshake.adjustCiphersuite(sa);
+            msg.addPayload(handshake.prepareKeyExchangePayload());
+            msg.addPayload(handshake.prepareNoncePayload());
+            msg.addPayload(handshake.prepareIdentificationPayload());
+            answer = handshake.exchangeMessage(msg);
+        } catch (IOException | GeneralSecurityException | IKEHandshakeException | ISAKMPParsingException ex) {
+            Logger.getLogger(IKEv1HandshakeTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
