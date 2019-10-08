@@ -24,16 +24,6 @@ public class IKEv1HandshakeSessionSecretsTest {
         CryptoHelper.prepare();
     }
 
-    private static final String TESTDHSECRET
-            = "19B67B23EB5F792EC9D7E11D16501CA2"
-            + "0F2A2D0B230D525CD824DFB16867B515"
-            + "DC2CE9560B20B2149BFB360C1662C26A"
-            + "5AD7FE1FAA86E66213238C80B2ED46CC"
-            + "B821BF5043093027EB6E32C71685A093"
-            + "306DF20C24190C7F93947FA21E56D10E"
-            + "4C5B7063B2B4DC1747F1DF0BD46975D1"
-            + "825EEDE335E3ACBAD71A063CECF866C7";
-
     /**
      * Test of computeSecretKeys method, of class IKEv1HandshakeSessionSecrets.
      */
@@ -43,6 +33,7 @@ public class IKEv1HandshakeSessionSecretsTest {
         handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2);
         IKEv1HandshakeSessionSecrets instance = handshake.secrets;
         instance.generateDefaults();
+        handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
         instance.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("7116900aa5c2880d"));
         instance.setResponderCookie(DatatypeHelper.hexDumpToByteArray("047ad6f8b3d0abb7"));
         instance.setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("4654fdd74594982a"));
@@ -51,7 +42,7 @@ public class IKEv1HandshakeSessionSecretsTest {
         instance.setPeerKeyExchangeData(DatatypeHelper.hexDumpToByteArray("2096a31ff922e5224d9d19f06a41e2d9aebe1180d4e5cbc3d6ea166e2b8810d5ddd048375025ae9bf895ad40c508cd8b9398bded0d00ae7e77c1a1eb31930495106892630152a926a45037606cda4651340082fc10558786b4d8c4e6d72222d580d9a30d9c3b7fe9c348a6eadc5e79a24fe4b4364297b5ff71914ef8a6980e73"));
         instance.setSAOfferBody(DatatypeHelper.hexDumpToByteArray("00000001000000010000002c01010001000000240101000080010007800e0080800200028004000280030001800b0001800c7080"));
         instance.setPeerIdentificationPayloadBody(DatatypeHelper.hexDumpToByteArray("010000000a00030a"));
-        instance.setDHSecret(DatatypeHelper.hexDumpToByteArray(TESTDHSECRET));
+        instance.setDHSecret(DatatypeHelper.hexDumpToByteArray("19B67B23EB5F792EC9D7E11D16501CA20F2A2D0B230D525CD824DFB16867B515DC2CE9560B20B2149BFB360C1662C26A5AD7FE1FAA86E66213238C80B2ED46CCB821BF5043093027EB6E32C71685A093306DF20C24190C7F93947FA21E56D10E4C5B7063B2B4DC1747F1DF0BD46975D1825EEDE335E3ACBAD71A063CECF866C7"));
 
         instance.computeSecretKeys();
 

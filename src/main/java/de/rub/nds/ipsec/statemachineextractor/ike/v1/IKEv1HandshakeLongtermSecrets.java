@@ -23,9 +23,9 @@ import java.util.Base64;
  */
 public class IKEv1HandshakeLongtermSecrets {
 
-    private final byte[] preSharedKey = "AAAA".getBytes();
-    private final PublicKey peerPublicKey;
-    private final PrivateKey myPrivateKey;
+    private byte[] preSharedKey = "AAAA".getBytes();
+    private PublicKey peerPublicKey;
+    private PrivateKey myPrivateKey;
 
     private final String CSR1PrivPEM
             = "MIIEpQIBAAKCAQEA1VnMrbauriqEy+hGC8HvXJRnoIu7lIOERAg7gQXh/4PN1zvN"
@@ -83,6 +83,18 @@ public class IKEv1HandshakeLongtermSecrets {
 
     public PrivateKey getMyPrivateKey() {
         return myPrivateKey;
+    }
+
+    public void setPreSharedKey(byte[] preSharedKey) {
+        this.preSharedKey = preSharedKey;
+    }
+
+    public void setPeerPublicKey(PublicKey peerPublicKey) {
+        this.peerPublicKey = peerPublicKey;
+    }
+
+    public void setMyPrivateKey(PrivateKey myPrivateKey) {
+        this.myPrivateKey = myPrivateKey;
     }
 
 }
