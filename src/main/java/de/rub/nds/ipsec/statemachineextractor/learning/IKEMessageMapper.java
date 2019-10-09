@@ -134,6 +134,9 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
                     NotificationPayload notification = (NotificationPayload) payload;
                     name.append(notification.getNotifyMessageType().toString());
                     break;
+                case Delete:
+                    name.append("DEL");
+                    break;
                 default:
                     throw new UnsupportedOperationException("Not supported yet.");
             }

@@ -96,6 +96,8 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
     
     public static Class<? extends ISAKMPPayload> getImplementingClass(PayloadTypeEnum type) {
         switch(type) {
+            case Delete:
+                return DeletePayload.class;
             case Hash:
                 return HashPayload.class;
             case Identification:

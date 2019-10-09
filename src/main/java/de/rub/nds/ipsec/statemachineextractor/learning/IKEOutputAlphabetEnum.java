@@ -19,6 +19,7 @@ public enum IKEOutputAlphabetEnum {
 //    v1_MM_KE,
 //    v1_MM_HASH,
     v1_AM_SA_KE_No_ID_V_V_HASH,
+    v1_INFO_HASH_DEL,
     v1_INFO_InvalidPayloadType,
     v1_INFO_DoiNotSupported,
     v1_INFO_SituationNotSupported,
