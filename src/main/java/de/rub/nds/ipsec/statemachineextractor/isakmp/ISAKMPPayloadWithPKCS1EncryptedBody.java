@@ -22,7 +22,7 @@ import javax.crypto.Cipher;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implements EncryptedISAKMPData {
+public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implements EncryptedISAKMPPayload {
 
     private final PrivateKey myPrivateKey;
     private final PublicKey peerPublicKey;

@@ -8,20 +8,12 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import java.security.GeneralSecurityException;
-
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public interface EncryptedISAKMPData {
+public interface EncryptedISAKMPPayload extends EncryptedISAKMPData {
 
-    void decrypt() throws GeneralSecurityException, ISAKMPParsingException;
+    ISAKMPPayload getUnderlyingPayload();
 
-    void encrypt() throws GeneralSecurityException;
-
-    byte[] getCiphertext();
-
-    boolean isIsInSync();
-    
 }

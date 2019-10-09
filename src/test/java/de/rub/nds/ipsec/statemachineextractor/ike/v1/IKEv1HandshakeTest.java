@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 
 /**
  *
@@ -101,6 +102,7 @@ public class IKEv1HandshakeTest {
     }
 
     @Test
+    @Ignore
     public void testAggressiveHandhake() {
         try {
             IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.10"), 500);

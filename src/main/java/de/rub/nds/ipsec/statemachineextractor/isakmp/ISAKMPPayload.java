@@ -93,5 +93,30 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
         }
         return buffer;
     }
+    
+    public static Class<? extends ISAKMPPayload> getImplementingClass(PayloadTypeEnum type) {
+        switch(type) {
+            case Hash:
+                return HashPayload.class;
+            case Identification:
+                return IdentificationPayload.class;
+            case KeyExchange:
+                return KeyExchangePayload.class;
+            case Nonce:
+                return NoncePayload.class;
+            case Notification:
+                return NotificationPayload.class;
+            case Proposal:
+                return ProposalPayload.class;
+            case SecurityAssociation:
+                return SecurityAssociationPayload.class;
+            case Transform:
+                return TransformPayload.class;
+            case VendorID:
+                return VendorIDPayload.class;
+            default:
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
 
 }

@@ -10,6 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
@@ -24,7 +25,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
@@ -120,21 +120,11 @@ public final class IKEv1Handshake {
         bais.skip(ISAKMPMessage.ISAKMP_HEADER_LEN);
         PayloadTypeEnum nextPayload = PayloadTypeEnum.get(bytes[16]);
         if (message.isEncryptedFlag()) {
-            while (nextPayload != PayloadTypeEnum.NONE) {
-                ISAKMPPayload payload;
-                switch (nextPayload) {
-                    case Hash:
-                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(HashPayload.class, bais, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
-                        break;
-                    case Notification:
-                        payload = SymmetricallyEncryptedISAKMPSerializable.fromStream(NotificationPayload.class, bais, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV()).getUnderlyingPayload();
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Not supported yet.");
-                }
-                nextPayload = payload.getNextPayload();
-                message.addPayload(payload);
-            }
+            EncryptedISAKMPMessage encMessage = EncryptedISAKMPMessage.fromPlainMessage(message, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV(message.getMessageId()));
+            encMessage.setCiphertext(bais);
+            encMessage.setNextPayload(nextPayload);
+            encMessage.decrypt();
+            message = encMessage;
         } else {
             while (nextPayload != PayloadTypeEnum.NONE) {
                 ISAKMPPayload payload;

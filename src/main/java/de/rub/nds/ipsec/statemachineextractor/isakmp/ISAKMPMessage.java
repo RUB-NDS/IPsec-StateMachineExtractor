@@ -8,9 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1HandshakeLongtermSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1HandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -33,7 +30,7 @@ public class ISAKMPMessage implements ISAKMPSerializable {
     private ExchangeTypeEnum exchangeType = ExchangeTypeEnum.NONE;
     private final BitSet flags = new BitSet(3);
     private byte[] messageId = new byte[]{0x00, 0x00, 0x00, 0x00};
-    private final List<ISAKMPPayload> payloads = new ArrayList<>();
+    protected final List<ISAKMPPayload> payloads = new ArrayList<>();
 
     public byte[] getInitiatorCookie() {
         if (initiatorCookie == null) {
@@ -103,15 +100,15 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         return bytes[0];
     }
 
-    public void setEncryptedFlag(boolean value) {
+    public final void setEncryptedFlag(boolean value) {
         this.flags.set(0, value);
     }
 
-    public void setCommitFlag(boolean value) {
+    public final void setCommitFlag(boolean value) {
         this.flags.set(1, value);
     }
 
-    public void setAuthenticationOnlyFlag(boolean value) {
+    public final void setAuthenticationOnlyFlag(boolean value) {
         this.flags.set(2, value);
     }
 
@@ -162,21 +159,18 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         return length;
     }
 
-    @Override
-    public void writeBytes(ByteArrayOutputStream baos) {
-        writeBytes(baos, null, null, null);
-    }
-
-    private void writeBytes(ByteArrayOutputStream baos, IKEv1Ciphersuite ciphersuite, IKEv1HandshakeLongtermSecrets ltsecrets, IKEv1HandshakeSessionSecrets secrets) {
+    protected void writeBytesWithoutPayloads(ByteArrayOutputStream baos) {
         baos.write(getInitiatorCookie(), 0, 8);
         baos.write(responderCookie, 0, 8);
         baos.write(getNextPayload().getValue());
         baos.write(version);
         baos.write(exchangeType.getValue());
-        this.setEncryptedFlag(ciphersuite != null);
         baos.write(getFlags());
         baos.write(messageId, 0, 4);
         baos.write(DatatypeHelper.intTo4ByteArray(getLength()), 0, 4);
+    }
+    
+    protected void writeBytesOfPayloads(ByteArrayOutputStream baos) {
         for (int i = 0; i < payloads.size(); i++) {
             ISAKMPPayload payload = payloads.get(i);
             if (i < payloads.size() - 1) {
@@ -188,16 +182,16 @@ public class ISAKMPMessage implements ISAKMPSerializable {
             payload.writeBytes(baos);
         }
     }
+    
+    @Override
+    public void writeBytes(ByteArrayOutputStream baos) {
+        writeBytesWithoutPayloads(baos);
+        writeBytesOfPayloads(baos);
+    }
 
     public byte[] getBytes() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        writeBytes(baos, null, null, null);
-        return baos.toByteArray();
-    }
-
-    public byte[] getEncryptedBytes(IKEv1Ciphersuite ciphersuite, IKEv1HandshakeLongtermSecrets ltsecrets, IKEv1HandshakeSessionSecrets secrets) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        writeBytes(baos, ciphersuite, ltsecrets, secrets);
+        writeBytes(baos);
         return baos.toByteArray();
     }
 }

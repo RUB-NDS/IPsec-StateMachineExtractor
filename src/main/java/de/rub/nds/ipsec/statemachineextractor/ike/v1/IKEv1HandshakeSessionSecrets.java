@@ -39,8 +39,7 @@ public class IKEv1HandshakeSessionSecrets {
     private KeyPair dhKeyPair;
     private PublicKey peerPublicKey;
     private byte[] dhSecret;
-    private byte[] iv;
-    private final Map<String, byte[]> infIVs = new HashMap<>();
+    private final Map<String, byte[]> ivs = new HashMap<>();
     private DHGroupAttributeEnum internalDHGroup;
     private boolean isInitiatorNonceChosen = false;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -291,42 +290,31 @@ public class IKEv1HandshakeSessionSecrets {
         return prf.doFinal(this.getPeerIdentificationPayloadBody());
     }
 
-    public byte[] getIV() throws GeneralSecurityException {
-        if (this.iv == null) {
-            int blockSize = ciphersuite.getCipher().getBlockSize();
-            try {
-                MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
-                digest.update(this.getKeyExchangeData());
-                digest.update(this.getPeerKeyExchangeData());
-                byte[] hash = digest.digest();
-                this.iv = Arrays.copyOf(hash, blockSize);
-            } catch (NullPointerException ex) {
-                return new byte[blockSize];
-            }
-        }
-        return this.iv;
-    }
-
-    public byte[] getInformationalIV(byte[] msgID) throws GeneralSecurityException {
+    public byte[] getIV(byte[] msgID) throws GeneralSecurityException {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
-        if (!this.infIVs.containsKey(msgIDStr)) {
+        if (!this.ivs.containsKey(msgIDStr)) {
             int blockSize = ciphersuite.getCipher().getBlockSize();
             try {
                 MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
-                digest.update(this.getIV());
-                digest.update(msgID);
+                if (msgIDStr.equals("00000000")) {
+                    digest.update(this.getKeyExchangeData());
+                    digest.update(this.getPeerKeyExchangeData());
+                } else {
+                    digest.update(this.getIV(new byte[]{0x00, 0x00, 0x00, 0x00}));
+                    digest.update(msgID);
+                }
                 byte[] hash = digest.digest();
-                byte[] infiv = Arrays.copyOf(hash, blockSize);
-                this.infIVs.put(msgIDStr, infiv);
+                this.ivs.put(msgIDStr, Arrays.copyOf(hash, blockSize));
             } catch (NullPointerException ex) {
                 return new byte[blockSize];
             }
         }
-        return this.infIVs.get(msgIDStr);
+        return this.ivs.get(msgIDStr);
     }
 
-    public void setIV(byte[] iv) {
-        this.iv = iv.clone();
+    public void setIV(byte[] msgID, byte[] iv) {
+        String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
+        this.ivs.put(msgIDStr, iv);
     }
 
     public byte[] getSAOfferBody() {
