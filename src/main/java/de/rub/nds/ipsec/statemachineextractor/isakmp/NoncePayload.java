@@ -27,6 +27,11 @@ public class NoncePayload extends SimpleBinaryPayload {
     public void setNonceData(byte[] nonceData) {
         setBinaryData(nonceData);
     }
+
+    @Override
+    public String toString() {
+        return "No";
+    }
     
     public static NoncePayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         NoncePayload noncePayload = new NoncePayload();

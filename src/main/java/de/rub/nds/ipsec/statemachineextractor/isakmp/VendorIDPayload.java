@@ -37,6 +37,11 @@ public class VendorIDPayload extends SimpleBinaryPayload {
     private void _setVendorID(byte[] vendorID) {
         setBinaryData(vendorID);
     }
+
+    @Override
+    public String toString() {
+        return "V";
+    }
     
     public static VendorIDPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         VendorIDPayload vendorIDpayload = new VendorIDPayload();

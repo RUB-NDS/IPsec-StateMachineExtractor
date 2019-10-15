@@ -194,4 +194,36 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         writeBytes(baos);
         return baos.toByteArray();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder name = new StringBuilder();
+        if (this.getVersion() == 0x10) {
+            name.append("v1");
+        } else {
+            name.append("v2");
+        }
+        name.append("_");
+        switch (this.getExchangeType()) {
+            case IdentityProtection:
+                name.append("MM");
+                break;
+            case Aggressive:
+                name.append("AM");
+                break;
+            case Informational:
+                name.append("INFO");
+                break;
+            default:
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
+        if(this.isEncryptedFlag()) {
+            name.append("*");
+        }
+        this.getPayloads().forEach((payload) -> {
+            name.append("-");
+            name.append(payload.toString());
+        });
+        return name.toString();
+    }
 }

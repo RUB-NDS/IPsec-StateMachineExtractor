@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -67,6 +66,11 @@ public class IdentificationPayload extends ISAKMPPayload {
     }
 
     @Override
+    public String toString() {
+        return "ID";
+    }
+
+    @Override
     public int getLength() {
         return ID_HEADER_LEN + identificationData.length;
     }
@@ -93,7 +97,7 @@ public class IdentificationPayload extends ISAKMPPayload {
         this.setPort(Arrays.copyOfRange(body, 2, 4));
         this.setIdentificationData(Arrays.copyOfRange(body, 4, body.length));
     }
-    
+
     @Override
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);

@@ -27,6 +27,11 @@ public class KeyExchangePayload extends SimpleBinaryPayload {
     public void setKeyExchangeData(byte[] keyExchangeData) {
         setBinaryData(keyExchangeData);
     }
+
+    @Override
+    public String toString() {
+        return "KE";
+    }
     
     public static KeyExchangePayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         KeyExchangePayload keyExchangePayload = new KeyExchangePayload();

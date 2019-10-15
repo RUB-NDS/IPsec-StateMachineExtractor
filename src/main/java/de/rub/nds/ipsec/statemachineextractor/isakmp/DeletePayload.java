@@ -9,14 +9,12 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
-import static de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload.NOTIFICATION_HEADER_LEN;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -70,6 +68,11 @@ public class DeletePayload extends ISAKMPPayload {
 
     public List<byte[]> getSPIs() {
         return Collections.unmodifiableList(spis);
+    }
+
+    @Override
+    public String toString() {
+        return "DEL";
     }
 
     @Override

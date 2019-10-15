@@ -27,6 +27,11 @@ public class HashPayload extends SimpleBinaryPayload {
     public void setHashData(byte[] hashData) {
         setBinaryData(hashData);
     }
+
+    @Override
+    public String toString() {
+        return "HASH";
+    }
     
     public static HashPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         HashPayload hashPayload = new HashPayload();

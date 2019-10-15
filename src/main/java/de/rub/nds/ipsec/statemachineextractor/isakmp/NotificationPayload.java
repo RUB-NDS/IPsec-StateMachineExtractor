@@ -82,6 +82,11 @@ public class NotificationPayload extends ISAKMPPayload {
     }
 
     @Override
+    public String toString() {
+        return this.notifyMessageType.toString();
+    }
+
+    @Override
     public int getLength() {
         return NOTIFICATION_HEADER_LEN + spi.length + notificationData.length;
     }
@@ -98,13 +103,13 @@ public class NotificationPayload extends ISAKMPPayload {
     }
 
     public static NotificationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-        NotificationPayload notificationPayload = new NotificationPayload();        
+        NotificationPayload notificationPayload = new NotificationPayload();
         notificationPayload.fillFromStream(bais);
         return notificationPayload;
     }
 
     @Override
-    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException{
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
         this.setDomainOfInterpretation(ByteBuffer.wrap(read4ByteFromStream(bais)).getInt());
         byte[] buffer = read4ByteFromStream(bais);

@@ -17,8 +17,6 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadF
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -27,10 +25,10 @@ import java.security.GeneralSecurityException;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutputAlphabetEnum, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
+public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, String, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
 
     static final ISAKMPMessage PARSING_ERROR = new ISAKMPMessage();
-    
+
     @Override
     public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(IKEInputAlphabetEnum abstractInput) {
         return (IKEv1Handshake handshake) -> {
@@ -82,65 +80,13 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, IKEOutp
     }
 
     @Override
-    public IKEOutputAlphabetEnum mapOutput(ISAKMPMessage concreteOutput) {
+    public String mapOutput(ISAKMPMessage concreteOutput) {
         if (concreteOutput == null) {
-            return IKEOutputAlphabetEnum.NO_RESPONSE;
+            return IKEOutputAlphabet.NO_RESPONSE;
         }
         if (concreteOutput == PARSING_ERROR) {
-            return IKEOutputAlphabetEnum.PARSING_ERROR;
+            return IKEOutputAlphabet.PARSING_ERROR;
         }
-        StringBuilder name = new StringBuilder();
-        if (concreteOutput.getVersion() == 0x10) {
-            name.append("v1");
-        } else {
-            name.append("v2");
-        }
-        name.append("_");
-        switch (concreteOutput.getExchangeType()) {
-            case IdentityProtection:
-                name.append("MM");
-                break;
-            case Aggressive:
-                name.append("AM");
-                break;
-            case Informational:
-                name.append("INFO");
-                break;
-            default:
-                throw new UnsupportedOperationException("Not supported yet.");
-        }
-        for (ISAKMPPayload payload : concreteOutput.getPayloads()) {
-            name.append("_");
-            switch (payload.getType()) {
-                case SecurityAssociation:
-                    name.append("SA");
-                    break;
-                case KeyExchange:
-                    name.append("KE");
-                    break;
-                case Nonce:
-                    name.append("No");
-                    break;
-                case Identification:
-                    name.append("ID");
-                    break;
-                case Hash:
-                    name.append("HASH");
-                    break;
-                case VendorID:
-                    name.append("V");
-                    break;
-                case Notification:
-                    NotificationPayload notification = (NotificationPayload) payload;
-                    name.append(notification.getNotifyMessageType().toString());
-                    break;
-                case Delete:
-                    name.append("DEL");
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Not supported yet.");
-            }
-        }
-        return IKEOutputAlphabetEnum.valueOf(name.toString());
+        return concreteOutput.toString();
     }
 }

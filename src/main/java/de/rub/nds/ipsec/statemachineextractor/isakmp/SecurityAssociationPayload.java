@@ -69,9 +69,14 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
     public void addProposalPayload(ProposalPayload payload) {
         payloads.add(payload);
     }
-    
+
     public List<ProposalPayload> getProposalPayloads() {
         return Collections.unmodifiableList(payloads);
+    }
+
+    @Override
+    public String toString() {
+        return "SA";
     }
 
     @Override
