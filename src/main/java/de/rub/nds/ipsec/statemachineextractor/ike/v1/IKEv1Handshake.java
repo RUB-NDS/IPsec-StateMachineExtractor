@@ -81,9 +81,6 @@ public final class IKEv1Handshake {
             secrets.setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
         udpTH.sendData(messageToSend.getBytes());
-        if (messageToSend.isEncryptedFlag()) {
-            secrets.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage)messageToSend).getNextIV());
-        }
         messages.add(messageToSend);
         byte[] rxData = udpTH.fetchData();
         if (rxData.length == 0) {
@@ -93,6 +90,10 @@ public final class IKEv1Handshake {
             return null; //only a retransmission
         }
         lastMsg = rxData;
+        //received an answer, so store last ciphertext block as IV
+        if (messageToSend.isEncryptedFlag()) {
+            secrets.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage)messageToSend).getNextIV());
+        }
         ISAKMPMessage messageReceived = ISAKMPMessageFromByteArray(rxData);
         messages.add(messageReceived);
         return messageReceived;

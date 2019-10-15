@@ -106,25 +106,33 @@ public class IKEv1HandshakeTest {
     public void testAggressiveHandhake() {
         try {
             IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.10"), 500);
+            SecurityAssociationPayload sa;
 
             ISAKMPMessage msg = new ISAKMPMessage();
-            msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-            SecurityAssociationPayload sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+            msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+            sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
             msg.addPayload(sa);
             handshake.adjustCiphersuite(sa);
-            ISAKMPMessage answer = handshake.exchangeMessage(msg);
-
-            msg = new ISAKMPMessage();
-            msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
             msg.addPayload(handshake.prepareKeyExchangePayload());
             msg.addPayload(handshake.prepareNoncePayload());
-            answer = handshake.exchangeMessage(msg);
+            msg.addPayload(handshake.prepareIdentificationPayload());
+            ISAKMPMessage answer = handshake.exchangeMessage(msg);
 
             msg = new ISAKMPMessage();
             msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
             msg.addPayload(handshake.prepareIdentificationPayload());
             msg.addPayload(handshake.prepareHashPayload());
             msg.setEncryptedFlag(true);
+            answer = handshake.exchangeMessage(msg);
+
+            msg = new ISAKMPMessage();
+            msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+            sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+            msg.addPayload(sa);
+            handshake.adjustCiphersuite(sa);
+            msg.addPayload(handshake.prepareKeyExchangePayload());
+            msg.addPayload(handshake.prepareNoncePayload());
+            msg.addPayload(handshake.prepareIdentificationPayload());
             answer = handshake.exchangeMessage(msg);
         } catch (IOException | GeneralSecurityException | IKEHandshakeException | ISAKMPParsingException ex) {
             Logger.getLogger(IKEv1HandshakeTest.class.getName()).log(Level.SEVERE, null, ex);
