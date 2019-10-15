@@ -68,6 +68,9 @@ public final class IKEv1Handshake {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
+        if (messageToSend.isEncryptedFlag()) {
+            messageToSend = EncryptedISAKMPMessage.fromPlainMessage(messageToSend, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV(messageToSend.getMessageId()));
+        }
         if (secrets.getInitiatorCookie() == null) {
             secrets.setInitiatorCookie(messageToSend.getInitiatorCookie());
         } else {
@@ -78,6 +81,9 @@ public final class IKEv1Handshake {
             secrets.setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
         udpTH.sendData(messageToSend.getBytes());
+        if (messageToSend.isEncryptedFlag()) {
+            secrets.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage)messageToSend).getNextIV());
+        }
         messages.add(messageToSend);
         byte[] rxData = udpTH.fetchData();
         if (rxData.length == 0) {
@@ -120,7 +126,9 @@ public final class IKEv1Handshake {
         bais.skip(ISAKMPMessage.ISAKMP_HEADER_LEN);
         PayloadTypeEnum nextPayload = PayloadTypeEnum.get(bytes[16]);
         if (message.isEncryptedFlag()) {
-            EncryptedISAKMPMessage encMessage = EncryptedISAKMPMessage.fromPlainMessage(message, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV(message.getMessageId()));
+            SecretKeySpec key = new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName());
+            byte[] iv = secrets.getIV(message.getMessageId());
+            EncryptedISAKMPMessage encMessage = EncryptedISAKMPMessage.fromPlainMessage(message, key, ciphersuite.getCipher(), iv);
             encMessage.setCiphertext(bais);
             encMessage.setNextPayload(nextPayload);
             encMessage.decrypt();

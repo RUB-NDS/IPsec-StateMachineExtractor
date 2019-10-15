@@ -38,35 +38,36 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, String,
                     case RESET:
                         handshake.reset();
                         return null;
-//                    case v1_MM_SA:
-//                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-//                        msg.addPayload(SecurityAssociationPayloadFactory.PKE_AES128_SHA1_G5);
-//                        break;
-//                    case v1_MM_KE:
-//                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-//                        msg.addPayload(handshake.prepareKeyExchangePayload());
-//                        msg.addPayload(handshake.prepareIdentificationPayload());
-//                        msg.addPayload(handshake.prepareNoncePayload());
-//                        msg.addPayload(VendorIDPayload.DeadPeerDetection);
-//                        break;
-//                    case v1_MM_HASH:
-//                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-//                        msg.addPayload(handshake.prepareHashPayload());
-//                        msg.setEncryptedFlag(true);
-//                        break; 
-                    case v1_AM_PSK_SA_KE_No_ID:
-                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+                    case v1_MM_SA:
+                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         SecurityAssociationPayload sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
                         msg.addPayload(sa);
                         handshake.adjustCiphersuite(sa);
+                        break;
+                    case v1_MM_KE_ID_No:
+                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(handshake.prepareKeyExchangePayload());
                         msg.addPayload(handshake.prepareNoncePayload());
+                        break;
+                    case v1_MM_HASH:
+                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(handshake.prepareIdentificationPayload());
-                        break;
-                    case v1_AM_HASH:
-                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
                         msg.addPayload(handshake.prepareHashPayload());
-                        break;
+                        msg.setEncryptedFlag(true);
+                        break; 
+//                    case v1_AM_PSK_SA_KE_No_ID:
+//                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+//                        SecurityAssociationPayload sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+//                        msg.addPayload(sa);
+//                        handshake.adjustCiphersuite(sa);
+//                        msg.addPayload(handshake.prepareKeyExchangePayload());
+//                        msg.addPayload(handshake.prepareNoncePayload());
+//                        msg.addPayload(handshake.prepareIdentificationPayload());
+//                        break;
+//                    case v1_AM_HASH:
+//                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+//                        msg.addPayload(handshake.prepareHashPayload());
+//                        break;
                     default:
                         throw new UnsupportedOperationException("Not supported yet.");
                 }

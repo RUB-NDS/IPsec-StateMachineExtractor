@@ -44,6 +44,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
         this.writeBytesOfPayloads(baos);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, IV);
         this.ciphertext = cipher.doFinal(baos.toByteArray());
+        this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipher.getBlockSize(), this.ciphertext.length);
         this.isInSync = true;
     }
 
@@ -123,6 +124,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
 
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
+        this.nextPayload = super.getNextPayload();
         writeBytesWithoutPayloads(baos);
         try {
             this.encrypt();
