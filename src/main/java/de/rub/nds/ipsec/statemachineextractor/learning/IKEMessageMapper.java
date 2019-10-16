@@ -39,6 +39,8 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, String,
                     case RESET:
                         handshake.reset();
                         return null;
+                    case RETRANS:
+                        return handshake.retransmit();
                     case v1_MM_PSK_SA:
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;

@@ -34,13 +34,14 @@ import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
@@ -53,11 +54,10 @@ public final class IKEv1Handshake {
     IKEv1Ciphersuite ciphersuite;
     IKEv1HandshakeLongtermSecrets ltsecrets;
     IKEv1HandshakeSessionSecrets secrets;
-    List<ISAKMPMessage> messages = new ArrayList<>();
+    List<WireMessage> messages = new ArrayList<>();
     final long timeout;
     final InetAddress remoteAddress;
     final int remotePort;
-    Set<byte[]> rxMsgs = new HashSet<>();
 
     public IKEv1Handshake(long timeout, InetAddress remoteAddress, int remotePort) throws IOException, GeneralSecurityException {
         this.timeout = timeout;
@@ -65,11 +65,45 @@ public final class IKEv1Handshake {
         this.remotePort = remotePort;
         reset();
     }
-
-    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
+    
+    public ISAKMPMessage retransmit() throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
+        if (messages.isEmpty()) {
+            return null;
+        }
+        List<WireMessage> txMsgs = messages.stream().filter(wm -> wm.isSentByMe == true).collect(Collectors.toList());
+        WireMessage lastTXMsg = txMsgs.get(txMsgs.size() - 1);
+        byte[] txData = lastTXMsg.getData().array();
+        byte[] rxData = exchangeData(txData);
+        if (rxData == null) {
+            return null;
+        }
+        //received an answer that is no retransmission, so store messages and last ciphertext block as IV
+        messages.add(lastTXMsg);
+        if (lastTXMsg.getMessage().isEncryptedFlag()) {
+            secrets.setIV(lastTXMsg.getMessage().getMessageId(), ((EncryptedISAKMPMessage) lastTXMsg.getMessage()).getNextIV());
+        }
+        ISAKMPMessage messageReceived = ISAKMPMessageFromByteArray(rxData);
+        messages.add(new WireMessage(rxData, messageReceived, false));
+        return messageReceived;
+    }
+    
+    protected byte[] exchangeData(byte[] txData) throws IOException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
+        udpTH.sendData(txData);
+        byte[] rxData = udpTH.fetchData();
+        if (rxData.length == 0) {
+            return null;
+        }
+        Set<ByteBuffer> rxMsgs = messages.stream().filter(wm -> wm.isSentByMe == false).map(WireMessage::getData).collect(Collectors.toSet());
+        if (rxMsgs.contains(ByteBuffer.wrap(rxData))) {
+            return null; //only a retransmission
+        }
+        return rxData;
+    }
+
+    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
         if (messageToSend.isEncryptedFlag()) {
             messageToSend = EncryptedISAKMPMessage.fromPlainMessage(messageToSend, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV(messageToSend.getMessageId()));
         }
@@ -82,22 +116,18 @@ public final class IKEv1Handshake {
         if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation && secrets.getSAOfferBody() != null) {
             secrets.setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
-        udpTH.sendData(messageToSend.getBytes());
-        messages.add(messageToSend);
-        byte[] rxData = udpTH.fetchData();
-        if (rxData.length == 0) {
+        byte[] txData = messageToSend.getBytes();
+        messages.add(new WireMessage(txData, messageToSend, true));
+        byte[] rxData = exchangeData(txData);
+        if (rxData == null) {
             return null;
         }
-        if (rxMsgs.contains(rxData)) {
-            return null; //only a retransmission
-        }
-        rxMsgs.add(rxData);
         //received an answer, so store last ciphertext block as IV
         if (messageToSend.isEncryptedFlag()) {
             secrets.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage) messageToSend).getNextIV());
         }
         ISAKMPMessage messageReceived = ISAKMPMessageFromByteArray(rxData);
-        messages.add(messageReceived);
+        messages.add(new WireMessage(rxData, messageReceived, false));
         return messageReceived;
     }
 
@@ -204,7 +234,6 @@ public final class IKEv1Handshake {
     }
 
     public void reset() throws IOException, GeneralSecurityException {
-        rxMsgs.clear();
         messages.clear();
         ciphersuite = new IKEv1Ciphersuite();
         ltsecrets = new IKEv1HandshakeLongtermSecrets();
