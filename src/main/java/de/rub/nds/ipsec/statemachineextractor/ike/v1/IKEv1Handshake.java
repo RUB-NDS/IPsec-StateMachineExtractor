@@ -38,7 +38,9 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
@@ -51,11 +53,11 @@ public final class IKEv1Handshake {
     IKEv1Ciphersuite ciphersuite;
     IKEv1HandshakeLongtermSecrets ltsecrets;
     IKEv1HandshakeSessionSecrets secrets;
-    List<ISAKMPMessage> messages;
+    List<ISAKMPMessage> messages = new ArrayList<>();
     final long timeout;
     final InetAddress remoteAddress;
     final int remotePort;
-    byte[] lastMsg;
+    Set<byte[]> rxMsgs = new HashSet<>();
 
     public IKEv1Handshake(long timeout, InetAddress remoteAddress, int remotePort) throws IOException, GeneralSecurityException {
         this.timeout = timeout;
@@ -86,13 +88,13 @@ public final class IKEv1Handshake {
         if (rxData.length == 0) {
             return null;
         }
-        if (Arrays.equals(rxData, lastMsg)) {
+        if (rxMsgs.contains(rxData)) {
             return null; //only a retransmission
         }
-        lastMsg = rxData;
+        rxMsgs.add(rxData);
         //received an answer, so store last ciphertext block as IV
         if (messageToSend.isEncryptedFlag()) {
-            secrets.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage)messageToSend).getNextIV());
+            secrets.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage) messageToSend).getNextIV());
         }
         ISAKMPMessage messageReceived = ISAKMPMessageFromByteArray(rxData);
         messages.add(messageReceived);
@@ -202,10 +204,11 @@ public final class IKEv1Handshake {
     }
 
     public void reset() throws IOException, GeneralSecurityException {
+        rxMsgs.clear();
+        messages.clear();
         ciphersuite = new IKEv1Ciphersuite();
         ltsecrets = new IKEv1HandshakeLongtermSecrets();
         secrets = new IKEv1HandshakeSessionSecrets(ciphersuite, ltsecrets);
-        messages = new ArrayList<>();
         if (this.udpTH != null) {
             dispose();
         }
