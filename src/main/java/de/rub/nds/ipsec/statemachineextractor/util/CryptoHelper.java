@@ -66,8 +66,12 @@ public class CryptoHelper {
     }
 
     private static byte[] dhPublicKey2Bytes(DHPublicKey pubkey) {
+        int paramLen = (int) (ceil(pubkey.getParams().getP().bitLength() / 8.0));
         byte[] publicKeyBytes = pubkey.getY().toByteArray();
-        if (publicKeyBytes[0] == 0) {
+        while (publicKeyBytes.length < paramLen) {
+            publicKeyBytes = Arrays.prepend(publicKeyBytes, (byte) 0x00);
+        }
+        if (publicKeyBytes.length == paramLen + 1 && publicKeyBytes[0] == 0) {
             byte[] shortPublicKeyBytes = new byte[publicKeyBytes.length - 1];
             System.arraycopy(publicKeyBytes, 1, shortPublicKeyBytes, 0, publicKeyBytes.length - 1);
             return shortPublicKeyBytes;
@@ -81,14 +85,14 @@ public class CryptoHelper {
         byte[] publicKeyBytes = new byte[pointSize];
         ECPoint w = pubkey.getW();
         byte[] wx = w.getAffineX().toByteArray();
-        while(wx.length < paramLen) {
-            wx = Arrays.prepend(wx, (byte)0x00);
+        while (wx.length < paramLen) {
+            wx = Arrays.prepend(wx, (byte) 0x00);
         }
         int start = (wx[0] == 0 && wx.length == paramLen + 1) ? 1 : 0;
         System.arraycopy(wx, start, publicKeyBytes, 0, paramLen);
         byte[] wy = w.getAffineY().toByteArray();
-        while(wy.length < paramLen) {
-            wy = Arrays.prepend(wy, (byte)0x00);
+        while (wy.length < paramLen) {
+            wy = Arrays.prepend(wy, (byte) 0x00);
         }
         start = (wy[0] == 0 && wy.length == paramLen + 1) ? 1 : 0;
         System.arraycopy(wy, start, publicKeyBytes, paramLen, paramLen);

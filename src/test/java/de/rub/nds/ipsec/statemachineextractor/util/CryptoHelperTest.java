@@ -8,12 +8,10 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.util;
 
-import com.sun.org.apache.xpath.internal.operations.And;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
@@ -21,6 +19,7 @@ import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
+import javax.crypto.spec.DHPublicKeySpec;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -81,7 +80,21 @@ public class CryptoHelperTest {
     }
 
     /**
-     * Test of createECPublicKeyFromBytes method, of class CryptoHelper.
+     * Test of dhPublicKey2Bytes method, of class CryptoHelper.
+     */
+    @Test
+    public void testDhPublicKey2BytesWithShortValue() throws Exception {
+        DHParameterSpec algoSpec = (DHParameterSpec) IKEDHGroupEnum.GROUP2_1024.getAlgorithmParameterSpec();
+        BigInteger y = new BigInteger("9c663bb89386d7ed717e48929946049a3d6dda84fbc0848ebb44f69fc9aad2d4e0db72119ba216ae26d90bc0ba1e417431e36ef926ad3608d371d099d6b2f8176be20bab35b2bfbe273e936d652667f7e40427f1990aa79f5e25abbc7ff0fd9c0890b1f5e840504356074c0c25268304b15216297892cdc925a8f2244c44cf", 16);
+        DHPublicKeySpec keySpec = new DHPublicKeySpec(y, algoSpec.getP(), algoSpec.getG());
+        KeyFactory kf = KeyFactory.getInstance("DH");
+        PublicKey publicKey = kf.generatePublic(keySpec);
+        byte[] bytes = CryptoHelper.publicKey2Bytes(publicKey);
+        assertEquals(algoSpec.getP().bitLength(), bytes.length * 8);
+    }
+
+    /**
+     * Test of ecPublicKey2Bytes method, of class CryptoHelper.
      */
     @Test
     public void testEcPublicKey2BytesWithShortValues() throws Exception {
