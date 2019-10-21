@@ -18,7 +18,6 @@ import java.util.Random;
 import net.automatalib.automata.transout.MealyMachine;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
-import net.automatalib.words.impl.Alphabets;
 import de.learnlib.api.SUL;
 import de.learnlib.api.algorithm.LearningAlgorithm.MealyLearner;
 import de.learnlib.api.oracle.EquivalenceOracle.MealyEquivalenceOracle;
@@ -30,7 +29,7 @@ import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOrac
 import de.learnlib.oracle.membership.SULOracle;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.learning.IKEInputAlphabetEnum;
+import de.rub.nds.ipsec.statemachineextractor.learning.IKEInputAlphabet;
 import de.rub.nds.ipsec.statemachineextractor.learning.IKEv1HandshakeContextHandler;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.io.File;
@@ -56,28 +55,28 @@ public class Main {
     
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
-        Alphabet<IKEInputAlphabetEnum> inputAlphabet = Alphabets.fromEnum(IKEInputAlphabetEnum.class);
+        IKEInputAlphabet inputAlphabet = new IKEInputAlphabet();
         final IKEv1HandshakeContextHandler contextHandler = new IKEv1HandshakeContextHandler(timeout, host, port);
         final ContextExecutableInputSUL<ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage, IKEv1Handshake> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
-        SUL<IKEInputAlphabetEnum, String> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
-        SULOracle<IKEInputAlphabetEnum, String> oracle = new SULOracle<>(sul);
-        MealyCacheOracle<IKEInputAlphabetEnum, String> mqOracle = MealyCacheOracle.createDAGCacheOracle(inputAlphabet, oracle);
+        SUL<String, String> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
+        SULOracle<String, String> oracle = new SULOracle<>(sul);
+        MealyCacheOracle<String, String> mqOracle = MealyCacheOracle.createDAGCacheOracle(inputAlphabet, oracle);
 
-        MealyLearner<IKEInputAlphabetEnum, String> learner;
-        learner = new ExtensibleLStarMealyBuilder<IKEInputAlphabetEnum, String>().withAlphabet(inputAlphabet).withOracle(mqOracle).create();
+        MealyLearner<String, String> learner;
+        learner = new ExtensibleLStarMealyBuilder<String, String>().withAlphabet(inputAlphabet).withOracle(mqOracle).create();
 
         learner.startLearning();
-        MealyMachine<?, IKEInputAlphabetEnum, ?, String> hypothesis = learner.getHypothesisModel();
+        MealyMachine<?, String, ?, String> hypothesis = learner.getHypothesisModel();
 
-        MealyEquivalenceOracle<IKEInputAlphabetEnum, String> eqOracle = new MealyRandomWordsEQOracle<>(
+        MealyEquivalenceOracle<String, String> eqOracle = new MealyRandomWordsEQOracle<>(
                 mqOracle,
                 1, // minLength
                 4, //maxLength
                 50, // maxTests
                 new Random(1));
 
-        DefaultQuery<IKEInputAlphabetEnum, Word<String>> ce;
+        DefaultQuery<String, Word<String>> ce;
         while ((ce = eqOracle.findCounterExample(hypothesis, inputAlphabet)) != null) {
             System.err.println("Found counterexample " + ce);
             System.err.println("Current hypothesis has " + hypothesis.getStates().size() + " states");

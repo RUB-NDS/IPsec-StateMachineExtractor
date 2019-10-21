@@ -20,45 +20,45 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, String, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
+public class IKEMessageMapper implements SULMapper<String, String, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
 
     static final ISAKMPMessage PARSING_ERROR = new ISAKMPMessage();
 
     @Override
-    public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(IKEInputAlphabetEnum abstractInput) {
+    public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(String abstractInput) {
         return (IKEv1Handshake handshake) -> {
             ISAKMPMessage msg = new ISAKMPMessage();
             SecurityAssociationPayload sa;
             try {
                 switch (abstractInput) {
-                    case RESET:
+                    case "RESET":
                         handshake.reset();
                         return null;
-                    case RETRANS:
-                        return handshake.retransmit();
-                    case v1_MM_PSK_SA:
+                    case "v1_MM_PSK-SA":
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
                         msg.addPayload(sa);
                         handshake.adjustCiphersuite(sa);
                         break;
-                    case v1_MM_PSK_KE_No:
+                    case "v1_MM-KE-No":
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(handshake.prepareKeyExchangePayload());
                         msg.addPayload(handshake.prepareNoncePayload());
                         break;
-                    case v1_MM_PSK_ID_HASH:
+                    case "v1_MM*-ID-HASH":
                         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
                         msg.addPayload(handshake.prepareIdentificationPayload());
                         msg.addPayload(handshake.prepareHashPayload());
                         msg.setEncryptedFlag(true);
                         break; 
-                    case v1_AM_PSK_SA_KE_No_ID:
+                    case "v1_AM_PSK-SA-KE-No-ID":
                         msg.setExchangeType(ExchangeTypeEnum.Aggressive);
                         sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
                         msg.addPayload(sa);
@@ -67,7 +67,7 @@ public class IKEMessageMapper implements SULMapper<IKEInputAlphabetEnum, String,
                         msg.addPayload(handshake.prepareNoncePayload());
                         msg.addPayload(handshake.prepareIdentificationPayload());
                         break;
-                    case v1_AM_HASH:
+                    case "v1_AM-HASH":
                         msg.setExchangeType(ExchangeTypeEnum.Aggressive);
                         msg.addPayload(handshake.prepareHashPayload());
                         break;
