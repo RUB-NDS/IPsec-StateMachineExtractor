@@ -20,8 +20,8 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ArrayDeque;
+import java.util.Arrays;
 
 /**
  *
@@ -33,52 +33,79 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
 
     @Override
     public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(String abstractInput) {
-        return (IKEv1Handshake handshake) -> {
-            ISAKMPMessage msg = new ISAKMPMessage();
-            SecurityAssociationPayload sa;
-            try {
-                switch (abstractInput) {
-                    case "RESET":
+        return new ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>() {
+            @Override
+            public ISAKMPMessage execute(IKEv1Handshake handshake) throws SULException {
+                ISAKMPMessage msg = new ISAKMPMessage();
+                SecurityAssociationPayload sa = null;
+                try {
+                    if (abstractInput.equals("RESET")) {
                         handshake.reset();
                         return null;
-                    case "v1_MM_PSK-SA":
-                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-                        sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
-                        msg.addPayload(sa);
-                        handshake.adjustCiphersuite(sa);
-                        break;
-                    case "v1_MM-KE-No":
-                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-                        msg.addPayload(handshake.prepareKeyExchangePayload());
-                        msg.addPayload(handshake.prepareNoncePayload());
-                        break;
-                    case "v1_MM*-ID-HASH":
-                        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-                        msg.addPayload(handshake.prepareIdentificationPayload());
-                        msg.addPayload(handshake.prepareHashPayload());
+                    }
+                    ArrayDeque<String> tokens = new ArrayDeque<>(Arrays.asList(abstractInput.split("_|\\*")));
+                    switch (tokens.pop()) {
+                        case "v1":
+                            msg.setVersion((byte) 0x10);
+                            break;
+                        case "v2":
+                            msg.setVersion((byte) 0x20);
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Not supported yet.");
+                    }
+                    switch (tokens.pop()) {
+                        case "MM":
+                            msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+                            break;
+                        case "AM":
+                            msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+                            break;
+                        case "INFO":
+                            msg.setExchangeType(ExchangeTypeEnum.Informational);
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Not supported yet.");
+                    }
+                    String token = tokens.pop();
+                    if (token.equals("")) {
+                        // There was a star-character, so enable encryption
                         msg.setEncryptedFlag(true);
-                        break; 
-                    case "v1_AM_PSK-SA-KE-No-ID":
-                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
-                        sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
-                        msg.addPayload(sa);
-                        handshake.adjustCiphersuite(sa);
-                        msg.addPayload(handshake.prepareKeyExchangePayload());
-                        msg.addPayload(handshake.prepareNoncePayload());
-                        msg.addPayload(handshake.prepareIdentificationPayload());
-                        break;
-                    case "v1_AM-HASH":
-                        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
-                        msg.addPayload(handshake.prepareHashPayload());
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Not supported yet.");
+                        token = tokens.pop();
+                    }
+                    if (!tokens.isEmpty()) {
+                        throw new UnsupportedOperationException("Malformed message identifier");
+                    }
+                    tokens = new ArrayDeque<>(Arrays.asList(token.split("-")));
+                    while (!tokens.isEmpty()) {
+                        switch (tokens.pop()) {
+                            case "PSK":
+                                sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+                                break;
+                            case "SA":
+                                msg.addPayload(sa);
+                                handshake.adjustCiphersuite(sa);
+                                break;
+                            case "KE":
+                                msg.addPayload(handshake.prepareKeyExchangePayload());
+                                break;
+                            case "No":
+                                msg.addPayload(handshake.prepareNoncePayload());
+                                break;
+                            case "ID":
+                                msg.addPayload(handshake.prepareIdentificationPayload());
+                                break;
+                            case "HASH":
+                                msg.addPayload(handshake.prepareHashPayload());
+                                break;
+                        }
+                    }
+                    return handshake.exchangeMessage(msg);
+                } catch (IOException | IKEHandshakeException | GeneralSecurityException ex) {
+                    throw new SULException(ex);
+                } catch (ISAKMPParsingException ex) {
+                    return PARSING_ERROR;
                 }
-                return handshake.exchangeMessage(msg);
-            } catch (IOException | IKEHandshakeException | GeneralSecurityException ex) {
-                throw new SULException(ex);
-            } catch (ISAKMPParsingException ex) {
-                return PARSING_ERROR;
             }
         };
     }

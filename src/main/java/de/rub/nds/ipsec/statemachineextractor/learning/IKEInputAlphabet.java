@@ -8,9 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.learning;
 
-import java.util.Arrays;
-import net.automatalib.words.Alphabet;
-import net.automatalib.words.impl.Alphabets;
 import net.automatalib.words.impl.ArrayAlphabet;
 
 /**
@@ -19,16 +16,15 @@ import net.automatalib.words.impl.ArrayAlphabet;
  */
 public class IKEInputAlphabet extends ArrayAlphabet<String> {
 
-    public static final Alphabet<String> alphabet = Alphabets.fromArray();
-
     public IKEInputAlphabet() {
-        this.addAll(Arrays.asList(new String[]{
+        super((new String[]{
             "RESET",
             "v1_MM_PSK-SA",
-            "v1_MM-KE-No",
-            "v1_MM*-ID-HASH",
+            "v1_MM_KE-No",
+            "v1_MM*_ID-HASH",
             "v1_AM_PSK-SA-KE-No-ID",
-            "v1_AM-HASH"}));
+            "v1_AM_HASH",
+        }));
     }
 
 }

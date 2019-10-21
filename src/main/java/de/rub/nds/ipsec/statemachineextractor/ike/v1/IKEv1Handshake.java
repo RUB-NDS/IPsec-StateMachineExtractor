@@ -165,6 +165,7 @@ public final class IKEv1Handshake {
             encMessage.setCiphertext(bais);
             encMessage.setNextPayload(nextPayload);
             encMessage.decrypt();
+            //TODO: If there's a hash payload in the message, check it
             message = encMessage;
         } else {
             while (nextPayload != PayloadTypeEnum.NONE) {
@@ -198,7 +199,7 @@ public final class IKEv1Handshake {
                     case Hash:
                         payload = HashPayload.fromStream(bais);
                         if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
-                            throw new IKEHandshakeException("Responder Hashes do not match!");
+                            throw new IKEHandshakeException("Responder Hash does not match!");
                         }
                         break;
                     case Nonce:
