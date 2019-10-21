@@ -126,7 +126,7 @@ public class NotificationPayload extends ISAKMPPayload {
             } catch (IOException ex) {
                 throw new ISAKMPParsingException(ex);
             }
-            if (readBytes != spidata.length) {
+            if (readBytes < spidata.length) {
                 throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + spidata.length + "bytes)!");
             }
             this.setSpi(spidata);
@@ -139,7 +139,7 @@ public class NotificationPayload extends ISAKMPPayload {
             } catch (IOException ex) {
                 throw new ISAKMPParsingException(ex);
             }
-            if (readBytes != buffer.length) {
+            if (readBytes < buffer.length) {
                 throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + buffer.length + "bytes)!");
             }
             this.setNotificationData(buffer);

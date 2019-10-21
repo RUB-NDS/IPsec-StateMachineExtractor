@@ -108,7 +108,7 @@ public class IdentificationPayload extends ISAKMPPayload {
         } catch (IOException ex) {
             throw new ISAKMPParsingException(ex);
         }
-        if (readBytes != length - ISAKMP_PAYLOAD_HEADER_LEN) {
+        if (readBytes < length - ISAKMP_PAYLOAD_HEADER_LEN) {
             throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - ISAKMP_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
         this.setBody(buffer);
