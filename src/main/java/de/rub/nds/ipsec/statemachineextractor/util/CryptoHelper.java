@@ -25,11 +25,11 @@ import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.DHPublicKeySpec;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.cryptomator.siv.org.bouncycastle.util.Arrays;
 
 /**
  *
@@ -69,7 +69,7 @@ public class CryptoHelper {
         int paramLen = (int) (ceil(pubkey.getParams().getP().bitLength() / 8.0));
         byte[] publicKeyBytes = pubkey.getY().toByteArray();
         while (publicKeyBytes.length < paramLen) {
-            publicKeyBytes = Arrays.prepend(publicKeyBytes, (byte) 0x00);
+            publicKeyBytes = byteArrayPrepend(publicKeyBytes, (byte) 0x00);
         }
         if (publicKeyBytes.length == paramLen + 1 && publicKeyBytes[0] == 0) {
             byte[] shortPublicKeyBytes = new byte[publicKeyBytes.length - 1];
@@ -86,17 +86,23 @@ public class CryptoHelper {
         ECPoint w = pubkey.getW();
         byte[] wx = w.getAffineX().toByteArray();
         while (wx.length < paramLen) {
-            wx = Arrays.prepend(wx, (byte) 0x00);
+            wx = byteArrayPrepend(wx, (byte) 0x00);
         }
         int start = (wx[0] == 0 && wx.length == paramLen + 1) ? 1 : 0;
         System.arraycopy(wx, start, publicKeyBytes, 0, paramLen);
         byte[] wy = w.getAffineY().toByteArray();
         while (wy.length < paramLen) {
-            wy = Arrays.prepend(wy, (byte) 0x00);
+            wy = byteArrayPrepend(wy, (byte) 0x00);
         }
         start = (wy[0] == 0 && wy.length == paramLen + 1) ? 1 : 0;
         System.arraycopy(wy, start, publicKeyBytes, paramLen, paramLen);
         return publicKeyBytes;
+    }
+    
+    public static byte[] byteArrayPrepend(byte[] a, byte b) {
+        byte[] na = new byte[a.length + 1];
+        System.arraycopy(a, 0, na, 1, a.length);
+        return na;
     }
 
     public static DHPublicKey createModPPublicKeyFromBytes(DHParameterSpec algoSpec, byte[] bytes) throws NoSuchAlgorithmException, InvalidKeySpecException {

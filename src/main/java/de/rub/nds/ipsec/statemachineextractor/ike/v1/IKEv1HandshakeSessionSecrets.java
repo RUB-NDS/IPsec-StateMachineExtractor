@@ -40,7 +40,7 @@ public class IKEv1HandshakeSessionSecrets {
     private PublicKey peerPublicKey;
     private byte[] dhSecret;
     private final Map<String, byte[]> ivs = new HashMap<>();
-    private DHGroupAttributeEnum internalDHGroup;
+    DHGroupAttributeEnum internalDHGroup;
     private boolean isInitiatorNonceChosen = false;
     private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -116,10 +116,6 @@ public class IKEv1HandshakeSessionSecrets {
         return peerPublicKey;
     }
 
-    public void setPeerPublicKey(PublicKey peerPublicKey) {
-        this.peerPublicKey = peerPublicKey;
-    }
-
     public PublicKey computePeerPublicKey() throws GeneralSecurityException {
         if (this.peerKeyExchangeData == null) {
             throw new IllegalStateException("No key exchange data for peer; use setPeerKeyExchangeData() first!");
@@ -165,6 +161,9 @@ public class IKEv1HandshakeSessionSecrets {
         keyAgreement.doPhase(peerPublicKey, true);
 
         this.dhSecret = keyAgreement.generateSecret();
+        while (this.dhSecret.length < ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes()) {
+            this.dhSecret = CryptoHelper.byteArrayPrepend(this.dhSecret, (byte) 0x00);
+        }
         return this.dhSecret;
     }
 
