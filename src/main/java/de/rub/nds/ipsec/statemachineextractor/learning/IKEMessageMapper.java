@@ -61,6 +61,10 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                         case "AM":
                             msg.setExchangeType(ExchangeTypeEnum.Aggressive);
                             break;
+                        case "QM":
+                            msg.setExchangeType(ExchangeTypeEnum.QuickMode);
+                            sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+                            break;
                         case "INFO":
                             msg.setExchangeType(ExchangeTypeEnum.Informational);
                             break;
@@ -96,7 +100,11 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 msg.addPayload(handshake.prepareIdentificationPayload());
                                 break;
                             case "HASH":
-                                msg.addPayload(handshake.prepareHashPayload());
+                                msg.addPayload(handshake.preparePhase1HashPayload());
+                                break;
+                            case "HASH1":
+                                msg.setMessageIdRandom();
+                                msg.addPayload(handshake.preparePhase2Hash1Payload());
                                 break;
                         }
                     }

@@ -22,7 +22,9 @@ public enum ExchangeTypeEnum {
     IdentityProtection((byte) 2),
     AuthenticationOnly((byte) 3),
     Aggressive((byte) 4),
-    Informational((byte) 5);
+    Informational((byte) 5),
+    QuickMode((byte) 32),
+    NewGroupMode((byte) 33);
 
     private final byte value;
 
@@ -33,7 +35,7 @@ public enum ExchangeTypeEnum {
     public byte getValue() {
         return value;
     }
-    
+
     // Reverse-lookup map
     private static final Map<Byte, ExchangeTypeEnum> lookup = new HashMap<Byte, ExchangeTypeEnum>();
 
@@ -42,7 +44,7 @@ public enum ExchangeTypeEnum {
             lookup.put(type.getValue(), type);
         }
     }
-    
+
     public static ExchangeTypeEnum get(byte value) {
         return lookup.get(value);
     }

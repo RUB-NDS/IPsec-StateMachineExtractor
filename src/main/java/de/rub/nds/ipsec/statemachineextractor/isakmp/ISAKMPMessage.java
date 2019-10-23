@@ -132,6 +132,13 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         this.messageId = messageId;
     }
 
+    public byte[] setMessageIdRandom() {
+        this.messageId = new byte[4];
+        Random rng = new Random();
+        rng.nextBytes(this.messageId);
+        return getMessageId();
+    }
+
     public List<ISAKMPPayload> getPayloads() {
         return Collections.unmodifiableList(payloads);
     }
@@ -169,7 +176,7 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         baos.write(messageId, 0, 4);
         baos.write(DatatypeHelper.intTo4ByteArray(getLength()), 0, 4);
     }
-    
+
     protected void writeBytesOfPayloads(ByteArrayOutputStream baos) {
         for (int i = 0; i < payloads.size(); i++) {
             ISAKMPPayload payload = payloads.get(i);
@@ -182,7 +189,7 @@ public class ISAKMPMessage implements ISAKMPSerializable {
             payload.writeBytes(baos);
         }
     }
-    
+
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
         writeBytesWithoutPayloads(baos);
@@ -217,7 +224,7 @@ public class ISAKMPMessage implements ISAKMPSerializable {
             default:
                 throw new UnsupportedOperationException("Not supported yet.");
         }
-        if(this.isEncryptedFlag()) {
+        if (this.isEncryptedFlag()) {
             name.append("*");
         }
         this.getPayloads().forEach((payload) -> {

@@ -121,7 +121,7 @@ public class IKEv1HandshakeTest {
             msg = new ISAKMPMessage();
             msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
             msg.addPayload(handshake.prepareIdentificationPayload());
-            msg.addPayload(handshake.prepareHashPayload());
+            msg.addPayload(handshake.preparePhase1HashPayload());
             msg.setEncryptedFlag(true);
             answer = handshake.exchangeMessage(msg);
 

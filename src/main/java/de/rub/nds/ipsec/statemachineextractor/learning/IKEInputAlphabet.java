@@ -24,6 +24,7 @@ public class IKEInputAlphabet extends ArrayAlphabet<String> {
             "v1_MM*_ID-HASH",
             "v1_AM_PSK-SA-KE-No-ID",
             "v1_AM_HASH",
+            "v1_QM*_HASH1-SA-No",
         }));
     }
 

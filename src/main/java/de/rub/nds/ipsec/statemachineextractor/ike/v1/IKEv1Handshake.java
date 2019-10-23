@@ -113,8 +113,8 @@ public final class IKEv1Handshake {
             messageToSend.setInitiatorCookie(secrets.getInitiatorCookie());
         }
         messageToSend.setResponderCookie(secrets.getResponderCookie());
-        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation && secrets.getSAOfferBody() != null) {
-            secrets.setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
+        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation && secrets.getISAKMPSA().getSAOfferBody() == null) {
+            secrets.getISAKMPSA().setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
         byte[] txData = messageToSend.getBytes();
         messages.add(new WireMessage(txData, messageToSend, true));
@@ -178,8 +178,8 @@ public final class IKEv1Handshake {
                         break;
                     case KeyExchange:
                         payload = KeyExchangePayload.fromStream(bais);
-                        secrets.setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
-                        secrets.computeDHSecret();
+                        secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                        secrets.getISAKMPSA().computeDHSecret();
                         break;
                     case Identification:
                         switch (ciphersuite.getAuthMethod()) {
@@ -212,7 +212,7 @@ public final class IKEv1Handshake {
                                 payload = NoncePayload.fromStream(bais);
                                 break;
                         }
-                        secrets.setResponderNonce(((NoncePayload) payload).getNonceData());
+                        secrets.getISAKMPSA().setResponderNonce(((NoncePayload) payload).getNonceData());
                         secrets.computeSecretKeys();
                         break;
                     case VendorID:
@@ -245,7 +245,7 @@ public final class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
         prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
         secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
-        secrets.setSAOfferBody(SecurityAssociationPayloadFactory.PSK_DES_MD5_G1.getBody());
+        secrets.getISAKMPSA().setSAOfferBody(SecurityAssociationPayloadFactory.PSK_DES_MD5_G1.getBody());
         secrets.generateDefaults();
     }
 
@@ -261,6 +261,7 @@ public final class IKEv1Handshake {
         tp.getAttributes().forEach((attr) -> {
             attr.configureCiphersuite(ciphersuite);
         });
+        secrets.updateISAKMPSA();
     }
 
     public void dispose() throws IOException {
@@ -270,11 +271,8 @@ public final class IKEv1Handshake {
     }
 
     public KeyExchangePayload prepareKeyExchangePayload() throws GeneralSecurityException {
-        if (secrets.getInternalDHGroup() != ciphersuite.getDhGroup()) {
-            secrets.generateDhKeyPair();
-        }
         KeyExchangePayload result = new KeyExchangePayload();
-        result.setKeyExchangeData(secrets.generateKeyExchangeData());
+        result.setKeyExchangeData(secrets.getISAKMPSA().generateKeyExchangeData());
         return result;
     }
 
@@ -306,13 +304,13 @@ public final class IKEv1Handshake {
 
     public ISAKMPPayload prepareNoncePayload() throws GeneralSecurityException {
         NoncePayload result = new NoncePayload();
-        if (secrets.getInitiatorNonce() == null) {
+        if (secrets.getISAKMPSA().getInitiatorNonce() == null) {
             SecureRandom random = new SecureRandom();
             byte[] initiatorNonce = new byte[ciphersuite.getNonceLen()];
             random.nextBytes(initiatorNonce);
-            secrets.setInitiatorNonce(initiatorNonce);
+            secrets.getISAKMPSA().setInitiatorNonce(initiatorNonce);
         }
-        result.setNonceData(secrets.getInitiatorNonce());
+        result.setNonceData(secrets.getISAKMPSA().getInitiatorNonce());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // these authentication methods encrypt the nonce using the public key of the peer
             ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
@@ -322,13 +320,15 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public ISAKMPPayload prepareHashPayload() throws GeneralSecurityException, IOException {
-        secrets.computeSecretKeys();
+    public ISAKMPPayload preparePhase1HashPayload() throws GeneralSecurityException, IOException {
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(secrets.getHASH_I());
-//        SymmetricallyEncryptedISAKMPSerializable encPayload = new SymmetricallyEncryptedISAKMPSerializable(hashPayload, secrets.getSKEYID_e(), ciphersuite.getCipher(), secrets.getIV());
-//        encPayload.encrypt();
-//        return encPayload;
+        return hashPayload;
+    }
+
+    public ISAKMPPayload preparePhase2Hash1Payload() throws GeneralSecurityException, IOException {
+        HashPayload hashPayload = new HashPayload();
+//        hashPayload.setHashData(secrets.getHASH1());
         return hashPayload;
     }
 }

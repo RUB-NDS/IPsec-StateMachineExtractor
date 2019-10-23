@@ -8,21 +8,15 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 import java.security.MessageDigest;
-import java.security.PublicKey;
-import java.security.spec.ECParameterSpec;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
-import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
@@ -36,20 +30,12 @@ public class IKEv1HandshakeSessionSecrets {
     private boolean isInitiatorCookieChosen = false;
     private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    private KeyPair dhKeyPair;
-    private PublicKey peerPublicKey;
-    private byte[] dhSecret;
-    private final Map<String, byte[]> ivs = new HashMap<>();
-    DHGroupAttributeEnum internalDHGroup;
-    private boolean isInitiatorNonceChosen = false;
-    private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    private final Map<String, byte[]> IVs = new HashMap<>();
+    private final Map<String, SASecrets> SAs = new HashMap<>();
     private byte[] skeyid, skeyid_d, skeyid_a, skeyid_e, ka;
-    private byte[] securityAssociationOfferBody;
-    private byte[] keyExchangeData;
     private byte[] identificationPayloadBody;
-    private byte[] peerKeyExchangeData;
     private byte[] peerIdentificationPayloadBody;
+    private SASecrets ISAKMPSA;
 
     private final IKEv1Ciphersuite ciphersuite;
     private final IKEv1HandshakeLongtermSecrets ltsecrets;
@@ -57,14 +43,27 @@ public class IKEv1HandshakeSessionSecrets {
     public IKEv1HandshakeSessionSecrets(IKEv1Ciphersuite ciphersuite, IKEv1HandshakeLongtermSecrets ltsecrets) {
         this.ciphersuite = ciphersuite;
         this.ltsecrets = ltsecrets;
+        updateISAKMPSA();
+    }
+
+    public final void updateISAKMPSA() {
+        if (this.ISAKMPSA == null || this.ciphersuite.getDhGroup() != this.ISAKMPSA.getDHGroup()) {
+            this.ISAKMPSA = new SASecrets(this.ciphersuite.getDhGroup());
+            this.SAs.put("00000000", this.ISAKMPSA);
+        }
+    }
+
+    public SASecrets getISAKMPSA() {
+        return ISAKMPSA;
     }
 
     public void generateDefaults() throws GeneralSecurityException {
-        generateDhKeyPair();
-        setPeerKeyExchangeData(CryptoHelper.publicKey2Bytes(dhKeyPair.getPublic()));
-        computePeerPublicKey();
-        generateDhKeyPair();
-        computeDHSecret();
+        updateISAKMPSA();
+        this.ISAKMPSA.generateDhKeyPair();
+        this.ISAKMPSA.setPeerKeyExchangeData(CryptoHelper.publicKey2Bytes(this.ISAKMPSA.getDhKeyPair().getPublic()));
+        this.ISAKMPSA.computePeerPublicKey();
+        this.ISAKMPSA.generateDhKeyPair();
+        this.ISAKMPSA.computeDHSecret();
         computeSecretKeys();
     }
 
@@ -86,105 +85,6 @@ public class IKEv1HandshakeSessionSecrets {
 
     public void setResponderCookie(byte[] responderCookie) {
         this.responderCookie = responderCookie;
-    }
-
-    public DHGroupAttributeEnum getInternalDHGroup() {
-        return internalDHGroup;
-    }
-
-    public KeyPair getDhKeyPair() {
-        return dhKeyPair;
-    }
-
-    public void setDhKeyPair(KeyPair dhKeyPair) {
-        this.dhKeyPair = dhKeyPair;
-    }
-
-    public KeyPair generateDhKeyPair() throws GeneralSecurityException {
-        String algoName;
-        if (ciphersuite.getDhGroup().getDHGroupParameters().isEC()) {
-            algoName = "EC";
-        } else {
-            algoName = "DiffieHellman";
-        }
-        this.internalDHGroup = ciphersuite.getDhGroup();
-        this.dhKeyPair = CryptoHelper.generateKeyPair(algoName, ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec());
-        return dhKeyPair;
-    }
-
-    public PublicKey getPeerPublicKey() {
-        return peerPublicKey;
-    }
-
-    public PublicKey computePeerPublicKey() throws GeneralSecurityException {
-        if (this.peerKeyExchangeData == null) {
-            throw new IllegalStateException("No key exchange data for peer; use setPeerKeyExchangeData() first!");
-        }
-        if (ciphersuite.getDhGroup().getDHGroupParameters().isEC()) {
-            ECParameterSpec algoSpec = (ECParameterSpec) ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec();
-            peerPublicKey = CryptoHelper.createECPublicKeyFromBytes(algoSpec, this.peerKeyExchangeData);
-        } else {
-            DHParameterSpec algoSpec = (DHParameterSpec) ciphersuite.getDhGroup().getDHGroupParameters().getAlgorithmParameterSpec();
-            peerPublicKey = CryptoHelper.createModPPublicKeyFromBytes(algoSpec, this.peerKeyExchangeData);
-        }
-        return this.peerPublicKey;
-    }
-
-    public byte[] getDHSecret() {
-        return dhSecret;
-    }
-
-    public void setDHSecret(byte[] dhSecret) {
-        this.dhSecret = dhSecret;
-    }
-
-    public byte[] computeDHSecret() throws GeneralSecurityException, IllegalStateException {
-        if (dhKeyPair == null) {
-            throw new IllegalStateException("No key pair generated; use generateDhKeyPair() first!");
-        }
-        if (this.internalDHGroup != ciphersuite.getDhGroup()) {
-            throw new IllegalStateException("The existing key pair does not match the ciphersuite!");
-        }
-        try {
-            computePeerPublicKey();
-        } catch (IllegalStateException ex) {
-            throw new IllegalStateException("No public key for peer; use setPeerPublicKey() or setPeerKeyExchangeData() first!", ex);
-        }
-        String dhAlgoName;
-        if (ciphersuite.getDhGroup().getDHGroupParameters().isEC()) {
-            dhAlgoName = "ECDH";
-        } else {
-            dhAlgoName = "DiffieHellman";
-        }
-        KeyAgreement keyAgreement = KeyAgreement.getInstance(dhAlgoName);
-        keyAgreement.init(dhKeyPair.getPrivate());
-        keyAgreement.doPhase(peerPublicKey, true);
-
-        this.dhSecret = keyAgreement.generateSecret();
-        while (this.dhSecret.length < ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes()) {
-            this.dhSecret = CryptoHelper.byteArrayPrepend(this.dhSecret, (byte) 0x00);
-        }
-        return this.dhSecret;
-    }
-
-    public byte[] getInitiatorNonce() {
-        if (!isInitiatorNonceChosen) {
-            return null;
-        }
-        return initiatorNonce;
-    }
-
-    public void setInitiatorNonce(byte[] initiatorNonce) {
-        this.initiatorNonce = initiatorNonce;
-        isInitiatorNonceChosen = true;
-    }
-
-    public byte[] getResponderNonce() {
-        return responderNonce;
-    }
-
-    public void setResponderNonce(byte[] responderNonce) {
-        this.responderNonce = responderNonce;
     }
 
     public byte[] getSKEYID() {
@@ -211,6 +111,11 @@ public class IKEv1HandshakeSessionSecrets {
         final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
         Mac prf = Mac.getInstance(HmacIdentifier);
         SecretKeySpec hmacKey;
+        byte[] initiatorNonce = this.ISAKMPSA.getInitiatorNonce();
+        if (initiatorNonce == null) {
+            initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        }
+        byte[] responderNonce = this.ISAKMPSA.getResponderNonce();
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
@@ -222,7 +127,7 @@ public class IKEv1HandshakeSessionSecrets {
             case DSS_Sig: // For signatures: SKEYID = prf(Ni_b | Nr_b, g^xy)
                 hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
                 prf.init(hmacKey);
-                skeyid = prf.doFinal(dhSecret);
+                skeyid = prf.doFinal(this.ISAKMPSA.getDHSecret());
                 break;
 
             case PKE:
@@ -244,17 +149,17 @@ public class IKEv1HandshakeSessionSecrets {
         }
         SecretKeySpec skeyidspec = new SecretKeySpec(skeyid, HmacIdentifier);
         prf.init(skeyidspec);
-        prf.update(this.getDHSecret());
+        prf.update(this.ISAKMPSA.getDHSecret());
         prf.update(concatCookies);
         prf.update((byte) 0);
         skeyid_d = prf.doFinal();
         prf.update(skeyid_d);
-        prf.update(this.getDHSecret());
+        prf.update(this.ISAKMPSA.getDHSecret());
         prf.update(concatCookies);
         prf.update((byte) 1);
         skeyid_a = prf.doFinal();
         prf.update(skeyid_a);
-        prf.update(this.getDHSecret());
+        prf.update(this.ISAKMPSA.getDHSecret());
         prf.update(concatCookies);
         prf.update((byte) 2);
         skeyid_e = prf.doFinal();
@@ -269,11 +174,11 @@ public class IKEv1HandshakeSessionSecrets {
         this.computeSecretKeys();
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         prf.init(new SecretKeySpec(this.getSKEYID(), "Hmac" + ciphersuite.getHash().toString()));
-        prf.update(this.getKeyExchangeData());
-        prf.update(this.getPeerKeyExchangeData());
+        prf.update(this.ISAKMPSA.getKeyExchangeData());
+        prf.update(this.ISAKMPSA.getPeerKeyExchangeData());
         prf.update(this.initiatorCookie);
         prf.update(this.responderCookie);
-        prf.update(this.securityAssociationOfferBody);
+        prf.update(this.ISAKMPSA.getSAOfferBody());
         return prf.doFinal(this.getIdentificationPayloadBody());
     }
 
@@ -281,63 +186,52 @@ public class IKEv1HandshakeSessionSecrets {
         this.computeSecretKeys();
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         prf.init(new SecretKeySpec(this.getSKEYID(), "Hmac" + ciphersuite.getHash().toString()));
-        prf.update(this.getPeerKeyExchangeData());
-        prf.update(this.getKeyExchangeData());
+        prf.update(this.ISAKMPSA.getPeerKeyExchangeData());
+        prf.update(this.ISAKMPSA.getKeyExchangeData());
         prf.update(this.getResponderCookie());
         prf.update(this.getInitiatorCookie());
-        prf.update(this.securityAssociationOfferBody);
+        prf.update(this.ISAKMPSA.getSAOfferBody());
         return prf.doFinal(this.getPeerIdentificationPayloadBody());
+    }
+
+    public byte[] getHASH1(byte[] msgID) throws GeneralSecurityException {
+//        this.computeSecretKeys();
+//        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
+//        prf.init(new SecretKeySpec(this.getSKEYID(), "Hmac" + ciphersuite.getHash().toString()));
+//        prf.update(this.getKeyExchangeData());
+//        prf.update(this.getPeerKeyExchangeData());
+//        prf.update(this.initiatorCookie);
+//        prf.update(this.responderCookie);
+//        prf.update(this.securityAssociationOfferBody);
+//        return prf.doFinal(this.getIdentificationPayloadBody());
+        throw new UnsupportedOperationException("");
     }
 
     public byte[] getIV(byte[] msgID) throws GeneralSecurityException {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
-        if (!this.ivs.containsKey(msgIDStr)) {
+        if (!this.IVs.containsKey(msgIDStr)) {
             int blockSize = ciphersuite.getCipher().getBlockSize();
             try {
                 MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
                 if (msgIDStr.equals("00000000")) {
-                    digest.update(this.getKeyExchangeData());
-                    digest.update(this.getPeerKeyExchangeData());
+                    digest.update(this.ISAKMPSA.getKeyExchangeData());
+                    digest.update(this.ISAKMPSA.getPeerKeyExchangeData());
                 } else {
                     digest.update(this.getIV(new byte[]{0x00, 0x00, 0x00, 0x00}));
                     digest.update(msgID);
                 }
                 byte[] hash = digest.digest();
-                this.ivs.put(msgIDStr, Arrays.copyOf(hash, blockSize));
+                this.IVs.put(msgIDStr, Arrays.copyOf(hash, blockSize));
             } catch (NullPointerException ex) {
                 return new byte[blockSize];
             }
         }
-        return this.ivs.get(msgIDStr);
+        return this.IVs.get(msgIDStr);
     }
 
     public void setIV(byte[] msgID, byte[] iv) {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
-        this.ivs.put(msgIDStr, iv);
-    }
-
-    public byte[] getSAOfferBody() {
-        return this.securityAssociationOfferBody;
-    }
-
-    public void setSAOfferBody(byte[] securityAssociationOfferBody) {
-        this.securityAssociationOfferBody = securityAssociationOfferBody;
-    }
-
-    public byte[] getKeyExchangeData() {
-        return keyExchangeData;
-    }
-
-    public void setKeyExchangeData(byte[] keyExchangeData) {
-        this.keyExchangeData = keyExchangeData;
-    }
-
-    public byte[] generateKeyExchangeData() throws GeneralSecurityException {
-        if (dhKeyPair == null) {
-            generateDhKeyPair();
-        }
-        this.keyExchangeData = CryptoHelper.publicKey2Bytes(dhKeyPair.getPublic());
-        return this.keyExchangeData;
+        this.IVs.put(msgIDStr, iv);
     }
 
     public byte[] getIdentificationPayloadBody() {
@@ -346,14 +240,6 @@ public class IKEv1HandshakeSessionSecrets {
 
     public void setIdentificationPayloadBody(byte[] identificationPayloadBody) {
         this.identificationPayloadBody = identificationPayloadBody;
-    }
-
-    public byte[] getPeerKeyExchangeData() {
-        return peerKeyExchangeData;
-    }
-
-    public void setPeerKeyExchangeData(byte[] peerKeyExchangeData) {
-        this.peerKeyExchangeData = peerKeyExchangeData;
     }
 
     public byte[] getPeerIdentificationPayloadBody() {
