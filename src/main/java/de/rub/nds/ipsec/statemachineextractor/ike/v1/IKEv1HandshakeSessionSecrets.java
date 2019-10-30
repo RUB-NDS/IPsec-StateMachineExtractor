@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
@@ -194,17 +195,28 @@ public class IKEv1HandshakeSessionSecrets {
         return prf.doFinal(this.getPeerIdentificationPayloadBody());
     }
 
-    public byte[] getHASH1(byte[] msgID) throws GeneralSecurityException {
-//        this.computeSecretKeys();
-//        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
-//        prf.init(new SecretKeySpec(this.getSKEYID(), "Hmac" + ciphersuite.getHash().toString()));
-//        prf.update(this.getKeyExchangeData());
-//        prf.update(this.getPeerKeyExchangeData());
-//        prf.update(this.initiatorCookie);
-//        prf.update(this.responderCookie);
-//        prf.update(this.securityAssociationOfferBody);
-//        return prf.doFinal(this.getIdentificationPayloadBody());
-        throw new UnsupportedOperationException("");
+    public byte[] getHASH1(ISAKMPMessage msg) throws GeneralSecurityException {
+        this.computeSecretKeys();
+        /* HASH(1) is the prf over the message id (M-ID) from the ISAKMP header 
+         * concatenated with the entire message that follows the hash including 
+         * all payload headers, but excluding any padding added for encryption.
+         */
+        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
+        prf.init(new SecretKeySpec(this.getSKEYID_a(), "Hmac" + ciphersuite.getHash().toString()));
+        prf.update(msg.getMessageId());
+        boolean encryptedFlag = msg.isEncryptedFlag();
+        msg.setEncryptedFlag(false);
+        byte[] bytes = msg.getBytes();
+        msg.setEncryptedFlag(encryptedFlag);
+        return prf.doFinal(Arrays.copyOfRange(bytes, ISAKMPMessage.ISAKMP_HEADER_LEN, bytes.length));
+    }
+
+    public SASecrets getSA(byte[] msgID) {
+        String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
+        if (!SAs.containsKey(msgIDStr)) {
+            SAs.put(msgIDStr, new SASecrets(ISAKMPSA.getDHGroup()));
+        }
+        return SAs.get(msgIDStr);
     }
 
     public byte[] getIV(byte[] msgID) throws GeneralSecurityException {

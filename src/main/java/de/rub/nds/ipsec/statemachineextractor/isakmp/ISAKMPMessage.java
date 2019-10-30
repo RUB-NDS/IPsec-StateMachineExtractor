@@ -147,7 +147,25 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         if (!payloads.isEmpty()) {
             payloads.get(payloads.size() - 1).setNextPayload(payload.getType());
         }
+        payload.setNextPayload(PayloadTypeEnum.NONE);
         payloads.add(payload);
+    }
+
+    public void addPayload(int index, ISAKMPPayload payload) {
+        payloads.add(index, payload);
+        updateNextPayloadProperty();
+    }
+
+    protected void updateNextPayloadProperty() {
+        for (int i = 0; i < payloads.size(); i++) {
+            ISAKMPPayload payload = payloads.get(i);
+            if (i < payloads.size() - 1) {
+                ISAKMPPayload nextPayload = payloads.get(i + 1);
+                payload.setNextPayload(nextPayload.getType());
+            } else {
+                payload.setNextPayload(PayloadTypeEnum.NONE);
+            }
+        }
     }
 
     public PayloadTypeEnum getNextPayload() {
@@ -178,16 +196,10 @@ public class ISAKMPMessage implements ISAKMPSerializable {
     }
 
     protected void writeBytesOfPayloads(ByteArrayOutputStream baos) {
-        for (int i = 0; i < payloads.size(); i++) {
-            ISAKMPPayload payload = payloads.get(i);
-            if (i < payloads.size() - 1) {
-                ISAKMPPayload nextPayload = payloads.get(i + 1);
-                payload.setNextPayload(nextPayload.getType());
-            } else {
-                payload.setNextPayload(PayloadTypeEnum.NONE);
-            }
+        updateNextPayloadProperty();
+        payloads.forEach((payload) -> {
             payload.writeBytes(baos);
-        }
+        });
     }
 
     @Override
@@ -217,6 +229,9 @@ public class ISAKMPMessage implements ISAKMPSerializable {
                 break;
             case Aggressive:
                 name.append("AM");
+                break;
+            case QuickMode:
+                name.append("QM");
                 break;
             case Informational:
                 name.append("INFO");

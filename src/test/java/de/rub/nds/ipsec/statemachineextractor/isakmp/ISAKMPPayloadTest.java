@@ -67,12 +67,12 @@ public class ISAKMPPayloadTest {
 
         @Override
         protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
         protected void setBody(byte[] body) throws ISAKMPParsingException {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 }

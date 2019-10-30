@@ -11,7 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DurationAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
@@ -25,7 +25,7 @@ public class IKEv1Ciphersuite {
     private AuthAttributeEnum authMethod = AuthAttributeEnum.PSK;
     private CipherAttributeEnum cipher = CipherAttributeEnum.DES_CBC;
     private DHGroupAttributeEnum dhGroup = DHGroupAttributeEnum.GROUP1;
-    private DurationAttribute duration = DurationAttribute.get(28800);
+    private LifeDurationAttribute duration = LifeDurationAttribute.get(28800);
     private HashAttributeEnum hash = HashAttributeEnum.MD5;
     private KeyLengthAttributeEnum keylength = KeyLengthAttributeEnum.L128;
     private LifeTypeAttributeEnum lifetype = LifeTypeAttributeEnum.SECONDS;
@@ -55,11 +55,11 @@ public class IKEv1Ciphersuite {
         this.dhGroup = dhGroup;
     }
 
-    public DurationAttribute getDuration() {
+    public LifeDurationAttribute getDuration() {
         return duration;
     }
 
-    public void setDuration(DurationAttribute duration) {
+    public void setDuration(LifeDurationAttribute duration) {
         this.duration = duration;
     }
 

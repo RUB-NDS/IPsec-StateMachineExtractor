@@ -11,7 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DurationAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
@@ -28,14 +28,14 @@ public class TransformPayloadTest {
 
     public static TransformPayload getTestTransformPayload() {
         TransformPayload instance = new TransformPayload();
-        instance.setTransformNumber((byte)1);
-        instance.addIKEAttribute(CipherAttributeEnum.AES_CBC);
-        instance.addIKEAttribute(KeyLengthAttributeEnum.L128);
-        instance.addIKEAttribute(HashAttributeEnum.SHA1);
-        instance.addIKEAttribute(DHGroupAttributeEnum.GROUP5);
-        instance.addIKEAttribute(AuthAttributeEnum.PKE);
-        instance.addIKEAttribute(LifeTypeAttributeEnum.SECONDS);
-        instance.addIKEAttribute(DurationAttribute.get(28800));
+        instance.setTransformNumber((byte)0);
+        instance.addAttribute(CipherAttributeEnum.AES_CBC);
+        instance.addAttribute(KeyLengthAttributeEnum.L128);
+        instance.addAttribute(HashAttributeEnum.SHA1);
+        instance.addAttribute(DHGroupAttributeEnum.GROUP5);
+        instance.addAttribute(AuthAttributeEnum.PKE);
+        instance.addAttribute(LifeTypeAttributeEnum.SECONDS);
+        instance.addAttribute(LifeDurationAttribute.get(28800));
         return instance;
     }
     
@@ -46,7 +46,7 @@ public class TransformPayloadTest {
     public void testWriteBytes() {
         TransformPayload instance = getTestTransformPayload();
         byte[] expResult = new byte[]{
-            0x00, 0x00, 0x00, 0x24, 0x01, 0x01, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x24, 0x00, 0x01, 0x00, 0x00,
             -128, 0x01, 0x00, 0x07, -128, 0x0e, 0x00, -128,
             -128, 0x02, 0x00, 0x02, -128, 0x04, 0x00, 0x05,
             -128, 0x03, 0x00, 0x04, -128, 0x0b, 0x00, 0x01,
@@ -66,9 +66,9 @@ public class TransformPayloadTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         getTestTransformPayload().writeBytes(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        TransformPayload instance = TransformPayload.fromStream(bais);
+        TransformPayload instance = TransformPayload.fromStream(bais, ProtocolIDEnum.ISAKMP);
         assertEquals(0, bais.available());
-        assertEquals(1, instance.getTransformId());
-        assertEquals(1, instance.getTransformNumber());
+        assertEquals(1, instance.getTransformId().getValue());
+        assertEquals(0, instance.getTransformNumber());
     }
 }

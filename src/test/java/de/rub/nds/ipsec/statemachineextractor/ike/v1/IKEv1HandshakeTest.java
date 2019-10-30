@@ -11,10 +11,12 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest.getTestIKEv1MainModeSecurityAssociationMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotifyMessageTypeEnum;
@@ -48,7 +50,7 @@ public class IKEv1HandshakeTest {
     @Test
     public void testPrepareKeyExchangePayload() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        KeyExchangePayload result = instance.prepareKeyExchangePayload();
+        KeyExchangePayload result = instance.prepareKeyExchangePayload(new byte[4]);
         assertTrue(result.getLength() <= instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4);
     }
 
@@ -60,7 +62,7 @@ public class IKEv1HandshakeTest {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
         instance.ciphersuite.setDhGroup(DHGroupAttributeEnum.GROUP19);
         instance.secrets.generateDefaults();
-        KeyExchangePayload result = instance.prepareKeyExchangePayload();
+        KeyExchangePayload result = instance.prepareKeyExchangePayload(new byte[4]);
         assertEquals(instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4, result.getLength());
     }
 
@@ -70,7 +72,7 @@ public class IKEv1HandshakeTest {
     @Test
     public void testPrepareNoncePayload() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        ISAKMPPayload result = instance.prepareNoncePayload();
+        ISAKMPPayload result = instance.prepareNoncePayload(new byte[4]);
         assertEquals(instance.ciphersuite.getNonceLen() + 4, result.getLength());
     }
 
@@ -103,39 +105,43 @@ public class IKEv1HandshakeTest {
 
     @Test
     @Ignore
-    public void testAggressiveHandhake() {
-        try {
-            IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.10"), 500);
-            SecurityAssociationPayload sa;
+    public void testAggressiveHandhake() throws Exception {
+        IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.10"), 500);
+        SecurityAssociationPayload sa;
+        ISAKMPMessage answer;
 
-            ISAKMPMessage msg = new ISAKMPMessage();
-            msg.setExchangeType(ExchangeTypeEnum.Aggressive);
-            sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
-            msg.addPayload(sa);
-            handshake.adjustCiphersuite(sa);
-            msg.addPayload(handshake.prepareKeyExchangePayload());
-            msg.addPayload(handshake.prepareNoncePayload());
-            msg.addPayload(handshake.prepareIdentificationPayload());
-            ISAKMPMessage answer = handshake.exchangeMessage(msg);
+        ISAKMPMessage msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+        sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
+        msg.addPayload(sa);
+        handshake.adjustCiphersuite(sa);
+        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
+        msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
+        msg.addPayload(handshake.prepareIdentificationPayload());
+        answer = handshake.exchangeMessage(msg);
 
-            msg = new ISAKMPMessage();
-            msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-            msg.addPayload(handshake.prepareIdentificationPayload());
-            msg.addPayload(handshake.preparePhase1HashPayload());
-            msg.setEncryptedFlag(true);
-            answer = handshake.exchangeMessage(msg);
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.Aggressive);
+        msg.addPayload(handshake.preparePhase1HashPayload());
+        answer = handshake.exchangeMessage(msg);
 
-            msg = new ISAKMPMessage();
-            msg.setExchangeType(ExchangeTypeEnum.Aggressive);
-            sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
-            msg.addPayload(sa);
-            handshake.adjustCiphersuite(sa);
-            msg.addPayload(handshake.prepareKeyExchangePayload());
-            msg.addPayload(handshake.prepareNoncePayload());
-            msg.addPayload(handshake.prepareIdentificationPayload());
-            answer = handshake.exchangeMessage(msg);
-        } catch (IOException | GeneralSecurityException | IKEHandshakeException | ISAKMPParsingException ex) {
-            Logger.getLogger(IKEv1HandshakeTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.QuickMode);
+        msg.setEncryptedFlag(true);
+        msg.setMessageIdRandom();
+        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+        msg.addPayload(sa);
+        msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+        IdentificationPayload id = new IdentificationPayload();
+        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdentificationData(new byte[8]);
+        msg.addPayload(id);
+        id = new IdentificationPayload();
+        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdentificationData(new byte[8]);
+        msg.addPayload(id);
+        handshake.addPhase2Hash1Payload(msg);
+        answer = handshake.exchangeMessage(msg);
+        answer.toString();
     }
 }

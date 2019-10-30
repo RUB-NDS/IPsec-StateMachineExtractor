@@ -10,6 +10,8 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
@@ -24,6 +26,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayloadWithPKCS1Encry
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
@@ -65,7 +68,7 @@ public final class IKEv1Handshake {
         this.remotePort = remotePort;
         reset();
     }
-    
+
     public ISAKMPMessage retransmit() throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
         if (messages.isEmpty()) {
             return null;
@@ -86,7 +89,7 @@ public final class IKEv1Handshake {
         messages.add(new WireMessage(rxData, messageReceived, false));
         return messageReceived;
     }
-    
+
     protected byte[] exchangeData(byte[] txData) throws IOException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
@@ -139,6 +142,7 @@ public final class IKEv1Handshake {
             case Aggressive:
             case IdentityProtection:
             case Informational:
+            case QuickMode:
                 break;
             default:
                 throw new UnsupportedOperationException("Not supported yet.");
@@ -245,7 +249,7 @@ public final class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
         prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
         secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
-        secrets.getISAKMPSA().setSAOfferBody(SecurityAssociationPayloadFactory.PSK_DES_MD5_G1.getBody());
+        secrets.getISAKMPSA().setSAOfferBody(SecurityAssociationPayloadFactory.P1_PSK_DES_MD5_G1.getBody());
         secrets.generateDefaults();
     }
 
@@ -254,12 +258,19 @@ public final class IKEv1Handshake {
             throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
         }
         ProposalPayload pp = payload.getProposalPayloads().get(0);
+        if (pp.getProtocolId() != ProtocolIDEnum.ISAKMP) {
+            throw new IKEHandshakeException("Proposal protocol is not ISAKMP.");
+        }
         if (pp.getTransformPayloads().size() != 1) {
             throw new IKEHandshakeException("Wrong number of transform payloads found. There should only be one.");
         }
         TransformPayload tp = pp.getTransformPayloads().get(0);
+        if (tp.getTransformId().getValue() != ProtocolTransformIDEnum.ISAKMP_KEY_IKE.getValue()) {
+            throw new IKEHandshakeException("Transform ID is not the the hybrid ISAKMP/Oakley Diffie-Hellman key exchange (IKE).");
+        }
         tp.getAttributes().forEach((attr) -> {
-            attr.configureCiphersuite(ciphersuite);
+            IKEv1Attribute iattr = (IKEv1Attribute) attr;
+            iattr.configureCiphersuite(ciphersuite);
         });
         secrets.updateISAKMPSA();
     }
@@ -270,9 +281,10 @@ public final class IKEv1Handshake {
         }
     }
 
-    public KeyExchangePayload prepareKeyExchangePayload() throws GeneralSecurityException {
+    public KeyExchangePayload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException {
         KeyExchangePayload result = new KeyExchangePayload();
-        result.setKeyExchangeData(secrets.getISAKMPSA().generateKeyExchangeData());
+        SASecrets sas = this.secrets.getSA(msgID);
+        result.setKeyExchangeData(sas.generateKeyExchangeData());
         return result;
     }
 
@@ -302,15 +314,16 @@ public final class IKEv1Handshake {
         return result;
     }
 
-    public ISAKMPPayload prepareNoncePayload() throws GeneralSecurityException {
+    public ISAKMPPayload prepareNoncePayload(byte[] msgID) throws GeneralSecurityException {
         NoncePayload result = new NoncePayload();
-        if (secrets.getISAKMPSA().getInitiatorNonce() == null) {
+        SASecrets sas = this.secrets.getSA(msgID);
+        if (sas.getInitiatorNonce() == null) {
             SecureRandom random = new SecureRandom();
             byte[] initiatorNonce = new byte[ciphersuite.getNonceLen()];
             random.nextBytes(initiatorNonce);
-            secrets.getISAKMPSA().setInitiatorNonce(initiatorNonce);
+            sas.setInitiatorNonce(initiatorNonce);
         }
-        result.setNonceData(secrets.getISAKMPSA().getInitiatorNonce());
+        result.setNonceData(sas.getInitiatorNonce());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // these authentication methods encrypt the nonce using the public key of the peer
             ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
@@ -326,9 +339,9 @@ public final class IKEv1Handshake {
         return hashPayload;
     }
 
-    public ISAKMPPayload preparePhase2Hash1Payload() throws GeneralSecurityException, IOException {
+    public void addPhase2Hash1Payload(ISAKMPMessage msg) throws GeneralSecurityException, IOException {
         HashPayload hashPayload = new HashPayload();
-//        hashPayload.setHashData(secrets.getHASH1());
-        return hashPayload;
+        hashPayload.setHashData(secrets.getHASH1(msg));
+        msg.addPayload(0, hashPayload);
     }
 }

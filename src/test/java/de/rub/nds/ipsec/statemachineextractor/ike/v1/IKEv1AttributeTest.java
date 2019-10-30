@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DurationAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import org.junit.Test;
@@ -25,7 +25,7 @@ public class IKEv1AttributeTest {
      */
     @Test
     public void testHashCode() {
-        IKEv1Attribute instance = DurationAttribute.get(28800);
+        IKEv1Attribute instance = LifeDurationAttribute.get(28800);
         byte[] expResult = DatatypeHelper.intTo4ByteArray(0x800c7080);
         assertArrayEquals(expResult, instance.getBytes());
     }

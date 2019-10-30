@@ -27,7 +27,7 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
 
     private int domainOfInterpretation = 0x01; //IPSEC
     private final BitSet situation = new BitSet(3);
-    private final List<ProposalPayload> payloads = new ArrayList<>();
+    private final List<ProposalPayload> proposals = new ArrayList<>();
 
     public SecurityAssociationPayload() {
         super(PayloadTypeEnum.SecurityAssociation);
@@ -67,11 +67,11 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
     }
 
     public void addProposalPayload(ProposalPayload payload) {
-        payloads.add(payload);
+        proposals.add(payload);
     }
 
     public List<ProposalPayload> getProposalPayloads() {
-        return Collections.unmodifiableList(payloads);
+        return Collections.unmodifiableList(proposals);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
     @Override
     public int getLength() {
         int length = SA_HEADER_LEN;
-        for (ProposalPayload payload : payloads) {
+        for (ProposalPayload payload : proposals) {
             length += payload.getLength();
         }
         return length;
@@ -93,8 +93,13 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
         super.writeBytes(baos);
         baos.write(DatatypeHelper.intTo4ByteArray(domainOfInterpretation), 0, 4);
         baos.write(getSituation(), 0, 4);
-        for (ProposalPayload payload : payloads) {
-            payload.writeBytes(baos);
+        for (int i = 0; i < proposals.size(); i++) {
+            ProposalPayload proposal = proposals.get(i);
+            proposal.setProposalNumber((byte) i);
+            if (i + 1 < proposals.size()) {
+                proposal.setNextPayload(PayloadTypeEnum.Proposal);
+            }
+            proposal.writeBytes(baos);
         }
     }
 
@@ -120,7 +125,7 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
 
     @Override
     protected void setBody(byte[] body) throws ISAKMPParsingException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

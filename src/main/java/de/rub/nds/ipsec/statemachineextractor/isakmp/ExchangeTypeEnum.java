@@ -15,7 +15,7 @@ import java.util.Map;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum ExchangeTypeEnum {
+public enum ExchangeTypeEnum implements ByteValueEnum {
 
     NONE((byte) 0),
     Base((byte) 1),
@@ -32,6 +32,7 @@ public enum ExchangeTypeEnum {
         this.value = value;
     }
 
+    @Override
     public byte getValue() {
         return value;
     }

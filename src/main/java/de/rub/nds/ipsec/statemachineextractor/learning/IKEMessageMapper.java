@@ -63,7 +63,7 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                             break;
                         case "QM":
                             msg.setExchangeType(ExchangeTypeEnum.QuickMode);
-                            sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+                            sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
                             break;
                         case "INFO":
                             msg.setExchangeType(ExchangeTypeEnum.Informational);
@@ -81,20 +81,21 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                         throw new UnsupportedOperationException("Malformed message identifier");
                     }
                     tokens = new ArrayDeque<>(Arrays.asList(token.split("-")));
+                    tokenprocessing:
                     while (!tokens.isEmpty()) {
                         switch (tokens.pop()) {
                             case "PSK":
-                                sa = SecurityAssociationPayloadFactory.PSK_AES128_SHA1_G2;
+                                sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
                                 break;
                             case "SA":
                                 msg.addPayload(sa);
                                 handshake.adjustCiphersuite(sa);
                                 break;
                             case "KE":
-                                msg.addPayload(handshake.prepareKeyExchangePayload());
+                                msg.addPayload(handshake.prepareKeyExchangePayload(msg.getMessageId()));
                                 break;
                             case "No":
-                                msg.addPayload(handshake.prepareNoncePayload());
+                                msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
                                 break;
                             case "ID":
                                 msg.addPayload(handshake.prepareIdentificationPayload());
@@ -104,8 +105,10 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 break;
                             case "HASH1":
                                 msg.setMessageIdRandom();
-                                msg.addPayload(handshake.preparePhase2Hash1Payload());
-                                break;
+                                msg.addPayload(sa);
+                                msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+                                handshake.addPhase2Hash1Payload(msg);
+                                break tokenprocessing;
                         }
                     }
                     return handshake.exchangeMessage(msg);

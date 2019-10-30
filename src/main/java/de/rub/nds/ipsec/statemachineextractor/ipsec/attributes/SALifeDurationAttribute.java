@@ -6,9 +6,8 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
+package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
@@ -17,18 +16,19 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class DurationAttribute implements IKEv1Attribute, ISAKMPSerializable {
+public class SALifeDurationAttribute implements IPsecAttribute, ISAKMPSerializable {
 
-    static DurationAttribute generate(int duration) {
+    static SALifeDurationAttribute generate(int duration) {
         check(duration);
-        return new DurationAttribute((0x800c << 16) + duration);
+        return new SALifeDurationAttribute((FORMAT_TYPE << 16) + duration);
     }
-    
+
+    protected static final int FORMAT_TYPE = 0x8002;
     private final byte[] bytes;
 
-    private DurationAttribute(int value) {
+    private SALifeDurationAttribute(int value) {
        this.bytes = DatatypeHelper.intTo4ByteArray(value);
-       IKEv1AttributeFactory.register(this, value);
+       IPsecAttributeFactory.register(this, value);
     }
 
     @Override
@@ -36,10 +36,10 @@ public class DurationAttribute implements IKEv1Attribute, ISAKMPSerializable {
         return bytes.clone();
     }
     
-    public static DurationAttribute get(int duration) {
+    public static SALifeDurationAttribute get(int duration) {
         check(duration);
         try {
-            return (DurationAttribute) IKEv1AttributeFactory.fromInt((0x800c << 16) + duration);
+            return (SALifeDurationAttribute) IPsecAttributeFactory.fromInt((FORMAT_TYPE << 16) + duration);
         } catch (ISAKMPParsingException ex) {
             throw new RuntimeException("This should not be possible", ex);
         }
@@ -49,10 +49,5 @@ public class DurationAttribute implements IKEv1Attribute, ISAKMPSerializable {
         if (duration > 0xFFFF) {
             throw new IllegalArgumentException("Duration too large.");
         }
-    }    
-
-    @Override
-    public void configureCiphersuite(IKEv1Ciphersuite ciphersuite) {
-        ciphersuite.setDuration(this);
     }
 }

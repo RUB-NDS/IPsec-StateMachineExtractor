@@ -17,7 +17,7 @@ import java.util.Map;
  * @see https://tools.ietf.org/html/rfc2407#section-4.6.2.1
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum IDTypeEnum {
+public enum IDTypeEnum implements ByteValueEnum {
 
     RESERVED((byte) 0),
     ID_IPV4_ADDR((byte) 1),
@@ -38,6 +38,7 @@ public enum IDTypeEnum {
         this.value = value;
     }
 
+    @Override
     public byte getValue() {
         return value;
     }
