@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
@@ -200,6 +201,7 @@ public class IKEv1HandshakeSessionSecrets {
         /* HASH(1) is the prf over the message id (M-ID) from the ISAKMP header 
          * concatenated with the entire message that follows the hash including 
          * all payload headers, but excluding any padding added for encryption.
+         * Hash(1) = prf(SKEYID_a, M-ID | Message after HASH payload)
          */
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         prf.init(new SecretKeySpec(this.getSKEYID_a(), "Hmac" + ciphersuite.getHash().toString()));
@@ -209,6 +211,22 @@ public class IKEv1HandshakeSessionSecrets {
         byte[] bytes = msg.getBytes();
         msg.setEncryptedFlag(encryptedFlag);
         return prf.doFinal(Arrays.copyOfRange(bytes, ISAKMPMessage.ISAKMP_HEADER_LEN, bytes.length));
+    }
+
+    public byte[] getHASH2(EncryptedISAKMPMessage msg) throws GeneralSecurityException {
+        this.computeSecretKeys();
+        /* HASH(2) is identical to HASH(1) except the initiator's nonce
+         * -- Ni, minus the payload header -- is added after M-ID but before the
+         * complete message. The addition of the nonce to HASH(2) is for a
+         * liveliness proof.
+         * Hash(2) = prf(SKEYID_a, M-ID | Ni_b | Message after HASH)
+         */
+        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
+        prf.init(new SecretKeySpec(this.getSKEYID_a(), "Hmac" + ciphersuite.getHash().toString()));
+        prf.update(msg.getMessageId());
+        prf.update(getSA(msg.getMessageId()).getInitiatorNonce());
+        byte[] bytes = msg.getPlaintext();
+        return prf.doFinal(Arrays.copyOfRange(bytes, msg.getPayloads().iterator().next().getLength(), bytes.length));
     }
 
     public SASecrets getSA(byte[] msgID) {

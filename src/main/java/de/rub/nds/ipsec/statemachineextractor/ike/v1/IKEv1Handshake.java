@@ -163,79 +163,107 @@ public final class IKEv1Handshake {
         bais.skip(ISAKMPMessage.ISAKMP_HEADER_LEN);
         PayloadTypeEnum nextPayload = PayloadTypeEnum.get(bytes[16]);
         if (message.isEncryptedFlag()) {
-            SecretKeySpec key = new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName());
-            byte[] iv = secrets.getIV(message.getMessageId());
-            EncryptedISAKMPMessage encMessage = EncryptedISAKMPMessage.fromPlainMessage(message, key, ciphersuite.getCipher(), iv);
-            encMessage.setCiphertext(bais);
-            encMessage.setNextPayload(nextPayload);
-            encMessage.decrypt();
-            //TODO: If there's a hash payload in the message, check it
-            message = encMessage;
+            message = processEncryptedMessage(message, nextPayload, bais);
         } else {
-            while (nextPayload != PayloadTypeEnum.NONE) {
-                ISAKMPPayload payload;
-                switch (nextPayload) {
-                    case SecurityAssociation:
-                        payload = SecurityAssociationPayload.fromStream(bais);
-                        SecurityAssociationPayload receivedSAPayload = (SecurityAssociationPayload) payload;
-                        adjustCiphersuite(receivedSAPayload);
-                        break;
-                    case KeyExchange:
-                        payload = KeyExchangePayload.fromStream(bais);
-                        secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
-                        secrets.getISAKMPSA().computeDHSecret();
-                        break;
-                    case Identification:
-                        switch (ciphersuite.getAuthMethod()) {
-                            case PKE:
-                                payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
-                                break;
-                            case RevPKE:
-                                throw new UnsupportedOperationException("Not supported yet.");
-                            //break;
-                            default:
-                                payload = IdentificationPayload.fromStream(bais);
-                                break;
-                        }
-                        secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
-                        secrets.computeSecretKeys();
-                        break;
-                    case Hash:
-                        payload = HashPayload.fromStream(bais);
-                        if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
-                            throw new IKEHandshakeException("Responder Hash does not match!");
-                        }
-                        break;
-                    case Nonce:
-                        switch (ciphersuite.getAuthMethod()) {
-                            case PKE:
-                            case RevPKE:
-                                payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
-                                break;
-                            default:
-                                payload = NoncePayload.fromStream(bais);
-                                break;
-                        }
-                        secrets.getISAKMPSA().setResponderNonce(((NoncePayload) payload).getNonceData());
-                        secrets.computeSecretKeys();
-                        break;
-                    case VendorID:
-                        payload = VendorIDPayload.fromStream(bais);
-                        break;
-                    case Notification:
-                        payload = NotificationPayload.fromStream(bais);
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Not supported yet.");
-                }
-                nextPayload = payload.getNextPayload();
-                message.addPayload(payload);
-            }
+            processPlainMessage(message, nextPayload, bais);
         }
         if (messageLength != message.getLength()) {
             throw new ISAKMPParsingException("Message lengths differ - Computed: " + message.getLength() + " vs. Received: " + messageLength + "!");
         }
         return message;
+    }
+
+    private ISAKMPMessage processEncryptedMessage(ISAKMPMessage message, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
+        SecretKeySpec key = new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName());
+        byte[] iv = secrets.getIV(message.getMessageId());
+        EncryptedISAKMPMessage encMessage = EncryptedISAKMPMessage.fromPlainMessage(message, key, ciphersuite.getCipher(), iv);
+        encMessage.setCiphertext(bais);
+        encMessage.setNextPayload(nextPayload);
+        encMessage.decrypt();
+        message = encMessage;
+        if (message.getExchangeType() == ExchangeTypeEnum.QuickMode) {
+            PayloadTypeEnum payloadType = nextPayload;
+            for (ISAKMPPayload payload : message.getPayloads()) {
+                switch (payloadType) {
+                    case Hash:
+                        if (!Arrays.equals(secrets.getHASH2(encMessage), ((HashPayload) payload).getHashData())) {
+                            throw new IKEHandshakeException("QuickMode HASH(2) does not match!");
+                        }
+                        break;
+                    case Nonce:
+                        secrets.getSA(message.getMessageId()).setResponderNonce(((NoncePayload) payload).getNonceData());
+                        break;
+                }
+                payloadType = payload.getNextPayload();
+            }
+        } else {
+            // TODO: If there's a hash payload in the message, check it
+        }
+        return message;
+    }
+
+    private void processPlainMessage(ISAKMPMessage message, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws ISAKMPParsingException, GeneralSecurityException, IllegalStateException, UnsupportedOperationException, IKEHandshakeException {
+        ISAKMPPayload payload;
+        while (nextPayload != PayloadTypeEnum.NONE) {
+            switch (nextPayload) {
+                case SecurityAssociation:
+                    payload = SecurityAssociationPayload.fromStream(bais);
+                    SecurityAssociationPayload receivedSAPayload = (SecurityAssociationPayload) payload;
+                    adjustCiphersuite(receivedSAPayload);
+                    break;
+                case KeyExchange:
+                    payload = KeyExchangePayload.fromStream(bais);
+                    secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                    secrets.getISAKMPSA().computeDHSecret();
+                    break;
+                case Identification:
+                    switch (ciphersuite.getAuthMethod()) {
+                        case PKE:
+                            payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(IdentificationPayload.class,
+                                    bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
+                            break;
+                        case RevPKE:
+                            throw new UnsupportedOperationException("Not supported yet.");
+                        //break;
+                        default:
+                            payload = IdentificationPayload.fromStream(bais);
+                            break;
+                    }
+                    secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
+                    secrets.computeSecretKeys();
+                    break;
+                case Hash:
+                    payload = HashPayload.fromStream(bais);
+                    if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
+                        throw new IKEHandshakeException("Responder Hash does not match!");
+                    }
+                    break;
+                case Nonce:
+                    switch (ciphersuite.getAuthMethod()) {
+                        case PKE:
+                        case RevPKE:
+                            payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(NoncePayload.class,
+                                    bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
+                            break;
+                        default:
+                            payload = NoncePayload.fromStream(bais);
+                            break;
+                    }
+                    secrets.getISAKMPSA().setResponderNonce(((NoncePayload) payload).getNonceData());
+                    secrets.computeSecretKeys();
+                    break;
+                case VendorID:
+                    payload = VendorIDPayload.fromStream(bais);
+                    break;
+                case Notification:
+                    payload = NotificationPayload.fromStream(bais);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Not supported yet.");
+            }
+            nextPayload = payload.getNextPayload();
+            message.addPayload(payload);
+        }
     }
 
     public void reset() throws IOException, GeneralSecurityException {

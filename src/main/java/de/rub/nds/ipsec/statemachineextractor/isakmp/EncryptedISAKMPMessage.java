@@ -29,6 +29,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
     private final Cipher cipherEnc, cipherDec;
     protected boolean isInSync = false;
     protected byte[] ciphertext = new byte[0];
+    protected byte[] plaintext;
     private PayloadTypeEnum nextPayload = PayloadTypeEnum.NONE;
 
     public EncryptedISAKMPMessage(SecretKey secretKey, CipherAttributeEnum mode, byte[] IV) throws GeneralSecurityException {
@@ -44,7 +45,8 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         this.writeBytesOfPayloads(baos);
         cipherEnc.init(Cipher.ENCRYPT_MODE, secretKey, IV);
-        this.ciphertext = cipherEnc.doFinal(baos.toByteArray());
+        this.plaintext = baos.toByteArray();
+        this.ciphertext = cipherEnc.doFinal(this.plaintext);
         this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipherEnc.getBlockSize(), this.ciphertext.length);
         this.isInSync = true;
     }
@@ -55,8 +57,8 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
             throw new IllegalStateException("No ciphertext set!");
         }
         cipherDec.init(Cipher.DECRYPT_MODE, secretKey, IV);
-        byte[] plaintext = cipherDec.doFinal(this.ciphertext);
-        ByteArrayInputStream bais = new ByteArrayInputStream(plaintext);
+        this.plaintext = cipherDec.doFinal(this.ciphertext);
+        ByteArrayInputStream bais = new ByteArrayInputStream(this.plaintext);
         this.payloads.clear();
         PayloadTypeEnum nextPayload = this.getNextPayload();
         while (nextPayload != PayloadTypeEnum.NONE) {
@@ -72,6 +74,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
             this.addPayload(payload);
         }
         this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipherDec.getBlockSize(), this.ciphertext.length);
+        this.plaintext = Arrays.copyOf(this.plaintext, super.getLength() - ISAKMP_HEADER_LEN); // remove padding
         this.isInSync = true;
     }
 
@@ -97,6 +100,13 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
             this.isInSync = false;
         }
         this.nextPayload = nextPayload;
+    }
+
+    public byte[] getPlaintext() {
+        if (!isInSync) {
+            throw new IllegalStateException("Plaintext not up to date. Run encrypt() or decrypt() first!");
+        }
+        return plaintext.clone();
     }
 
     @Override
@@ -127,6 +137,10 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
 
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
+        if (!this.isEncryptedFlag()) {
+            super.writeBytes(baos);
+            return;
+        }
         this.nextPayload = super.getNextPayload();
         writeBytesWithoutPayloads(baos);
         try {
