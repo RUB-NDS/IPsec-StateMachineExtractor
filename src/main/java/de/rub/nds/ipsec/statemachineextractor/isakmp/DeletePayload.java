@@ -86,7 +86,7 @@ public class DeletePayload extends ISAKMPPayload {
         baos.write(DatatypeHelper.intTo4ByteArray(domainOfInterpretation), 0, 4);
         baos.write(protocolID);
         baos.write(spiSize);
-        baos.write(DatatypeHelper.intTo4ByteArray(spis.size()), 0, 2);
+        baos.write(DatatypeHelper.intTo4ByteArray(spis.size()), 2, 2);
         spis.forEach((spi) -> {
             baos.write(spi, 0, spi.length);
         });
@@ -119,11 +119,8 @@ public class DeletePayload extends ISAKMPPayload {
         this.setProtocolID(buffer[0]);
         this.setSpiSize(buffer[1]);
         int numberOfSPIs = ((buffer[2] & 0xff) << 8) | (buffer[3] & 0xff);
-        while (bais.available() > 0) {
+        for (int i = 0; i < numberOfSPIs; i++) {
             spis.add(readSPIFromStream(bais, spiSize));
-        }
-        if (numberOfSPIs != spis.size()) {
-            throw new ISAKMPParsingException("Incorrect number of SPIs found!");
         }
         if (length != this.getLength()) {
             throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");

@@ -22,6 +22,7 @@ public class ProposalPayloadTest {
 
     public static ProposalPayload getTestProposalPayload() {
         ProposalPayload instance = new ProposalPayload();
+        instance.setProposalNumber((byte) 0);
         instance.addTransform(getTestTransformPayload());
         return instance;
     }
@@ -33,7 +34,7 @@ public class ProposalPayloadTest {
     public void testWriteBytes() {
         ProposalPayload instance = getTestProposalPayload();
         byte[] expResult = new byte[]{
-            0x00, 0x00, 0x00, 0x2c, 0x01, 0x01, 0x00, 0x01,
+            0x00, 0x00, 0x00, 0x2c, 0x00, 0x01, 0x00, 0x01,
             0x00, 0x00, 0x00, 0x24, 0x00, 0x01, 0x00, 0x00,
             -128, 0x01, 0x00, 0x07, -128, 0x0e, 0x00, -128,
             -128, 0x02, 0x00, 0x02, -128, 0x04, 0x00, 0x05,
@@ -45,7 +46,7 @@ public class ProposalPayloadTest {
         byte[] result = baos.toByteArray();
         assertArrayEquals(expResult, result);
     }
-    
+
     /**
      * Test of fromStream method, of class ProposalPayload.
      */
@@ -54,7 +55,7 @@ public class ProposalPayloadTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         getTestProposalPayload().writeBytes(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        ProposalPayload instance = ProposalPayload.fromStream(bais);
+        ProposalPayload.fromStream(bais);
         assertEquals(0, bais.available());
     }
 }

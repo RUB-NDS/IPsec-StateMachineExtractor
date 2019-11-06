@@ -10,7 +10,6 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ISAKMPTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1AttributeFactory;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.AHTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
@@ -31,7 +30,7 @@ public class TransformPayload extends ISAKMPPayload {
 
     protected static final int TRANSFORM_PAYLOAD_HEADER_LEN = 8;
 
-    private byte transformNumber;
+    private byte transformNumber = -128;
     private ProtocolTransformIDEnum transformId = ISAKMPTransformIDEnum.KEY_IKE.toProtocolTransformIDEnum();
     private final List<ISAKMPAttribute> attributes = new ArrayList<>();
     private ProtocolIDEnum protocolID;
@@ -94,7 +93,7 @@ public class TransformPayload extends ISAKMPPayload {
             // no further hint, just guess
             return ProtocolTransformIDEnum.getFirstMatch(value);
         }
-        switch(protocolID) {
+        switch (protocolID) {
             case ISAKMP:
                 return ISAKMPTransformIDEnum.get(value).toProtocolTransformIDEnum();
             case IPSEC_ESP:
@@ -105,14 +104,14 @@ public class TransformPayload extends ISAKMPPayload {
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
     }
-    
+
     public static TransformPayload fromStream(ByteArrayInputStream bais, ProtocolIDEnum protoID) throws ISAKMPParsingException {
         TransformPayload transformPayload = new TransformPayload();
         transformPayload.setProtocolID(protoID);
         transformPayload.fillFromStream(bais);
         return transformPayload;
     }
-    
+
     @Override
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);

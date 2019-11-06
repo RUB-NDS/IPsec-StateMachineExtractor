@@ -173,33 +173,41 @@ public final class IKEv1Handshake {
         return message;
     }
 
-    private ISAKMPMessage processEncryptedMessage(ISAKMPMessage message, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
+    private ISAKMPMessage processEncryptedMessage(ISAKMPMessage encMessage, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
         SecretKeySpec key = new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName());
-        byte[] iv = secrets.getIV(message.getMessageId());
-        EncryptedISAKMPMessage encMessage = EncryptedISAKMPMessage.fromPlainMessage(message, key, ciphersuite.getCipher(), iv);
-        encMessage.setCiphertext(bais);
-        encMessage.setNextPayload(nextPayload);
-        encMessage.decrypt();
-        message = encMessage;
-        if (message.getExchangeType() == ExchangeTypeEnum.QuickMode) {
-            PayloadTypeEnum payloadType = nextPayload;
-            for (ISAKMPPayload payload : message.getPayloads()) {
-                switch (payloadType) {
-                    case Hash:
-                        if (!Arrays.equals(secrets.getHASH2(encMessage), ((HashPayload) payload).getHashData())) {
-                            throw new IKEHandshakeException("QuickMode HASH(2) does not match!");
-                        }
-                        break;
-                    case Nonce:
-                        secrets.getSA(message.getMessageId()).setResponderNonce(((NoncePayload) payload).getNonceData());
-                        break;
-                }
-                payloadType = payload.getNextPayload();
+        byte[] iv = secrets.getIV(encMessage.getMessageId());
+        EncryptedISAKMPMessage decMessage = EncryptedISAKMPMessage.fromPlainMessage(encMessage, key, ciphersuite.getCipher(), iv);
+        decMessage.setCiphertext(bais);
+        decMessage.setNextPayload(nextPayload);
+        decMessage.decrypt();
+        PayloadTypeEnum payloadType = nextPayload;
+        for (ISAKMPPayload payload : decMessage.getPayloads()) {
+            switch (payloadType) {
+                case Hash:
+                    switch (decMessage.getExchangeType()) {
+                        case IdentityProtection:
+                            if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
+                                throw new IKEHandshakeException("Main Mode HASH_R does not match!");
+                            }
+                            break;
+                        case Informational:
+                            if (!Arrays.equals(secrets.getHASH1(decMessage), ((HashPayload) payload).getHashData())) {
+                                throw new IKEHandshakeException("Informational HASH(1) does not match!");
+                            }
+                            break;
+                        case QuickMode:
+                            if (!Arrays.equals(secrets.getHASH2(decMessage), ((HashPayload) payload).getHashData())) {
+                                throw new IKEHandshakeException("QuickMode HASH(2) does not match!");
+                            }
+                            break;
+                    }
+                    break;
+                case Nonce:
+                    secrets.getSA(decMessage.getMessageId()).setResponderNonce(((NoncePayload) payload).getNonceData());
+                    break;
             }
-        } else {
-            // TODO: If there's a hash payload in the message, check it
         }
-        return message;
+        return decMessage;
     }
 
     private void processPlainMessage(ISAKMPMessage message, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws ISAKMPParsingException, GeneralSecurityException, IllegalStateException, UnsupportedOperationException, IKEHandshakeException {
@@ -235,7 +243,7 @@ public final class IKEv1Handshake {
                 case Hash:
                     payload = HashPayload.fromStream(bais);
                     if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
-                        throw new IKEHandshakeException("Responder Hash does not match!");
+                        throw new IKEHandshakeException("Aggressive Mode HASH_R does not match!");
                     }
                     break;
                 case Nonce:

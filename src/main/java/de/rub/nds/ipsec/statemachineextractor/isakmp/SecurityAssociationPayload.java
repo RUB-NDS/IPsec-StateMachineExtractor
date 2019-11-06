@@ -95,7 +95,9 @@ public class SecurityAssociationPayload extends ISAKMPPayload {
         baos.write(getSituation(), 0, 4);
         for (int i = 0; i < proposals.size(); i++) {
             ProposalPayload proposal = proposals.get(i);
-            proposal.setProposalNumber((byte) i);
+            if (proposal.getProposalNumber() == -128) {
+                proposal.setProposalNumber((byte) i);
+            }
             if (i + 1 < proposals.size()) {
                 proposal.setNextPayload(PayloadTypeEnum.Proposal);
             }

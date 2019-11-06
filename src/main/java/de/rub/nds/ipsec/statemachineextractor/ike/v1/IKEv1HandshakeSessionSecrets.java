@@ -11,6 +11,8 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
@@ -197,36 +199,58 @@ public class IKEv1HandshakeSessionSecrets {
     }
 
     public byte[] getHASH1(ISAKMPMessage msg) throws GeneralSecurityException {
-        this.computeSecretKeys();
         /* HASH(1) is the prf over the message id (M-ID) from the ISAKMP header 
          * concatenated with the entire message that follows the hash including 
          * all payload headers, but excluding any padding added for encryption.
          * Hash(1) = prf(SKEYID_a, M-ID | Message after HASH payload)
          */
-        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
-        prf.init(new SecretKeySpec(this.getSKEYID_a(), "Hmac" + ciphersuite.getHash().toString()));
-        prf.update(msg.getMessageId());
-        boolean encryptedFlag = msg.isEncryptedFlag();
-        msg.setEncryptedFlag(false);
-        byte[] bytes = msg.getBytes();
-        msg.setEncryptedFlag(encryptedFlag);
-        return prf.doFinal(Arrays.copyOfRange(bytes, ISAKMPMessage.ISAKMP_HEADER_LEN, bytes.length));
+        return getQuickModeHASH(msg, 1);
     }
 
-    public byte[] getHASH2(EncryptedISAKMPMessage msg) throws GeneralSecurityException {
-        this.computeSecretKeys();
+    public byte[] getHASH2(ISAKMPMessage msg) throws GeneralSecurityException {
         /* HASH(2) is identical to HASH(1) except the initiator's nonce
          * -- Ni, minus the payload header -- is added after M-ID but before the
          * complete message. The addition of the nonce to HASH(2) is for a
          * liveliness proof.
          * Hash(2) = prf(SKEYID_a, M-ID | Ni_b | Message after HASH)
          */
+        return getQuickModeHASH(msg, 2);
+    }
+
+    public byte[] getHASH3(ISAKMPMessage msg) throws GeneralSecurityException {
+        /* HASH(3)-- for liveliness-- is the prf over the value zero represented
+         * as a single octet, followed by a concatenation of the message id and
+         * the two nonces-- the initiator's followed by the responder's-- minus
+         * the payload header.
+         * Hash(3) = prf(SKEYID_a, 0 | M-ID | Ni_b | Nr_b)
+         */
+        return getQuickModeHASH(msg, 3);
+    }
+
+    protected byte[] getQuickModeHASH(ISAKMPMessage msg, int index) throws GeneralSecurityException {
+        this.computeSecretKeys();
         Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
         prf.init(new SecretKeySpec(this.getSKEYID_a(), "Hmac" + ciphersuite.getHash().toString()));
+        if (index == 3) {
+            prf.update((byte) 0x0);
+        }
         prf.update(msg.getMessageId());
-        prf.update(getSA(msg.getMessageId()).getInitiatorNonce());
-        byte[] bytes = msg.getPlaintext();
-        return prf.doFinal(Arrays.copyOfRange(bytes, msg.getPayloads().iterator().next().getLength(), bytes.length));
+        if (index == 2 || index == 3) {
+            prf.update(getSA(msg.getMessageId()).getInitiatorNonce());
+        }
+        if (index == 3) {
+            return prf.doFinal(getSA(msg.getMessageId()).getResponderNonce());
+        }
+        boolean encryptedFlag = msg.isEncryptedFlag();
+        msg.setEncryptedFlag(false);
+        byte[] bytes = msg.getBytes();
+        msg.setEncryptedFlag(encryptedFlag);
+        int offset = ISAKMPMessage.ISAKMP_HEADER_LEN;
+        ISAKMPPayload firstPayload = msg.getPayloads().iterator().next();
+        if (firstPayload.getType() == PayloadTypeEnum.Hash) {
+            offset += firstPayload.getLength();
+        }
+        return prf.doFinal(Arrays.copyOfRange(bytes, offset, bytes.length));
     }
 
     public SASecrets getSA(byte[] msgID) {

@@ -24,7 +24,7 @@ public class ProposalPayload extends ISAKMPPayload {
 
     protected static final int PROPOSAL_PAYLOAD_HEADER_LEN = 8;
 
-    private byte proposalNumber = 1;
+    private byte proposalNumber = -128;
     private ProtocolIDEnum protocolId = ProtocolIDEnum.ISAKMP;
     private byte[] SPI = new byte[0];
     private final List<TransformPayload> transforms = new ArrayList<>();
@@ -57,7 +57,9 @@ public class ProposalPayload extends ISAKMPPayload {
         baos.write(SPI, 0, SPI.length);
         for (int i = 0; i < transforms.size(); i++) {
             TransformPayload transform = transforms.get(i);
-            transform.setTransformNumber((byte) i);
+            if (transform.getTransformNumber() == -128) {
+                transform.setTransformNumber((byte) i);
+            }
             if (i + 1 < transforms.size()) {
                 transform.setNextPayload(PayloadTypeEnum.Transform);
             }
@@ -88,7 +90,7 @@ public class ProposalPayload extends ISAKMPPayload {
     public void setSPI(byte[] SPI) {
         this.SPI = SPI;
     }
-    
+
     public byte[] setSPIRandom() {
         this.SPI = new byte[4];
         Random rng = new Random();
