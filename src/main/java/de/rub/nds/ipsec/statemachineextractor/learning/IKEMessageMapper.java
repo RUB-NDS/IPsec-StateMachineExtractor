@@ -15,8 +15,10 @@ import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -43,6 +45,10 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                         handshake.reset();
                         return null;
                     }
+                    if (abstractInput.equals("NEW_QM_MSG_ID")) {
+                        handshake.setMostRecentMessageID(null);
+                        return null;
+                    }
                     ArrayDeque<String> tokens = new ArrayDeque<>(Arrays.asList(abstractInput.split("_|\\*")));
                     switch (tokens.pop()) {
                         case "v1":
@@ -63,7 +69,6 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                             break;
                         case "QM":
                             msg.setExchangeType(ExchangeTypeEnum.QuickMode);
-                            sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
                             break;
                         case "INFO":
                             msg.setExchangeType(ExchangeTypeEnum.Informational);
@@ -80,16 +85,23 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                     if (!tokens.isEmpty()) {
                         throw new UnsupportedOperationException("Malformed message identifier");
                     }
+                    boolean requiresHash1PostProcessing = false;
                     tokens = new ArrayDeque<>(Arrays.asList(token.split("-")));
-                    tokenprocessing:
                     while (!tokens.isEmpty()) {
                         switch (tokens.pop()) {
                             case "PSK":
                                 sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
                                 break;
                             case "SA":
+                                switch (msg.getExchangeType()) {
+                                    case QuickMode:
+                                        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+                                        break;
+                                    default:
+                                        handshake.adjustCiphersuite(sa);
+                                        break;
+                                }
                                 msg.addPayload(sa);
-                                handshake.adjustCiphersuite(sa);
                                 break;
                             case "KE":
                                 msg.addPayload(handshake.prepareKeyExchangePayload(msg.getMessageId()));
@@ -98,17 +110,32 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
                                 break;
                             case "ID":
-                                msg.addPayload(handshake.prepareIdentificationPayload());
+                                switch (msg.getExchangeType()) {
+                                    case QuickMode:
+                                        IdentificationPayload id = new IdentificationPayload();
+                                        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+                                        id.setIdentificationData(new byte[8]);
+                                        msg.addPayload(id);
+                                        break;
+                                    default:
+                                        msg.addPayload(handshake.prepareIdentificationPayload());
+                                        break;
+                                }
                                 break;
                             case "HASH":
                                 msg.addPayload(handshake.preparePhase1HashPayload());
                                 break;
                             case "HASH1":
-                                msg.setMessageIdRandom();
-                                msg.addPayload(sa);
-                                msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
-                                handshake.addPhase2Hash1Payload(msg);
-                                break tokenprocessing;
+                                adjustQuickModeMessageID(handshake, msg);
+                                requiresHash1PostProcessing = true;
+                                break;
+                            case "HASH3":
+                                adjustQuickModeMessageID(handshake, msg);
+                                handshake.addPhase2Hash3Payload(msg);
+                                break;
+                        }
+                        if (requiresHash1PostProcessing) {
+                            handshake.addPhase2Hash1Payload(msg);
                         }
                     }
                     return handshake.exchangeMessage(msg);
@@ -117,6 +144,14 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                 } catch (ISAKMPParsingException ex) {
                     return PARSING_ERROR;
                 }
+            }
+
+            private void adjustQuickModeMessageID(IKEv1Handshake handshake, ISAKMPMessage msg) {
+                if (handshake.getMostRecentMessageID() == null) {
+                    msg.setMessageIdRandom();
+                    handshake.setMostRecentMessageID(msg.getMessageId());
+                }
+                msg.setMessageId(handshake.getMostRecentMessageID());
             }
         };
     }

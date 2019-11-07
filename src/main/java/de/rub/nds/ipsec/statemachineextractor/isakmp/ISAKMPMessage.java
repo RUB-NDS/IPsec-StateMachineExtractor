@@ -129,6 +129,9 @@ public class ISAKMPMessage implements ISAKMPSerializable {
     }
 
     public void setMessageId(byte[] messageId) {
+        if (messageId.length != 4) {
+            throw new IllegalArgumentException("The Message ID has to be 4 bytes long!");
+        }
         this.messageId = messageId;
     }
 

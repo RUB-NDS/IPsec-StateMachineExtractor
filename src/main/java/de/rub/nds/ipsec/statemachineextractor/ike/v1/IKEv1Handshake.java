@@ -317,6 +317,14 @@ public final class IKEv1Handshake {
         }
     }
 
+    public byte[] getMostRecentMessageID() {
+        return secrets.getMostRecentMessageID();
+    }
+
+    public void setMostRecentMessageID(byte[] mostRecentMessageID) {
+        secrets.setMostRecentMessageID(mostRecentMessageID);
+    }
+
     public KeyExchangePayload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException {
         KeyExchangePayload result = new KeyExchangePayload();
         SASecrets sas = this.secrets.getSA(msgID);
@@ -378,6 +386,12 @@ public final class IKEv1Handshake {
     public void addPhase2Hash1Payload(ISAKMPMessage msg) throws GeneralSecurityException, IOException {
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(secrets.getHASH1(msg));
+        msg.addPayload(0, hashPayload);
+    }
+
+    public void addPhase2Hash3Payload(ISAKMPMessage msg) throws GeneralSecurityException, IOException {
+        HashPayload hashPayload = new HashPayload();
+        hashPayload.setHashData(secrets.getHASH3(msg));
         msg.addPayload(0, hashPayload);
     }
 }

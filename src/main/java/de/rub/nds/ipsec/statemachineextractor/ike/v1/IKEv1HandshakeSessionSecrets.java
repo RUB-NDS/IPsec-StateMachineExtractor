@@ -9,7 +9,6 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
@@ -39,6 +38,7 @@ public class IKEv1HandshakeSessionSecrets {
     private byte[] skeyid, skeyid_d, skeyid_a, skeyid_e, ka;
     private byte[] identificationPayloadBody;
     private byte[] peerIdentificationPayloadBody;
+    private byte[] mostRecentMessageID;
     private SASecrets ISAKMPSA;
 
     private final IKEv1Ciphersuite ciphersuite;
@@ -89,6 +89,14 @@ public class IKEv1HandshakeSessionSecrets {
 
     public void setResponderCookie(byte[] responderCookie) {
         this.responderCookie = responderCookie;
+    }
+
+    public byte[] getMostRecentMessageID() {
+        return mostRecentMessageID;
+    }
+
+    public void setMostRecentMessageID(byte[] mostRecentMessageID) {
+        this.mostRecentMessageID = mostRecentMessageID;
     }
 
     public byte[] getSKEYID() {
