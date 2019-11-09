@@ -134,9 +134,9 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 handshake.addPhase2Hash3Payload(msg);
                                 break;
                         }
-                        if (requiresHash1PostProcessing) {
-                            handshake.addPhase2Hash1Payload(msg);
-                        }
+                    }
+                    if (requiresHash1PostProcessing) {
+                        handshake.addPhase2Hash1Payload(msg);
                     }
                     return handshake.exchangeMessage(msg);
                 } catch (IOException | IKEHandshakeException | GeneralSecurityException ex) {

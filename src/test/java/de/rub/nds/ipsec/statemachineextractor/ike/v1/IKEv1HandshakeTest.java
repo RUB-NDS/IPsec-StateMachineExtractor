@@ -123,6 +123,7 @@ public class IKEv1HandshakeTest {
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);
         msg.setEncryptedFlag(true);
         msg.setMessageIdRandom();
+        handshake.setMostRecentMessageID(msg.getMessageId());
         sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
@@ -136,6 +137,12 @@ public class IKEv1HandshakeTest {
         msg.addPayload(id);
         handshake.addPhase2Hash1Payload(msg);
         answer = handshake.exchangeMessage(msg);
+        
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.QuickMode);
+        msg.setEncryptedFlag(true);
+        msg.setMessageId(handshake.getMostRecentMessageID());
+        
         answer.toString();
     }
 }

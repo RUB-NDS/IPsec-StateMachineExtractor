@@ -125,11 +125,15 @@ public final class IKEv1Handshake {
         if (rxData == null) {
             return null;
         }
-        //received an answer, so store last ciphertext block as IV
         if (messageToSend.isEncryptedFlag()) {
+            //received an answer, so store last ciphertext block as IV for decryption
             secrets.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage) messageToSend).getNextIV());
         }
         ISAKMPMessage messageReceived = ISAKMPMessageFromByteArray(rxData);
+        if (messageToSend.isEncryptedFlag()) {
+            //message could be unmarshalled, so store last ciphertext block as IV for next encryption
+            secrets.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(rxData, rxData.length - ciphersuite.getCipher().getBlockSize(), rxData.length));
+        }
         messages.add(new WireMessage(rxData, messageReceived, false));
         return messageReceived;
     }
@@ -184,28 +188,27 @@ public final class IKEv1Handshake {
         for (ISAKMPPayload payload : decMessage.getPayloads()) {
             switch (payloadType) {
                 case Hash:
+                    byte[] expectedHash = null;
                     switch (decMessage.getExchangeType()) {
                         case IdentityProtection:
-                            if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
-                                throw new IKEHandshakeException("Main Mode HASH_R does not match!");
-                            }
+                            expectedHash = secrets.getHASH_R();
                             break;
                         case Informational:
-                            if (!Arrays.equals(secrets.getHASH1(decMessage), ((HashPayload) payload).getHashData())) {
-                                throw new IKEHandshakeException("Informational HASH(1) does not match!");
-                            }
+                            expectedHash = secrets.getHASH1(decMessage);
                             break;
                         case QuickMode:
-                            if (!Arrays.equals(secrets.getHASH2(decMessage), ((HashPayload) payload).getHashData())) {
-                                throw new IKEHandshakeException("QuickMode HASH(2) does not match!");
-                            }
+                            expectedHash = secrets.getHASH2(decMessage);
                             break;
+                    }
+                    if (!Arrays.equals(expectedHash, ((HashPayload) payload).getHashData())) {
+                        ((HashPayload) payload).setIsCheckFailed(true);
                     }
                     break;
                 case Nonce:
                     secrets.getSA(decMessage.getMessageId()).setResponderNonce(((NoncePayload) payload).getNonceData());
                     break;
             }
+            payloadType = payload.getNextPayload();
         }
         return decMessage;
     }
