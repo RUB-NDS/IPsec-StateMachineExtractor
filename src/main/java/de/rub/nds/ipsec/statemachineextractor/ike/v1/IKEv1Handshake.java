@@ -200,8 +200,10 @@ public final class IKEv1Handshake {
                             expectedHash = secrets.getHASH2(decMessage);
                             break;
                     }
-                    if (!Arrays.equals(expectedHash, ((HashPayload) payload).getHashData())) {
-                        ((HashPayload) payload).setIsCheckFailed(true);
+                    if (Arrays.equals(expectedHash, ((HashPayload) payload).getHashData())) {
+                        ((HashPayload) payload).setCheckFailed(false);
+                    } else {
+                        ((HashPayload) payload).setCheckFailed(true);
                     }
                     break;
                 case Nonce:
@@ -245,8 +247,10 @@ public final class IKEv1Handshake {
                     break;
                 case Hash:
                     payload = HashPayload.fromStream(bais);
-                    if (!Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
-                        throw new IKEHandshakeException("Aggressive Mode HASH_R does not match!");
+                    if (Arrays.equals(secrets.getHASH_R(), ((HashPayload) payload).getHashData())) {
+                        ((HashPayload) payload).setCheckFailed(false);
+                    } else {
+                        ((HashPayload) payload).setCheckFailed(true);
                     }
                     break;
                 case Nonce:

@@ -139,7 +139,7 @@ public class IKEv1HandshakeIT {
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("0534fc1813e089e1"), secrets.getResponderCookie());
-        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("91b7a7f96ea7a07c12ae03af0bc32e9f347685bb"), ((HashPayload) answer.getPayloads().get(answer.getPayloads().size() - 1)).getHashData());
+        assertFalse(((HashPayload) answer.getPayloads().get(answer.getPayloads().size() - 1)).isCheckFailed());
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.Aggressive);
@@ -170,6 +170,7 @@ public class IKEv1HandshakeIT {
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("cc23d268"), ((SecurityAssociationPayload) answer.getPayloads().get(1)).getProposalPayloads().get(0).getSPI());
+        assertFalse(((HashPayload) answer.getPayloads().get(0)).isCheckFailed());
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);

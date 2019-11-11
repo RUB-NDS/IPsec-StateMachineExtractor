@@ -16,7 +16,7 @@ import java.io.ByteArrayInputStream;
  */
 public class HashPayload extends SimpleBinaryPayload {
     
-    boolean isCheckFailed = false;
+    boolean checkFailed = true;
 
     public HashPayload() {
         super(PayloadTypeEnum.Hash);
@@ -30,17 +30,17 @@ public class HashPayload extends SimpleBinaryPayload {
         setBinaryData(hashData);
     }
 
-    public boolean isIsCheckFailed() {
-        return isCheckFailed;
+    public boolean isCheckFailed() {
+        return checkFailed;
     }
 
-    public void setIsCheckFailed(boolean isCheckFailed) {
-        this.isCheckFailed = isCheckFailed;
+    public void setCheckFailed(boolean checkFailed) {
+        this.checkFailed = checkFailed;
     }
 
     @Override
     public String toString() {
-        if (isCheckFailed) {
+        if (checkFailed) {
             return "!HASH";
         }
         return "HASH";
