@@ -209,6 +209,21 @@ public final class IKEv1Handshake {
                 case Nonce:
                     secrets.getSA(decMessage.getMessageId()).setResponderNonce(((NoncePayload) payload).getNonceData());
                     break;
+                case Identification:
+                    switch (ciphersuite.getAuthMethod()) {
+                        case PSK:
+                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
+                            secrets.computeSecretKeys();
+                            break;
+                        case DSS_Sig:
+                        case RSA_Sig:
+                            throw new UnsupportedOperationException("Not supported yet.");
+                        default:
+                            throw new UnsupportedOperationException("This authentication should not be sending encrypted identification payloads.");
+                    }
+                    secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
+                    secrets.computeSecretKeys();
+                    break;
             }
             payloadType = payload.getNextPayload();
         }

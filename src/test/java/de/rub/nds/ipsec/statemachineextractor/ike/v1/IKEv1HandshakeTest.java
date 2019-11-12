@@ -111,7 +111,8 @@ public class IKEv1HandshakeTest {
         handshake.adjustCiphersuite(sa);
         msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
         msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
-        msg.addPayload(handshake.prepareIdentificationPayload());
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPrivate().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPublic().getEncoded()));
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
@@ -137,12 +138,69 @@ public class IKEv1HandshakeTest {
         msg.addPayload(id);
         handshake.addPhase2Hash1Payload(msg);
         answer = handshake.exchangeMessage(msg);
-        
+
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);
         msg.setEncryptedFlag(true);
         msg.setMessageId(handshake.getMostRecentMessageID());
-        
-        answer.toString();
+        handshake.addPhase2Hash3Payload(msg);
+        answer = handshake.exchangeMessage(msg);
+    }
+    
+    @Test
+    @Ignore
+    public void testMainModeHandhake() throws Exception {
+        IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.10"), 500);
+        SecurityAssociationPayload sa;
+        ISAKMPMessage answer;
+
+        ISAKMPMessage msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+        sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
+        msg.addPayload(sa);
+        handshake.adjustCiphersuite(sa);
+        answer = handshake.exchangeMessage(msg);
+
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
+        msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPrivate().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPublic().getEncoded()));
+        answer = handshake.exchangeMessage(msg);
+
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+        msg.setEncryptedFlag(true);
+        msg.addPayload(handshake.prepareIdentificationPayload());
+        msg.addPayload(handshake.preparePhase1HashPayload());
+        answer = handshake.exchangeMessage(msg);
+        System.out.println(answer.toString());
+
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.QuickMode);
+        msg.setEncryptedFlag(true);
+        msg.setMessageIdRandom();
+        handshake.setMostRecentMessageID(msg.getMessageId());
+        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+        msg.addPayload(sa);
+        msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+        IdentificationPayload id = new IdentificationPayload();
+        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdentificationData(new byte[8]);
+        msg.addPayload(id);
+        id = new IdentificationPayload();
+        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdentificationData(new byte[8]);
+        msg.addPayload(id);
+        handshake.addPhase2Hash1Payload(msg);
+        answer = handshake.exchangeMessage(msg);
+
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.QuickMode);
+        msg.setEncryptedFlag(true);
+        msg.setMessageId(handshake.getMostRecentMessageID());
+        handshake.addPhase2Hash3Payload(msg);
+        answer = handshake.exchangeMessage(msg);
     }
 }
