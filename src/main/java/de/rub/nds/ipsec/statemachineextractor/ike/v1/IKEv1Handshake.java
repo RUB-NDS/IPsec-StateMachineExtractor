@@ -210,19 +210,21 @@ public final class IKEv1Handshake {
                     secrets.getSA(decMessage.getMessageId()).setResponderNonce(((NoncePayload) payload).getNonceData());
                     break;
                 case Identification:
-                    switch (ciphersuite.getAuthMethod()) {
-                        case PSK:
-                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
-                            secrets.computeSecretKeys();
-                            break;
-                        case DSS_Sig:
-                        case RSA_Sig:
-                            throw new UnsupportedOperationException("Not supported yet.");
-                        default:
-                            throw new UnsupportedOperationException("This authentication should not be sending encrypted identification payloads.");
+                    if (decMessage.getExchangeType() != ExchangeTypeEnum.QuickMode) {
+                        switch (ciphersuite.getAuthMethod()) {
+                            case PSK:
+                                secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
+                                secrets.computeSecretKeys();
+                                break;
+                            case DSS_Sig:
+                            case RSA_Sig:
+                                throw new UnsupportedOperationException("Not supported yet.");
+                            default:
+                                throw new UnsupportedOperationException("This authentication should not be sending encrypted identification payloads.");
+                        }
+                        secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
+                        secrets.computeSecretKeys();
                     }
-                    secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
-                    secrets.computeSecretKeys();
                     break;
             }
             payloadType = payload.getNextPayload();
@@ -247,17 +249,18 @@ public final class IKEv1Handshake {
                 case Identification:
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
-                            payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(IdentificationPayload.class,
-                                    bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
+                            ISAKMPPayloadWithPKCS1EncryptedBody encPayload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) encPayload.getUnderlyingPayload()).getBody());
+                            payload = encPayload;
                             break;
                         case RevPKE:
                             throw new UnsupportedOperationException("Not supported yet.");
                         //break;
                         default:
                             payload = IdentificationPayload.fromStream(bais);
+                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
                             break;
                     }
-                    secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
                     secrets.computeSecretKeys();
                     break;
                 case Hash:
@@ -272,14 +275,15 @@ public final class IKEv1Handshake {
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
                         case RevPKE:
-                            payload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(NoncePayload.class,
-                                    bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey()).getUnderlyingPayload();
+                            ISAKMPPayloadWithPKCS1EncryptedBody encPayload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                            secrets.getISAKMPSA().setResponderNonce(((NoncePayload) encPayload.getUnderlyingPayload()).getNonceData());
+                            payload = encPayload;
                             break;
                         default:
                             payload = NoncePayload.fromStream(bais);
+                            secrets.getISAKMPSA().setResponderNonce(((NoncePayload) payload).getNonceData());
                             break;
                     }
-                    secrets.getISAKMPSA().setResponderNonce(((NoncePayload) payload).getNonceData());
                     secrets.computeSecretKeys();
                     break;
                 case VendorID:
@@ -366,17 +370,16 @@ public final class IKEv1Handshake {
             result.setIdType(IDTypeEnum.ID_IPV4_ADDR);
         }
         result.setIdentificationData(addr.getAddress());
+        secrets.setIdentificationPayloadBody(result.getBody());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
             // this authentication method encrypts the identification using the public key of the peer
             ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
-            pke.encrypt();
             return pke;
         }
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // this authentication method encrypts the identification using a derived key
             throw new UnsupportedOperationException("Not supported yet.");
         }
-        secrets.setIdentificationPayloadBody(result.getBody());
         return result;
     }
 
@@ -390,10 +393,9 @@ public final class IKEv1Handshake {
             sas.setInitiatorNonce(initiatorNonce);
         }
         result.setNonceData(sas.getInitiatorNonce());
-        if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
+        if (Arrays.equals(msgID, new byte[4]) && (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE)) {
             // these authentication methods encrypt the nonce using the public key of the peer
             ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
-            pke.encrypt();
             return pke;
         }
         return result;

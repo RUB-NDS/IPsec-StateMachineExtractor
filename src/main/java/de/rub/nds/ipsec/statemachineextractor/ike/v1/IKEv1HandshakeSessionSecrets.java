@@ -144,8 +144,8 @@ public class IKEv1HandshakeSessionSecrets {
 
             case PKE:
             case RevPKE: // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
-                MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
-                hmacKey = new SecretKeySpec(digest.digest(concatNonces), HmacIdentifier);
+                // Cisco rather uses: SKEYID = prf(Ni_b | Nr_b, CKY-I | CKY-R)
+                hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
                 prf.init(hmacKey);
                 skeyid = prf.doFinal(concatCookies);
                 break;

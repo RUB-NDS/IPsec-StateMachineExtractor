@@ -34,7 +34,7 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
         super(payload.getType());
         this.underlyingPayload = payload;
         if (!(myPrivateKey instanceof RSAPrivateKey && peerPublicKey instanceof RSAPublicKey)) {
-            throw new IllegalArgumentException("PKCS#1 v1.5 encryption in IPsec only works with RSA!");
+            throw new IllegalArgumentException("PKCS#1 v1.5 encryption in IKE only works with RSA!");
         }
         this.myPrivateKey = myPrivateKey;
         this.peerPublicKey = peerPublicKey;
@@ -76,7 +76,11 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
     @Override
     public byte[] getCiphertext() {
         if (!isInSync) {
-            throw new IllegalStateException("Ciphertext not up to date. Run encrypt() first!");
+            try {
+                this.encrypt();
+            } catch (GeneralSecurityException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         return encryptedBody.clone();
     }
@@ -99,11 +103,6 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
     @Override
     protected int fillGenericPayloadHeaderFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         return this.underlyingPayload.fillGenericPayloadHeaderFromStream(bais);
-    }
-
-    @Override
-    protected byte[] getGenericPayloadHeader() {
-        return super.getGenericPayloadHeader();
     }
 
     @Override
@@ -139,7 +138,11 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
         if (!isInSync) {
-            throw new IllegalStateException("Encrypted body not up to date. Run encrypt() first!");
+            try {
+                this.encrypt();
+            } catch (GeneralSecurityException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         super.writeBytes(baos);
         baos.write(encryptedBody, 0, encryptedBody.length);

@@ -47,7 +47,10 @@ public enum NotifyMessageTypeEnum {
     CertificateUnavailable(28),
     UnsupportedExchangeType(29),
     UnequalPayloadLengths(30),
-    Connected(16384);
+    Connected(16384),
+    ResponderLifetime(24576),
+    ReplayStatus(24577),
+    InitialContact(24578);
 
     private final int value;
 
@@ -74,7 +77,11 @@ public enum NotifyMessageTypeEnum {
         }
         int low = value[1] >= 0 ? value[1] : 256 + value[1];
         int high = value[0] >= 0 ? value[0] : 256 + value[0];
-        return lookup.get(low | (high << 8));
+        NotifyMessageTypeEnum type = lookup.get(low | (high << 8));
+        if (type == null) {
+            throw new IllegalArgumentException("Encountered unknown NotifyMessageType!");
+        }
+        return type;
     }
 
 }
