@@ -100,7 +100,7 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                             case "SA":
                                 switch (msg.getExchangeType()) {
                                     case QuickMode:
-                                        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+                                        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
                                         break;
                                     default:
                                         handshake.adjustCiphersuite(sa);

@@ -125,7 +125,7 @@ public class IKEv1HandshakeTest {
         msg.setEncryptedFlag(true);
         msg.setMessageIdRandom();
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
@@ -182,7 +182,7 @@ public class IKEv1HandshakeTest {
         msg.setEncryptedFlag(true);
         msg.setMessageIdRandom();
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();

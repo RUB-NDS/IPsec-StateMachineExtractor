@@ -37,7 +37,7 @@ public class SecurityAssociationPayloadFactory {
     public static SecurityAssociationPayload createP1SA(AuthAttributeEnum authMethod, CipherAttributeEnum cipher, de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum keylength, HashAttributeEnum hash, DHGroupAttributeEnum group, LifeTypeAttributeEnum lifetype, LifeDurationAttribute duration) {
         TransformPayload transformPayload = new TransformPayload();
         transformPayload.addAttribute(cipher);
-        if(!cipher.isIsFixedKeySize()) {
+        if (!cipher.isIsFixedKeySize()) {
             transformPayload.addAttribute(keylength);
         }
         transformPayload.addAttribute(hash);
@@ -52,7 +52,7 @@ public class SecurityAssociationPayloadFactory {
         securityAssociationPayload.addProposalPayload(proposalPayload);
         return securityAssociationPayload;
     }
-    
+
     public static SecurityAssociationPayload createP2ESPSA(ESPTransformIDEnum cipher, EncapsulationModeAttributeEnum encap, de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum auth, SALifeTypeAttributeEnum lifetype, SALifeDurationAttribute duration) {
         TransformPayload transformPayload = new TransformPayload();
         transformPayload.setTransformId(cipher.toProtocolTransformIDEnum());
@@ -60,7 +60,7 @@ public class SecurityAssociationPayloadFactory {
         transformPayload.addAttribute(lifetype);
         transformPayload.addAttribute(duration);
         transformPayload.addAttribute(auth);
-        if(!cipher.isIsFixedKeySize()) {
+        if (!cipher.isIsFixedKeySize()) {
             transformPayload.addAttribute(keylength);
         }
         ProposalPayload proposalPayload = new ProposalPayload();
@@ -72,11 +72,13 @@ public class SecurityAssociationPayloadFactory {
         securityAssociationPayload.addProposalPayload(proposalPayload);
         return securityAssociationPayload;
     }
-    
+
     public static final SecurityAssociationPayload P1_PSK_DES_MD5_G1     = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.DES_CBC, null, HashAttributeEnum.MD5, DHGroupAttributeEnum.GROUP1, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
     public static final SecurityAssociationPayload P1_PSK_AES128_SHA1_G2 = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP2, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
     public static final SecurityAssociationPayload P1_PSK_AES128_SHA1_G5 = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
     public static final SecurityAssociationPayload P1_PKE_AES128_SHA1_G5 = createP1SA(AuthAttributeEnum.PKE, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
-    
-    public static final SecurityAssociationPayload P2_ESP_TUNNEL_AES128_SHA1 = createP2ESPSA(ESPTransformIDEnum.AES, EncapsulationModeAttributeEnum.Tunnel, de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA, SALifeTypeAttributeEnum.SECONDS, SALifeDurationAttribute.get(3600));
+
+    public static SecurityAssociationPayload getP2_ESP_TUNNEL_AES128_SHA1() {
+        return createP2ESPSA(ESPTransformIDEnum.AES, EncapsulationModeAttributeEnum.Tunnel, de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA, SALifeTypeAttributeEnum.SECONDS, SALifeDurationAttribute.get(3600));
+    }
 }

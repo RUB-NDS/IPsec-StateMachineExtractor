@@ -189,7 +189,7 @@ public class IKEv1HandshakeIT {
         msg.setEncryptedFlag(true);
         msg.setMessageId(DatatypeHelper.hexDumpToByteArray("e582bf04"));
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("f94d660a"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("35496d7f0f01f56f"));
@@ -270,7 +270,7 @@ public class IKEv1HandshakeIT {
         msg.setEncryptedFlag(true);
         msg.setMessageId(DatatypeHelper.hexDumpToByteArray("259cf133"));
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("b75ad16c"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("695346ebcf35ab90"));
@@ -403,7 +403,7 @@ public class IKEv1HandshakeIT {
         msg.setEncryptedFlag(true);
         msg.setMessageId(DatatypeHelper.hexDumpToByteArray("45c9ec04"));
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.P2_ESP_TUNNEL_AES128_SHA1;
+        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("ac8eca3c"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("508d6b24469f8136"));
