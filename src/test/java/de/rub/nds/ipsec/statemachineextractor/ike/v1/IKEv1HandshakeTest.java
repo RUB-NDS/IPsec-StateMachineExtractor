@@ -150,13 +150,13 @@ public class IKEv1HandshakeTest {
     @Test
     @Ignore
     public void testMainModeHandhake() throws Exception {
-        IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.2"), 500);
+        IKEv1Handshake handshake = new IKEv1Handshake(1000, InetAddress.getByName("10.0.3.2"), 500);
         SecurityAssociationPayload sa;
         ISAKMPMessage answer;
 
         ISAKMPMessage msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-        sa = SecurityAssociationPayloadFactory.P1_PKE_AES128_SHA1_G5;
+        sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
         msg.addPayload(sa);
         handshake.adjustCiphersuite(sa);
         answer = handshake.exchangeMessage(msg);
@@ -165,19 +165,17 @@ public class IKEv1HandshakeTest {
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
         msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
-        msg.addPayload(handshake.prepareIdentificationPayload());
         System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPrivate().getEncoded()));
         System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPublic().getEncoded()));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getInitiatorNonce()));
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         msg.setEncryptedFlag(true);
+        msg.addPayload(handshake.prepareIdentificationPayload());
         msg.addPayload(handshake.preparePhase1HashPayload());
         answer = handshake.exchangeMessage(msg);
-        assertNotNull(answer);
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getKa()));
+        System.out.println(answer.toString());
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);

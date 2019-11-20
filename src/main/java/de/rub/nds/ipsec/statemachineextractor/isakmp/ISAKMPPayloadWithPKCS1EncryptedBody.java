@@ -148,4 +148,8 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
         baos.write(encryptedBody, 0, encryptedBody.length);
     }
 
+    @Override
+    public String toString() {
+        return "<" + this.underlyingPayload.toString() + ">";
+    }
 }

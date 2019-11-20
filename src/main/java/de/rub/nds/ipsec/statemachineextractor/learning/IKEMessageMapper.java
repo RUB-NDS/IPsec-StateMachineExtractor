@@ -20,6 +20,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayDeque;
@@ -40,6 +41,7 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
             public ISAKMPMessage execute(IKEv1Handshake handshake) throws SULException {
                 ISAKMPMessage msg = new ISAKMPMessage();
                 SecurityAssociationPayload sa = null;
+                IdentificationPayload id = null;
                 try {
                     if (abstractInput.equals("RESET")) {
                         handshake.reset();
@@ -92,6 +94,9 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                             case "PSK":
                                 sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
                                 break;
+                            case "PKE":
+                                sa = SecurityAssociationPayloadFactory.P1_PKE_AES128_SHA1_G5;
+                                break;
                             case "SA":
                                 switch (msg.getExchangeType()) {
                                     case QuickMode:
@@ -107,20 +112,24 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 msg.addPayload(handshake.prepareKeyExchangePayload(msg.getMessageId()));
                                 break;
                             case "No":
+                            case "<No>":
                                 msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
                                 break;
                             case "ID":
-                                switch (msg.getExchangeType()) {
-                                    case QuickMode:
-                                        IdentificationPayload id = new IdentificationPayload();
-                                        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
-                                        id.setIdentificationData(new byte[8]);
-                                        msg.addPayload(id);
-                                        break;
-                                    default:
-                                        msg.addPayload(handshake.prepareIdentificationPayload());
-                                        break;
-                                }
+                            case "<ID>":
+                                msg.addPayload(handshake.prepareIdentificationPayload());
+                                break;
+                            case "IDci":
+                                id = new IdentificationPayload();
+                                id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+                                id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000100ffffff00"));
+                                msg.addPayload(id);
+                                break;
+                            case "IDcr":
+                                id = new IdentificationPayload();
+                                id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+                                id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000200ffffff00"));
+                                msg.addPayload(id);
                                 break;
                             case "HASH":
                                 msg.addPayload(handshake.preparePhase1HashPayload());
@@ -133,6 +142,8 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 adjustQuickModeMessageID(handshake, msg);
                                 handshake.addPhase2Hash3Payload(msg);
                                 break;
+                            default:
+                                throw new UnsupportedOperationException("Malformed message identifier");
                         }
                     }
                     if (requiresHash1PostProcessing) {

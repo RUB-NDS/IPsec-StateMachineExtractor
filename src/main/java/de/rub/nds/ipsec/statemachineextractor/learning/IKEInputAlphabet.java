@@ -21,11 +21,14 @@ public class IKEInputAlphabet extends ArrayAlphabet<String> {
             "RESET",
             "NEW_QM_MSG_ID",
             "v1_MM_PSK-SA",
+            "v1_MM_PKE-SA",
             "v1_MM_KE-No",
+            "v1_MM_KE-<No>-<ID>",
             "v1_MM*_ID-HASH",
+            "v1_MM*_HASH",
             "v1_AM_PSK-SA-KE-No-ID",
             "v1_AM_HASH",
-            "v1_QM*_HASH1-SA-No-ID-ID",
+            "v1_QM*_HASH1-SA-No-IDci-IDcr",
             "v1_QM*_HASH3",
         }));
     }
