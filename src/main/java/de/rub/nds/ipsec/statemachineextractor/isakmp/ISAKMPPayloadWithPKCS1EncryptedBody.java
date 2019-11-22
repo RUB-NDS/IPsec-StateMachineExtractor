@@ -86,7 +86,7 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
     }
 
     @Override
-    public boolean isIsInSync() {
+    public boolean isInSync() {
         return isInSync;
     }
 

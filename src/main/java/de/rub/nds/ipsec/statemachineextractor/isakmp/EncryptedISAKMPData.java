@@ -22,6 +22,6 @@ public interface EncryptedISAKMPData {
 
     byte[] getCiphertext();
 
-    boolean isIsInSync();
+    boolean isInSync();
     
 }

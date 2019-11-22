@@ -83,7 +83,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
     }
 
     @Override
-    public boolean isIsInSync() {
+    public boolean isInSync() {
         return isInSync;
     }
 
