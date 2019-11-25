@@ -25,6 +25,7 @@ import java.util.StringJoiner;
 public class ISAKMPMessage implements SerializableMessage, ISAKMPSerializable {
 
     public static final int ISAKMP_HEADER_LEN = 28;
+    public static final int COOKIE_LEN = 8;
 
     private byte[] initiatorCookie;
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};

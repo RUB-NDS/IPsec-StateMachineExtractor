@@ -13,6 +13,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.DeletePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
@@ -442,6 +443,15 @@ public final class IKEv1Handshake {
         HashPayload hashPayload = new HashPayload();
         hashPayload.setHashData(secrets.getHASH_I());
         return hashPayload;
+    }
+
+    public ISAKMPPayload prepareDeletePayload() throws GeneralSecurityException, IOException {
+        DeletePayload deletePayload = new DeletePayload();
+        byte[] concatCookies = new byte[ISAKMPMessage.COOKIE_LEN * 2];
+        System.arraycopy(secrets.getInitiatorCookie(), 0, concatCookies, 0, ISAKMPMessage.COOKIE_LEN);
+        System.arraycopy(secrets.getResponderCookie(), 0, concatCookies, ISAKMPMessage.COOKIE_LEN, ISAKMPMessage.COOKIE_LEN);
+        deletePayload.addSPI(concatCookies);
+        return deletePayload;
     }
 
     public void addPhase2Hash1Payload(ISAKMPMessage msg) throws GeneralSecurityException, IOException {

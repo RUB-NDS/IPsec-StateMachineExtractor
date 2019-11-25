@@ -160,6 +160,9 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                             case "HASH":
                                 msg.addPayload(conn.getHandshake().preparePhase1HashPayload());
                                 break;
+                            case "DEL":
+                                msg.addPayload(conn.getHandshake().prepareDeletePayload());
+                                // Intentionally no break here
                             case "HASH1":
                                 adjustQuickModeMessageID(conn.getHandshake(), msg);
                                 requiresHash1PostProcessing = true;

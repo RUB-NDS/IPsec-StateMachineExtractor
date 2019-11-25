@@ -28,8 +28,6 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class IKEv1HandshakeSessionSecrets {
 
-    static final int COOKIE_LEN = 8;
-
     private boolean isInitiatorCookieChosen = false;
     private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -139,9 +137,9 @@ public class IKEv1HandshakeSessionSecrets {
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
-        byte[] concatCookies = new byte[COOKIE_LEN * 2];
-        System.arraycopy(initiatorCookie, 0, concatCookies, 0, COOKIE_LEN);
-        System.arraycopy(responderCookie, 0, concatCookies, COOKIE_LEN, COOKIE_LEN);
+        byte[] concatCookies = new byte[ISAKMPMessage.COOKIE_LEN * 2];
+        System.arraycopy(initiatorCookie, 0, concatCookies, 0, ISAKMPMessage.COOKIE_LEN);
+        System.arraycopy(responderCookie, 0, concatCookies, ISAKMPMessage.COOKIE_LEN, ISAKMPMessage.COOKIE_LEN);
         switch (ciphersuite.getAuthMethod()) {
             case RSA_Sig:
             case DSS_Sig: // For signatures: SKEYID = prf(Ni_b | Nr_b, g^xy)
