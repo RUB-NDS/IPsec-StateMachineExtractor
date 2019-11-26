@@ -55,13 +55,10 @@ public class IKEv1HandshakeLongtermSecrets {
             + "YuuKKgdda6kh4/eFa7Ko9uCSmCJyNouo6l21a3I4LeKfsSuddZK6sio=";
 
     private final String CSR2PubPEM
-            = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxWJ9sySuB3FKqYRwTIPC"
-            + "08zDntEo0ywCnRWNSY9bknJ2zBU4F1YliiH5//Li9DdR/j/Ls+ipH5M/ZOFrVuZW"
-            + "bbkaqcF5aWmy8LcA/IykimzcgfR3wy+gjtxjP4Igjm/NvHVV3/x3x4Zu4bi34X+G"
-            + "z+D3dUNLmNvPe2CGshLjc9BwqohjVozbBe5gNqTzZOGxNIH1EOvTRAqYFtaYwffY"
-            + "QLU/JAvE3XRCYhk45zoIeJfHs8w9URDIXkcXyMdBMRfGzZFsyNrjvnwQMyvOwbLb"
-            + "N4PWepQqGLMbKJ06NsDcQ8QYMFINw2lGekfxukoWWwOBIe8VOOb3HVCXrSuCe0+d"
-            + "bwIDAQAB";
+            = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCr7TcTUIPfXO2Ly1vptfTPws92"
+            + "2g9FpIfMJLpbu2JL/2++stk/VVmJeqssidZNW1uMP8XeHLUby/LdRk5z8lFehHvn"
+            + "uQwYyWMbaMJq9s/yCiFB5DD1TkzyOaGgXiiDUWYIIIbUzpt5CnUgXq8CkVvR8OJ7"
+            + "e7iZoEiuSJAGC/mhywIDAQAB";
 
     public IKEv1HandshakeLongtermSecrets() throws GeneralSecurityException {
         byte[] decoded = Base64.getDecoder().decode(CSR1PrivPEM);

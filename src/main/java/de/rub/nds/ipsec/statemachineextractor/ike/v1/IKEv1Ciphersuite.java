@@ -29,7 +29,7 @@ public class IKEv1Ciphersuite {
     private HashAttributeEnum hash = HashAttributeEnum.MD5;
     private KeyLengthAttributeEnum keylength = KeyLengthAttributeEnum.L128;
     private LifeTypeAttributeEnum lifetype = LifeTypeAttributeEnum.SECONDS;
-    private int nonceLen = 8;
+    private int nonceLen = 16; // RFC2409: 8 - 256 bytes (inclusive); Huawei works with 16 bytes
 
     public AuthAttributeEnum getAuthMethod() {
         return authMethod;

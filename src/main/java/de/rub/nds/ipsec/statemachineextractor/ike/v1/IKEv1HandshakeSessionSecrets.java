@@ -35,7 +35,7 @@ public class IKEv1HandshakeSessionSecrets {
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private final Map<String, byte[]> IVs = new HashMap<>();
     private final Map<String, SASecrets> SAs = new HashMap<>();
-    private byte[] skeyid, skeyid_d, skeyid_a, skeyid_e, ka;
+    private byte[] skeyid, skeyid_d, skeyid_a, skeyid_e, ka, ke_i, ke_r;
     private byte[] identificationPayloadBody;
     private byte[] peerIdentificationPayloadBody;
     private byte[] mostRecentMessageID;
@@ -119,6 +119,14 @@ public class IKEv1HandshakeSessionSecrets {
         return ka;
     }
 
+    public byte[] getKe_i() {
+        return ke_i;
+    }
+
+    public byte[] getKe_r() {
+        return ke_r;
+    }
+
     public void computeSecretKeys() throws GeneralSecurityException {
         final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
         Mac prf = Mac.getInstance(HmacIdentifier);
@@ -142,8 +150,20 @@ public class IKEv1HandshakeSessionSecrets {
                 skeyid = prf.doFinal(this.ISAKMPSA.getDHSecret());
                 break;
 
+            case RevPKE:
+                hmacKey = new SecretKeySpec(initiatorNonce, HmacIdentifier);
+                prf.init(hmacKey);
+                byte[] Ne_i = prf.doFinal(initiatorCookie);
+                ke_i = new byte[ciphersuite.getCipher().getBlockSize()];
+                System.arraycopy(Ne_i, 0, ke_i, 0, ke_i.length);
+                hmacKey = new SecretKeySpec(responderNonce, HmacIdentifier);
+                prf.init(hmacKey);
+                byte[] Ne_r = prf.doFinal(responderCookie);
+                ke_r = new byte[ciphersuite.getCipher().getBlockSize()];
+                System.arraycopy(Ne_r, 0, ke_r, 0, ke_r.length);
+            // No 'break' here intentionally!
             case PKE:
-            case RevPKE: // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
+                // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
                 // Cisco rather uses: SKEYID = prf(Ni_b | Nr_b, CKY-I | CKY-R)
                 hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
                 prf.init(hmacKey);
@@ -294,6 +314,29 @@ public class IKEv1HandshakeSessionSecrets {
     public void setIV(byte[] msgID, byte[] iv) {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
         this.IVs.put(msgIDStr, iv);
+    }
+
+    public byte[] getRPKEIV() throws GeneralSecurityException {
+        String key = "RPKE";
+        if (!this.IVs.containsKey(key)) {
+            byte[] iv = new byte[ciphersuite.getCipher().getBlockSize()];
+            this.IVs.put(key, iv);
+        }
+        return this.IVs.get(key);
+    }
+
+    public void setRPKEIV(byte[] iv) {
+        /*
+         * RFC2409 states the following: "The IV for encrypting the first
+         * payload following the nonce is set to 0 (zero). The IV for subsequent
+         * payloads encrypted with the ephemeral symmetric cipher key, Ke_i, is
+         * the last ciphertext block of the previous payload."
+         * 
+         * Huawei however ignores the second sentence and always uses the
+         * zero-IV. Since Huawei is the only known implementation of RevPKE, we
+         * simply disable storing the new IV.
+         */
+        //this.IVs.put("RPKE", iv);
     }
 
     public byte[] getIdentificationPayloadBody() {

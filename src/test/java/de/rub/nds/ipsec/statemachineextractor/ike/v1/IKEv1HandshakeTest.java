@@ -44,7 +44,7 @@ public class IKEv1HandshakeTest {
     @Test
     public void testPrepareKeyExchangePayload() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        KeyExchangePayload result = instance.prepareKeyExchangePayload(new byte[4]);
+        ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
         assertTrue(result.getLength() <= instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4);
     }
 
@@ -56,7 +56,7 @@ public class IKEv1HandshakeTest {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
         instance.ciphersuite.setDhGroup(DHGroupAttributeEnum.GROUP19);
         instance.secrets.generateDefaults();
-        KeyExchangePayload result = instance.prepareKeyExchangePayload(new byte[4]);
+        ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
         assertEquals(instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4, result.getLength());
     }
 

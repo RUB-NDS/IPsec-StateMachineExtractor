@@ -37,7 +37,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
     public SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke) throws GeneralSecurityException {
         this(payload, ciphersuite, ke, null);
     }
-    
+
     public SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke, byte[] iv) throws GeneralSecurityException {
         super(payload.getType());
         this.underlyingPayload = payload;
@@ -77,10 +77,28 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
         }
         int i = padLength;
         while (i > 1) {
-            if (in[in.length - i] != 0) {
-                throw new BadPaddingException();
+            try {
+                if (in[in.length - i] != 0) {
+                    throw new BadPaddingException();
+                }
+                i--;
+            } catch (BadPaddingException ex) {
+                if (i == padLength) {
+                    /*
+                     * RFC2409 states: "All padding bytes, except for the last
+                     * one, contain 0x00. The last byte of the padding contains
+                     * the number of the padding bytes used, excluding the last
+                     * one."
+                     * 
+                     * Huawei instead counts the last byte also, leading to an
+                     * invalid padding. Since Huawei is the only known
+                     * implementation of RevPKE, we allow this false padding.
+                     */
+                    padLength = --i;
+                } else {
+                    throw ex;
+                }
             }
-            i--;
         }
         byte[] out = new byte[in.length - padLength];
         System.arraycopy(in, 0, out, 0, in.length - padLength);
@@ -130,7 +148,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
         }
         return encryptedBody.clone();
     }
-    
+
     public byte[] getNextIV() {
         return nextIV.clone();
     }

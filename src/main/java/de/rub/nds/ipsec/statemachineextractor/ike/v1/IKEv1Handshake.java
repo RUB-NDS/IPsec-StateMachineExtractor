@@ -28,6 +28,8 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
@@ -249,13 +251,16 @@ public final class IKEv1Handshake {
                 case Identification:
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
-                            PKCS1EncryptedISAKMPPayload encPayload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
-                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) encPayload.getUnderlyingPayload()).getBody());
-                            payload = encPayload;
+                            PKCS1EncryptedISAKMPPayload pkcs1Payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) pkcs1Payload.getUnderlyingPayload()).getBody());
+                            payload = pkcs1Payload;
                             break;
                         case RevPKE:
-                            throw new UnsupportedOperationException("Not supported yet.");
-                        //break;
+                            SecretKeySpec ke_r = new SecretKeySpec(secrets.getKe_r(), ciphersuite.getCipher().cipherJCEName());
+                            SymmetricallyEncryptedIdentificationPayloadHuaweiStyle symmPayload = SymmetricallyEncryptedIdentificationPayloadHuaweiStyle.fromStream(bais, ciphersuite, ke_r, secrets.getRPKEIV());
+                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) symmPayload.getUnderlyingPayload()).getBody());
+                            payload = symmPayload;
+                            break;
                         default:
                             payload = IdentificationPayload.fromStream(bais);
                             secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
@@ -351,10 +356,18 @@ public final class IKEv1Handshake {
         secrets.setMostRecentMessageID(mostRecentMessageID);
     }
 
-    public KeyExchangePayload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException {
+    public ISAKMPPayload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException {
         KeyExchangePayload result = new KeyExchangePayload();
         SASecrets sas = this.secrets.getSA(msgID);
         result.setKeyExchangeData(sas.generateKeyExchangeData());
+        if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
+            // this authentication method encrypts the key exchange value using a derived key
+            secrets.computeSecretKeys();
+            SymmetricallyEncryptedISAKMPPayload rpke = new SymmetricallyEncryptedISAKMPPayload(result, ciphersuite, new SecretKeySpec(secrets.getKe_i(), ciphersuite.getCipher().cipherJCEName()), secrets.getRPKEIV());
+            rpke.encrypt();
+            secrets.setRPKEIV(rpke.getNextIV());
+            return rpke;
+        }
         return result;
     }
 
@@ -378,7 +391,12 @@ public final class IKEv1Handshake {
         }
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // this authentication method encrypts the identification using a derived key
-            throw new UnsupportedOperationException("Not supported yet.");
+            result.setIdType(IDTypeEnum.ID_KEY_ID);
+            secrets.computeSecretKeys();
+            SymmetricallyEncryptedIdentificationPayloadHuaweiStyle rpke = new SymmetricallyEncryptedIdentificationPayloadHuaweiStyle(result, ciphersuite, new SecretKeySpec(secrets.getKe_i(), ciphersuite.getCipher().cipherJCEName()), secrets.getRPKEIV());
+            rpke.encrypt();
+            secrets.setRPKEIV(rpke.getNextIV());
+            return rpke;
         }
         return result;
     }

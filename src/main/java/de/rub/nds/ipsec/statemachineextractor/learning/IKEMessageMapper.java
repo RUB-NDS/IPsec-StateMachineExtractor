@@ -97,6 +97,9 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                             case "PKE":
                                 sa = SecurityAssociationPayloadFactory.P1_PKE_AES128_SHA1_G5;
                                 break;
+                            case "RPKE":
+                                sa = SecurityAssociationPayloadFactory.P1_RPKE_AES128_SHA1_G5;
+                                break;
                             case "SA":
                                 switch (msg.getExchangeType()) {
                                     case QuickMode:
@@ -109,6 +112,7 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 msg.addPayload(sa);
                                 break;
                             case "KE":
+                            case "(KE)":
                                 msg.addPayload(handshake.prepareKeyExchangePayload(msg.getMessageId()));
                                 break;
                             case "No":
@@ -117,6 +121,7 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 break;
                             case "ID":
                             case "<ID>":
+                            case "(ID)":
                                 msg.addPayload(handshake.prepareIdentificationPayload());
                                 break;
                             case "IDci":

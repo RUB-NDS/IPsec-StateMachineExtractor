@@ -220,7 +220,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
         cs.setCipher(CipherAttributeEnum.DES_CBC);
         SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_DES);
 
-        byte[] inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABB0101");
+        byte[] inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAA010102");
         instance.removeRFC2409Padding(inwspace);
         fail();
     }

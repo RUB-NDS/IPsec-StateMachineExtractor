@@ -17,7 +17,13 @@ import java.util.Arrays;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- *
+ * Class to fix Huawei's misunderstanding of RFC2409.
+ * 
+ * RFC2409 says that the entire body of a payload has to be encrypted.
+ * However, for identification payloads, Huawei leaves the 4 bytes (ID type, 
+ * Protocol ID, and Port) after the generic ISAKMP header unencrypted.
+ * This class generates identification payloads that Huawei understands.
+ * 
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class SymmetricallyEncryptedIdentificationPayloadHuaweiStyle extends SymmetricallyEncryptedISAKMPPayload {
