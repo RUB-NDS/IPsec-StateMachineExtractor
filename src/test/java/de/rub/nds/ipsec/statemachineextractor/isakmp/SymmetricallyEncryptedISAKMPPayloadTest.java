@@ -24,11 +24,11 @@ import static org.junit.Assert.*;
  */
 public class SymmetricallyEncryptedISAKMPPayloadTest {
 
-    private static final SecretKeySpec TEST_KEY_DES = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFF"), "DES");
+    static final SecretKeySpec TEST_KEY_DES = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFF"), "DES");
     private static final SecretKeySpec TEST_KEY_AES = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"), "AES");
-    private static final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("1A1A1A1A1A1B1C1D");
-    private static final byte[] TEST_HASH = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABBCCDD");
-    private static final byte[] TEST_HASH_ENC = DatatypeHelper.hexDumpToByteArray("0AE7097DDF4EABE455028CFAF36400CD");
+    static final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("1A1A1A1A1A1B1C1D");
+    static final byte[] TEST_HASH = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABBCCDD");
+    static final byte[] TEST_HASH_ENC = DatatypeHelper.hexDumpToByteArray("0AE7097DDF4EABE455028CFAF36400CD");
     private static final byte[] TEST_HASH_PAYLOAD_ENC = DatatypeHelper.hexDumpToByteArray("000000140AE7097DDF4EABE455028CFAF36400CD");
 
     @Test
@@ -66,7 +66,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
 
     /**
      * Test of addRFC2409Padding method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testAddRFC2409PaddingB128() throws Exception {
@@ -103,7 +103,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testRemoveRFC2409PaddingB64() throws Exception {
@@ -140,7 +140,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testRemoveRFC2409PaddingB128() throws Exception {
@@ -182,7 +182,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * SymmetricallyEncryptedISAKMPPayload.
      */
     @Test(expected = IllegalBlockSizeException.class)
     public void testRemoveRFC2409PaddingWrongPadding1() throws Exception {
@@ -197,7 +197,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * SymmetricallyEncryptedISAKMPPayload.
      */
     @Test(expected = BadPaddingException.class)
     public void testRemoveRFC2409PaddingWrongPadding2() throws Exception {
@@ -212,7 +212,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * SymmetricallyEncryptedISAKMPPayload.
      */
     @Test(expected = BadPaddingException.class)
     public void testRemoveRFC2409PaddingWrongPadding3() throws Exception {
@@ -226,8 +226,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
     }
 
     /**
-     * Test of encrypt method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * Test of encrypt method, of class SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testEncrypt() throws Exception {
@@ -240,8 +239,7 @@ public class SymmetricallyEncryptedISAKMPPayloadTest {
     }
 
     /**
-     * Test of fromStream method, of class
- SymmetricallyEncryptedISAKMPPayload.
+     * Test of fromStream method, of class SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testFromStream() throws Exception {
