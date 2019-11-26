@@ -24,7 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class ISAKMPPayloadWithSymmetricallyEncryptedBody extends ISAKMPPayload implements EncryptedISAKMPPayload {
+public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implements EncryptedISAKMPPayload {
 
     private final SecretKeySpec ke;
     protected boolean isInSync;
@@ -34,11 +34,11 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBody extends ISAKMPPayload i
     private IvParameterSpec IV;
     private byte[] nextIV = new byte[0];
 
-    public ISAKMPPayloadWithSymmetricallyEncryptedBody(ISAKMPPayload payload, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke) throws GeneralSecurityException {
+    public SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke) throws GeneralSecurityException {
         this(payload, ciphersuite, ke, null);
     }
     
-    public ISAKMPPayloadWithSymmetricallyEncryptedBody(ISAKMPPayload payload, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke, byte[] iv) throws GeneralSecurityException {
+    public SymmetricallyEncryptedISAKMPPayload(ISAKMPPayload payload, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke, byte[] iv) throws GeneralSecurityException {
         super(payload.getType());
         this.underlyingPayload = payload;
         if (!ke.getAlgorithm().equals(ciphersuite.getCipher().cipherJCEName())) {
@@ -104,10 +104,10 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBody extends ISAKMPPayload i
         this.isInSync = true;
     }
 
-    public static <T extends ISAKMPPayload> ISAKMPPayloadWithSymmetricallyEncryptedBody fromStream(Class<T> payloadType, ByteArrayInputStream bais, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke, byte[] iv) throws ISAKMPParsingException {
+    public static <T extends ISAKMPPayload> SymmetricallyEncryptedISAKMPPayload fromStream(Class<T> payloadType, ByteArrayInputStream bais, IKEv1Ciphersuite ciphersuite, SecretKeySpec ke, byte[] iv) throws ISAKMPParsingException {
         try {
             T payload = payloadType.getConstructor((Class<?>[]) null).newInstance((Object[]) null);
-            ISAKMPPayloadWithSymmetricallyEncryptedBody encPayload = new ISAKMPPayloadWithSymmetricallyEncryptedBody(payload, ciphersuite, ke, iv);
+            SymmetricallyEncryptedISAKMPPayload encPayload = new SymmetricallyEncryptedISAKMPPayload(payload, ciphersuite, ke, iv);
             int length = encPayload.fillGenericPayloadHeaderFromStream(bais);
             byte[] buffer = new byte[length - ISAKMP_PAYLOAD_HEADER_LEN];
             bais.read(buffer);

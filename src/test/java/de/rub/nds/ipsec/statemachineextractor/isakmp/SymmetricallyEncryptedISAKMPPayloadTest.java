@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
+public class SymmetricallyEncryptedISAKMPPayloadTest {
 
     private static final SecretKeySpec TEST_KEY_DES = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFF"), "DES");
     private static final SecretKeySpec TEST_KEY_AES = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"), "AES");
@@ -35,7 +35,7 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
     public void testAddRFC2409PaddingB64() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(new HashPayload(), cs, TEST_KEY_DES);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_DES);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFF");
@@ -66,13 +66,13 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
 
     /**
      * Test of addRFC2409Padding method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testAddRFC2409PaddingB128() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.AES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(new HashPayload(), cs, TEST_KEY_AES);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_AES);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -103,13 +103,13 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testRemoveRFC2409PaddingB64() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(new HashPayload(), cs, TEST_KEY_DES);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_DES);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFF00");
@@ -140,13 +140,13 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testRemoveRFC2409PaddingB128() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.AES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(new HashPayload(), cs, TEST_KEY_AES);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_AES);
         byte[] inwspace, actual, expected;
 
         inwspace = DatatypeHelper.hexDumpToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00");
@@ -182,13 +182,13 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test(expected = IllegalBlockSizeException.class)
     public void testRemoveRFC2409PaddingWrongPadding1() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(new HashPayload(), cs, TEST_KEY_DES);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_DES);
 
         byte[] inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABBCC");
         instance.removeRFC2409Padding(inwspace);
@@ -197,13 +197,13 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test(expected = BadPaddingException.class)
     public void testRemoveRFC2409PaddingWrongPadding2() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(new HashPayload(), cs, TEST_KEY_DES);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_DES);
 
         byte[] inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABBCCDD");
         instance.removeRFC2409Padding(inwspace);
@@ -212,13 +212,13 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
 
     /**
      * Test of removeRFC2409Padding method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test(expected = BadPaddingException.class)
     public void testRemoveRFC2409PaddingWrongPadding3() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(new HashPayload(), cs, TEST_KEY_DES);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(new HashPayload(), cs, TEST_KEY_DES);
 
         byte[] inwspace = DatatypeHelper.hexDumpToByteArray("AABBCCDDAABB0101");
         instance.removeRFC2409Padding(inwspace);
@@ -227,7 +227,7 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
 
     /**
      * Test of encrypt method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testEncrypt() throws Exception {
@@ -235,20 +235,20 @@ public class ISAKMPPayloadWithSymmetricallyEncryptedBodyTest {
         hashPayload.setHashData(TEST_HASH);
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = new ISAKMPPayloadWithSymmetricallyEncryptedBody(hashPayload, cs, TEST_KEY_DES, TEST_IV);
+        SymmetricallyEncryptedISAKMPPayload instance = new SymmetricallyEncryptedISAKMPPayload(hashPayload, cs, TEST_KEY_DES, TEST_IV);
         assertArrayEquals(TEST_HASH_ENC, instance.getCiphertext());
     }
 
     /**
      * Test of fromStream method, of class
-     * ISAKMPPayloadWithSymmetricallyEncryptedBody.
+ SymmetricallyEncryptedISAKMPPayload.
      */
     @Test
     public void testFromStream() throws Exception {
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);
         ByteArrayInputStream bais = new ByteArrayInputStream(TEST_HASH_PAYLOAD_ENC);
-        ISAKMPPayloadWithSymmetricallyEncryptedBody instance = ISAKMPPayloadWithSymmetricallyEncryptedBody.fromStream(HashPayload.class, bais, cs, TEST_KEY_DES, TEST_IV);
+        SymmetricallyEncryptedISAKMPPayload instance = SymmetricallyEncryptedISAKMPPayload.fromStream(HashPayload.class, bais, cs, TEST_KEY_DES, TEST_IV);
         assertArrayEquals(TEST_HASH, ((HashPayload) instance.getUnderlyingPayload()).getHashData());
         assertEquals(0, bais.available());
     }

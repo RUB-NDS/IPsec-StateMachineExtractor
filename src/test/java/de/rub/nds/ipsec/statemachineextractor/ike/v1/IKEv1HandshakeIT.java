@@ -12,7 +12,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayloadWithPKCS1EncryptedBody;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
@@ -376,19 +376,19 @@ public class IKEv1HandshakeIT {
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
-        ISAKMPPayloadWithPKCS1EncryptedBody noncePayload = (ISAKMPPayloadWithPKCS1EncryptedBody) handshake.prepareNoncePayload(new byte[4]);
+        PKCS1EncryptedISAKMPPayload noncePayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareNoncePayload(new byte[4]);
         noncePayload.encrypt();
         Field encryptedBodyField = noncePayload.getClass().getDeclaredField("encryptedBody");
         encryptedBodyField.setAccessible(true);
         encryptedBodyField.set(noncePayload, DatatypeHelper.hexDumpToByteArray("665a9218eb9f8eb3703725e73257c7abdbfdf913147419d719f98a811551b38bcb97958ae356b1db28dc12f09c451fe50a8d7b21083c2ef61bcc28e6920f87c836a0b3b6aa1f4161af8bf2bd3224f4229855a794454e678947e44530a5cbb8aad8c7ae0de0fee80fc6ab7aab648803d52afc30c9485aa6dc33b75d15004cc91bfaf9ebb509a45d0d2c5e3ce03f3a3c92ffacbdacb53bcdf2871659abeb1caf4013d9e44aeabbce348352f375b5722ce87efc708770665baba249407a98d29cd1e4e4afffb62b72ae7f6dfa4da65849b950ea56348075e5151168cff2e9e451014e4abf053edebfb39d1ab083adefb3dba1da147914938fe370784bd943899c58"));
         msg.addPayload(noncePayload);
-        ISAKMPPayloadWithPKCS1EncryptedBody identificationPayload = (ISAKMPPayloadWithPKCS1EncryptedBody) handshake.prepareIdentificationPayload();
+        PKCS1EncryptedISAKMPPayload identificationPayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIdentificationPayload();
         identificationPayload.encrypt();
         encryptedBodyField.set(identificationPayload, DatatypeHelper.hexDumpToByteArray("467c30bc16916a50eb1590b15b8a9373bca1fe0db7ef22ad761c2101b21f37f941f5b78738b6a1b2b82b80d615df308a55048552bbac4ff5d4388e3ebab9ec0942906944e2fdca0eb41a524ba83e8f071a1f8b1360358a6c6f170adb16e30cff29c098960bf7980ff68aedf41583dc766b382a832fea27d7ec744ca9f1aee731a6e19a3c91b630f42a07b0756211d13ba34eb0fa2f6aee903afd72b005e3907afade66fabd7757ab2075df47c3f41593a1466174e238e094461236cbabd76d71d9028d4d1b365c042dfb80356103530ea3f8b295ddf4a0f7ffef80b1fbd1642ae10b75fc9e8f856add7c0f18bd08607b41f5b8c1d26c45736298c2660c44bf69"));
         msg.addPayload(identificationPayload);
         answer = handshake.exchangeMessage(msg);
 
-        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("A94233221932229B8DB685D5A8B518307429A276"), ((NoncePayload) (((ISAKMPPayloadWithPKCS1EncryptedBody) answer.getPayloads().get(2)).getUnderlyingPayload())).getNonceData());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("A94233221932229B8DB685D5A8B518307429A276"), ((NoncePayload) (((PKCS1EncryptedISAKMPPayload) answer.getPayloads().get(2)).getUnderlyingPayload())).getNonceData());
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
