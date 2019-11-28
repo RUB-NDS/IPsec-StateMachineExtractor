@@ -126,13 +126,13 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
                                 break;
                             case "IDci":
                                 id = new IdentificationPayload();
-                                id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+                                id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
                                 id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000100ffffff00"));
                                 msg.addPayload(id);
                                 break;
                             case "IDcr":
                                 id = new IdentificationPayload();
-                                id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+                                id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
                                 id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000200ffffff00"));
                                 msg.addPayload(id);
                                 break;

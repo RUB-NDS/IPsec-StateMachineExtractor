@@ -378,9 +378,9 @@ public final class IKEv1Handshake {
         InetAddress addr = udpTH.getLocalAddress();
         IdentificationPayload result = new IdentificationPayload();
         if (addr instanceof Inet6Address) {
-            result.setIdType(IDTypeEnum.ID_IPV6_ADDR);
+            result.setIdType(IDTypeEnum.IPV6_ADDR);
         } else if (addr instanceof Inet4Address) {
-            result.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+            result.setIdType(IDTypeEnum.IPV4_ADDR);
         }
         result.setIdentificationData(addr.getAddress());
         secrets.setIdentificationPayloadBody(result.getBody());
@@ -391,7 +391,7 @@ public final class IKEv1Handshake {
         }
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // this authentication method encrypts the identification using a derived key
-            result.setIdType(IDTypeEnum.ID_KEY_ID);
+            result.setIdType(IDTypeEnum.KEY_ID);
             secrets.computeSecretKeys();
             SymmetricallyEncryptedIdentificationPayloadHuaweiStyle rpke = new SymmetricallyEncryptedIdentificationPayloadHuaweiStyle(result, ciphersuite, new SecretKeySpec(secrets.getKe_i(), ciphersuite.getCipher().cipherJCEName()), secrets.getRPKEIV());
             rpke.encrypt();

@@ -34,7 +34,7 @@ public class SymmetricallyEncryptedIdentificationPayloadHuaweiStyleTest {
     @Test
     public void testEncrypt() throws Exception {
         IdentificationPayload idPayload = new IdentificationPayload();
-        idPayload.setIdType(IDTypeEnum.ID_KEY_ID);
+        idPayload.setIdType(IDTypeEnum.KEY_ID);
         idPayload.setIdentificationData(TEST_HASH);
         IKEv1Ciphersuite cs = new IKEv1Ciphersuite();
         cs.setCipher(CipherAttributeEnum.DES_CBC);

@@ -129,11 +129,11 @@ public class IKEv1HandshakeTest {
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
         msg.addPayload(id);
         id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
         msg.addPayload(id);
         handshake.addPhase2Hash1Payload(msg);
@@ -186,11 +186,11 @@ public class IKEv1HandshakeTest {
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000100ffffff00"));
         msg.addPayload(id);
         id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000200ffffff00"));
         msg.addPayload(id);
         handshake.addPhase2Hash1Payload(msg);

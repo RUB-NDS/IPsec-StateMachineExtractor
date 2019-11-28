@@ -44,7 +44,7 @@ public class IdentificationPayloadPKETest {
 
     public static PKCS1EncryptedISAKMPPayload getTestIdentificationPayloadPKE() {
         IdentificationPayload idPayload = new IdentificationPayload();
-        idPayload.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+        idPayload.setIdType(IDTypeEnum.IPV4_ADDR);
         idPayload.setIdentificationData(new byte[]{10, 0, 0, 0});
         PKCS1EncryptedISAKMPPayload instance = new PKCS1EncryptedISAKMPPayload(idPayload, TESTKEYPAIR.getPrivate(), TESTKEYPAIR.getPublic());
         try {
