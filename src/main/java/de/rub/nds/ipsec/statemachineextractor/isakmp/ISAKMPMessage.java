@@ -15,6 +15,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.StringJoiner;
 
 /**
  *
@@ -245,10 +246,12 @@ public class ISAKMPMessage implements ISAKMPSerializable {
         if (this.isEncryptedFlag()) {
             name.append("*");
         }
+        name.append("_");
+        StringJoiner payloadSequence = new StringJoiner("-");
         this.getPayloads().forEach((payload) -> {
-            name.append("-");
-            name.append(payload.toString());
+            payloadSequence.add(payload.toString());
         });
+        name.append(payloadSequence.toString());
         return name.toString();
     }
 }

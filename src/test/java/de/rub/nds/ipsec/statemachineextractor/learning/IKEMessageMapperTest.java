@@ -40,7 +40,7 @@ public class IKEMessageMapperTest {
         executableInput = instance.mapInput(abstractInput);
         concreteOutput = executableInput.execute(handshake);
         abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_MM-SA-V", abstractOutput);
+        assertEquals("v1_MM_SA-V", abstractOutput);
 
         abstractInput = "v1_MM_<No>-(KE)-(ID)";
         executableInput = instance.mapInput(abstractInput);
