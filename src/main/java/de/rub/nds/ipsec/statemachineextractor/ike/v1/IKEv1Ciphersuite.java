@@ -79,6 +79,20 @@ public class IKEv1Ciphersuite {
         this.keylength = keylength;
     }
 
+    public int getKeySize() {
+        if (this.cipher == null) {
+            throw new IllegalStateException("No cipher set!");
+        }
+        int keySize = this.cipher.getKeySize();
+        if (keySize != 0) {
+            return keySize;
+        }
+        if (this.keylength == null) {
+            throw new IllegalStateException("Cipher has variable key size and no KeyLengthAttribute set!");
+        }
+        return this.keylength.getKeySize();
+    }
+
     public LifeTypeAttributeEnum getLifetype() {
         return lifetype;
     }

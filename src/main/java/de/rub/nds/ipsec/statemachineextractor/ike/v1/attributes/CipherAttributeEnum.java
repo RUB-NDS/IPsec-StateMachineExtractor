@@ -20,28 +20,28 @@ import javax.crypto.Cipher;
  */
 public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
 
-    DES_CBC(0x80010001, true),
-    IDEA_CBC(0x80010002, true),
-    Blowfish_CBC(0x80010003, false),
-    RC5_R16_B64_CBC(0x80010004, false),
-    TRIPPLEDES_CBC(0x80010005, true),
-    CAST_CBC(0x80010006, false),
-    AES_CBC(0x80010007, false);
+    DES_CBC(0x80010001, 8),
+    IDEA_CBC(0x80010002, 16),
+    Blowfish_CBC(0x80010003, 0),
+    RC5_R16_B64_CBC(0x80010004, 0),
+    TRIPPLEDES_CBC(0x80010005, 24),
+    CAST_CBC(0x80010006, 0),
+    AES_CBC(0x80010007, 0);
 
-    private final boolean isFixedKeySize;
+    private final int keySize;
     private final byte[] bytes;
     private int blockSize;
-    
-    private CipherAttributeEnum(int value, boolean isFixedKeySize) {
+
+    private CipherAttributeEnum(int value, int keySize) {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
-        this.isFixedKeySize = isFixedKeySize;
+        this.keySize = keySize;
         IKEv1AttributeFactory.register(this, value);
     }
 
     public boolean isIsFixedKeySize() {
-        return isFixedKeySize;
+        return keySize != 0;
     }
-    
+
     @Override
     public byte[] getBytes() {
         return bytes.clone();
@@ -51,9 +51,9 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     public void configureCiphersuite(IKEv1Ciphersuite ciphersuite) {
         ciphersuite.setCipher(this);
     }
-    
+
     public String cipherJCEName() {
-        switch(this) {
+        switch (this) {
             case DES_CBC:
                 return "DES";
             case IDEA_CBC:
@@ -71,15 +71,19 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
         }
         throw new UnsupportedOperationException("Impossible unless you extend the enum!");
     }
-    
+
     public String modeOfOperationJCEName() {
         return "CBC"; // it's as simple as that ¯\_(ツ)_/¯
     }
-    
+
     public int getBlockSize() throws GeneralSecurityException {
         if (blockSize == 0) {
             blockSize = Cipher.getInstance(cipherJCEName()).getBlockSize();
         }
         return blockSize;
+    }
+
+    public int getKeySize() {
+        return keySize;
     }
 }
