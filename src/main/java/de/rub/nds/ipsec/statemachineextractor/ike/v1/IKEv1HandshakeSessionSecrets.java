@@ -150,6 +150,14 @@ public class IKEv1HandshakeSessionSecrets {
                 skeyid = prf.doFinal(this.ISAKMPSA.getDHSecret());
                 break;
 
+            case PKE:
+                // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
+                // Cisco rather uses: SKEYID = prf(Ni_b | Nr_b, CKY-I | CKY-R)
+                hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
+                prf.init(hmacKey);
+                skeyid = prf.doFinal(concatCookies);
+                break;
+
             case RevPKE:
                 hmacKey = new SecretKeySpec(initiatorNonce, HmacIdentifier);
                 prf.init(hmacKey);
@@ -161,11 +169,9 @@ public class IKEv1HandshakeSessionSecrets {
                 byte[] Ne_r = prf.doFinal(responderCookie);
                 ke_r = new byte[ciphersuite.getCipher().getBlockSize()];
                 System.arraycopy(Ne_r, 0, ke_r, 0, ke_r.length);
-            // No 'break' here intentionally!
-            case PKE:
                 // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
-                // Cisco rather uses: SKEYID = prf(Ni_b | Nr_b, CKY-I | CKY-R)
-                hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
+                MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
+                hmacKey = new SecretKeySpec(digest.digest(concatNonces), HmacIdentifier);
                 prf.init(hmacKey);
                 skeyid = prf.doFinal(concatCookies);
                 break;

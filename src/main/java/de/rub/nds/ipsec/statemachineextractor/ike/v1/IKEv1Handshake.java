@@ -32,6 +32,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKM
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -244,8 +245,18 @@ public final class IKEv1Handshake {
                     adjustCiphersuite(receivedSAPayload);
                     break;
                 case KeyExchange:
-                    payload = KeyExchangePayload.fromStream(bais);
-                    secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                    switch (ciphersuite.getAuthMethod()) {
+                        case RevPKE:
+                            SecretKeySpec ke_r = new SecretKeySpec(secrets.getKe_r(), ciphersuite.getCipher().cipherJCEName());
+                            SymmetricallyEncryptedISAKMPPayload symmPayload = SymmetricallyEncryptedISAKMPPayload.fromStream(KeyExchangePayload.class, bais, ciphersuite, ke_r, secrets.getRPKEIV());
+                            secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) symmPayload.getUnderlyingPayload()).getKeyExchangeData());
+                            payload = symmPayload;
+                            break;
+                        default:
+                            payload = KeyExchangePayload.fromStream(bais);
+                            secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                            break;
+                    }
                     secrets.getISAKMPSA().computeDHSecret();
                     break;
                 case Identification:
@@ -316,7 +327,7 @@ public final class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
         prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
         secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
-        secrets.getISAKMPSA().setSAOfferBody(SecurityAssociationPayloadFactory.P1_PSK_DES_MD5_G1.getBody());
+        secrets.getISAKMPSA().setSAOfferBody(null);
         secrets.generateDefaults();
     }
 
@@ -392,6 +403,7 @@ public final class IKEv1Handshake {
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // this authentication method encrypts the identification using a derived key
             result.setIdType(IDTypeEnum.KEY_ID);
+            secrets.setIdentificationPayloadBody(result.getBody());
             secrets.computeSecretKeys();
             SymmetricallyEncryptedIdentificationPayloadHuaweiStyle rpke = new SymmetricallyEncryptedIdentificationPayloadHuaweiStyle(result, ciphersuite, new SecretKeySpec(secrets.getKe_i(), ciphersuite.getCipher().cipherJCEName()), secrets.getRPKEIV());
             rpke.encrypt();

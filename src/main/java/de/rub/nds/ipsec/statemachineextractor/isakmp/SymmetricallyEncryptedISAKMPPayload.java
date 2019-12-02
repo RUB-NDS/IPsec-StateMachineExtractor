@@ -72,7 +72,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
             throw new IllegalBlockSizeException();
         }
         int padLength = in[in.length - 1] + 1;
-        if (padLength > cipher.getBlockSize() || padLength <= 0) {
+        if (padLength > in.length || padLength <= 0) {
             throw new BadPaddingException();
         }
         int i = padLength;
@@ -83,7 +83,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
                 }
                 i--;
             } catch (BadPaddingException ex) {
-                if (i == padLength) {
+                if (i == in[in.length - 1] + 1) {
                     /*
                      * RFC2409 states: "All padding bytes, except for the last
                      * one, contain 0x00. The last byte of the padding contains

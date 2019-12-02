@@ -24,4 +24,9 @@ public interface ISAKMPSerializable {
 
     void writeBytes(ByteArrayOutputStream baos);
     
+    default byte[] getBytes() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        this.writeBytes(baos);
+        return baos.toByteArray();
+    }
 }
