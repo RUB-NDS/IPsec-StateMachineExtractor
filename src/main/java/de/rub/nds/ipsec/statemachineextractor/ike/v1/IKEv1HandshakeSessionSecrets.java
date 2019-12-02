@@ -175,10 +175,10 @@ public class IKEv1HandshakeSessionSecrets {
         prf.update(concatCookies);
         prf.update((byte) 2);
         skeyid_e = prf.doFinal();
-        if (skeyid_e.length < ciphersuite.getCipher().getBlockSize()) {
+        if (skeyid_e.length < ciphersuite.getKeySize()) {
             throw new UnsupportedOperationException("Not enough keying material. Additional PRF runs needed.");
         }
-        ka = new byte[ciphersuite.getCipher().getBlockSize()];
+        ka = new byte[ciphersuite.getKeySize()];
         System.arraycopy(skeyid_e, 0, ka, 0, ka.length);
     }
 

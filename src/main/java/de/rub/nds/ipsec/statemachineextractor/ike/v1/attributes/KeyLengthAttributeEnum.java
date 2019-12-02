@@ -18,15 +18,21 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
  */
 public enum KeyLengthAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
 
-    L128(0x800e0080),
-    L192(0x800e00C0),
-    L256(0x800e0100);
+    L128(0x800e0080, 16),
+    L192(0x800e00C0, 24),
+    L256(0x800e0100, 32);
 
     private final byte[] bytes;
+    private final int keySize;
 
-    private KeyLengthAttributeEnum(int value) {
+    private KeyLengthAttributeEnum(int value, int size) {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
+        this.keySize = size;
         IKEv1AttributeFactory.register(this, value);
+    }
+
+    public int getKeySize() {
+        return this.keySize;
     }
 
     @Override
