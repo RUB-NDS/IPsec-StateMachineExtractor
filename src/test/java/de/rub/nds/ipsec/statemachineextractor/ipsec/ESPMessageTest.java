@@ -1,3 +1,11 @@
+/**
+ * IPsec-StateMachineExtractor - Extract the state machine of an IKEv1/IKEv2 implementation
+ *
+ * Copyright © 2019 Ruhr University Bochum
+ *
+ * Licensed under Apache License 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
@@ -94,7 +102,7 @@ public class ESPMessageTest {
         assertArrayEquals(CASE7_PAYLOAD, instance.getPayloadData());
         assertEquals(4, instance.getNextHeader());
     }
-    
+
     @Test
     public void testRFC3602TestVectorCase8() throws Exception {
         final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("85d47224b5f3dd5d2101d4ea8dffab22");
@@ -107,7 +115,7 @@ public class ESPMessageTest {
         byte[] expResult = CASE8_MSG;
         assertArrayEquals(expResult, result);
     }
-    
+
     @Test
     public void testRFC3602TestVectorCase8Reverse() throws Exception {
         ESPMessage instance = ESPMessage.fromBytes(CASE8_MSG, CASE78_KEY, "AES", "CBC");

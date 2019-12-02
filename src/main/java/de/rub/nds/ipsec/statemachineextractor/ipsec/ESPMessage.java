@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

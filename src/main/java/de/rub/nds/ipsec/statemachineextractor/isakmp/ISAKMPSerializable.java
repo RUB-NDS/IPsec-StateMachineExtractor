@@ -23,5 +23,5 @@ public interface ISAKMPSerializable {
     int getLength();
 
     void writeBytes(ByteArrayOutputStream baos);
-    
+
 }
