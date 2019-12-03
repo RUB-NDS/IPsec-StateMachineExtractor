@@ -8,20 +8,18 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import java.io.ByteArrayOutputStream;
+import de.rub.nds.ipsec.statemachineextractor.ByteStreamSerializable;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public interface ISAKMPSerializable {
+public interface ISAKMPSerializable extends ByteStreamSerializable {
 
     /**
      * @return the length of the full payload, including the generic payload
      * header
      */
     int getLength();
-
-    void writeBytes(ByteArrayOutputStream baos);
 
 }

@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.learning;
 import de.learnlib.api.exception.SULException;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.mapper.api.SULMapper;
+import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
@@ -30,13 +31,13 @@ import java.util.Arrays;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEMessageMapper implements SULMapper<String, String, ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage> {
+public class IPsecMessageMapper implements SULMapper<String, String, ContextExecutableInput<SerializableMessage, IKEv1Handshake>, SerializableMessage> {
 
     static final ISAKMPMessage PARSING_ERROR = new ISAKMPMessage();
 
     @Override
-    public ContextExecutableInput<ISAKMPMessage, IKEv1Handshake> mapInput(String abstractInput) {
-        return new ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>() {
+    public ContextExecutableInput<SerializableMessage, IKEv1Handshake> mapInput(String abstractInput) {
+        return new ContextExecutableInput<SerializableMessage, IKEv1Handshake>() {
             @Override
             public ISAKMPMessage execute(IKEv1Handshake handshake) throws SULException {
                 ISAKMPMessage msg = new ISAKMPMessage();
@@ -168,12 +169,12 @@ public class IKEMessageMapper implements SULMapper<String, String, ContextExecut
     }
 
     @Override
-    public String mapOutput(ISAKMPMessage concreteOutput) {
+    public String mapOutput(SerializableMessage concreteOutput) {
         if (concreteOutput == null) {
-            return IKEOutputAlphabet.NO_RESPONSE;
+            return IPsecOutputAlphabet.NO_RESPONSE;
         }
         if (concreteOutput == PARSING_ERROR) {
-            return IKEOutputAlphabet.PARSING_ERROR;
+            return IPsecOutputAlphabet.PARSING_ERROR;
         }
         return concreteOutput.toString();
     }

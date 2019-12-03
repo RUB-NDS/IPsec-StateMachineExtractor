@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.ByteValueEnum;
 import java.util.HashMap;
 import java.util.Map;
 

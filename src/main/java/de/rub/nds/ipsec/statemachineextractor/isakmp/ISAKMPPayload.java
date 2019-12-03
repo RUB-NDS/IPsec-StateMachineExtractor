@@ -82,16 +82,11 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
     }
     
     protected static byte[] read4ByteFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-        byte[] buffer = new byte[4];
         try {
-            int read = bais.read(buffer);
-            if (read != 4) {
-                throw new ISAKMPParsingException("Reading from InputStream failed!");
-            }
+            return DatatypeHelper.read4ByteFromStream(bais);
         } catch (IOException ex) {
-            throw new ISAKMPParsingException(ex);
+            throw new ISAKMPParsingException("Reading from InputStream failed!", ex);
         }
-        return buffer;
     }
     
     public static Class<? extends ISAKMPPayload> getImplementingClass(PayloadTypeEnum type) {

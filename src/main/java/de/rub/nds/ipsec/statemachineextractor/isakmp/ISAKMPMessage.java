@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.Random;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class ISAKMPMessage implements ISAKMPSerializable {
+public class ISAKMPMessage implements SerializableMessage, ISAKMPSerializable {
 
     public static final int ISAKMP_HEADER_LEN = 28;
 
@@ -209,12 +210,6 @@ public class ISAKMPMessage implements ISAKMPSerializable {
     public void writeBytes(ByteArrayOutputStream baos) {
         writeBytesWithoutPayloads(baos);
         writeBytesOfPayloads(baos);
-    }
-
-    public byte[] getBytes() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        writeBytes(baos);
-        return baos.toByteArray();
     }
 
     @Override

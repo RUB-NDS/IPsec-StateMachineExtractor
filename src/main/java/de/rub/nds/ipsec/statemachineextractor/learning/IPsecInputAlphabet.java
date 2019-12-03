@@ -14,9 +14,9 @@ import net.automatalib.words.impl.ArrayAlphabet;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEInputAlphabet extends ArrayAlphabet<String> {
+public class IPsecInputAlphabet extends ArrayAlphabet<String> {
 
-    public IKEInputAlphabet() {
+    public IPsecInputAlphabet() {
         super((new String[]{
             "RESET",
             "NEW_QM_MSG_ID",

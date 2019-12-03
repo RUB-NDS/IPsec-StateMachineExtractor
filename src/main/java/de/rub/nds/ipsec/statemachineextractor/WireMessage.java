@@ -6,9 +6,8 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1;
+package de.rub.nds.ipsec.statemachineextractor;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import java.nio.ByteBuffer;
 
 /**
@@ -18,10 +17,10 @@ import java.nio.ByteBuffer;
 public class WireMessage {
 
     final ByteBuffer data;
-    final ISAKMPMessage message;
+    final SerializableMessage message;
     final boolean isSentByMe;
 
-    public WireMessage(byte[] data, ISAKMPMessage message, boolean isSentByMe) {
+    public WireMessage(byte[] data, SerializableMessage message, boolean isSentByMe) {
         this.data = ByteBuffer.wrap(data);
         this.message = message;
         this.isSentByMe = isSentByMe;
@@ -31,11 +30,11 @@ public class WireMessage {
         return data.duplicate();
     }
 
-    public ISAKMPMessage getMessage() {
+    public SerializableMessage getMessage() {
         return message;
     }
 
-    public boolean isIsSentByMe() {
+    public boolean isSentByMe() {
         return isSentByMe;
     }
 

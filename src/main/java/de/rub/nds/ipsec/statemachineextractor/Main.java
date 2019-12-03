@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor;
 
-import de.rub.nds.ipsec.statemachineextractor.learning.IKEMessageMapper;
+import de.rub.nds.ipsec.statemachineextractor.learning.IPsecMessageMapper;
 import de.learnlib.algorithms.lstar.mealy.ExtensibleLStarMealyBuilder;
 import de.learnlib.api.query.DefaultQuery;
 import java.time.Duration;
@@ -28,8 +28,7 @@ import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOracle;
 import de.learnlib.oracle.membership.SULOracle;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.learning.IKEInputAlphabet;
+import de.rub.nds.ipsec.statemachineextractor.learning.IPsecInputAlphabet;
 import de.rub.nds.ipsec.statemachineextractor.learning.IKEv1HandshakeContextHandler;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.io.File;
@@ -55,11 +54,11 @@ public class Main {
     
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
-        IKEInputAlphabet inputAlphabet = new IKEInputAlphabet();
+        IPsecInputAlphabet inputAlphabet = new IPsecInputAlphabet();
         final IKEv1HandshakeContextHandler contextHandler = new IKEv1HandshakeContextHandler(timeout, host, port);
-        final ContextExecutableInputSUL<ContextExecutableInput<ISAKMPMessage, IKEv1Handshake>, ISAKMPMessage, IKEv1Handshake> ceiSUL;
+        final ContextExecutableInputSUL<ContextExecutableInput<SerializableMessage, IKEv1Handshake>, SerializableMessage, IKEv1Handshake> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
-        SUL<String, String> sul = SULMappers.apply(new IKEMessageMapper(), ceiSUL);
+        SUL<String, String> sul = SULMappers.apply(new IPsecMessageMapper(), ceiSUL);
         SULOracle<String, String> oracle = new SULOracle<>(sul);
         MealyCacheOracle<String, String> mqOracle = MealyCacheOracle.createDAGCacheOracle(inputAlphabet, oracle);
 

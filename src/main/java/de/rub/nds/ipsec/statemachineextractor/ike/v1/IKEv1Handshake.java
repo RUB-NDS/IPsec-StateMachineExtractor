@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.WireMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
@@ -69,27 +70,6 @@ public final class IKEv1Handshake {
         reset();
     }
 
-    public ISAKMPMessage retransmit() throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
-        if (messages.isEmpty()) {
-            return null;
-        }
-        List<WireMessage> txMsgs = messages.stream().filter(wm -> wm.isSentByMe == true).collect(Collectors.toList());
-        WireMessage lastTXMsg = txMsgs.get(txMsgs.size() - 1);
-        byte[] txData = lastTXMsg.getData().array();
-        byte[] rxData = exchangeData(txData);
-        if (rxData == null) {
-            return null;
-        }
-        //received an answer that is no retransmission, so store messages and last ciphertext block as IV
-        messages.add(lastTXMsg);
-        if (lastTXMsg.getMessage().isEncryptedFlag()) {
-            secrets.setIV(lastTXMsg.getMessage().getMessageId(), ((EncryptedISAKMPMessage) lastTXMsg.getMessage()).getNextIV());
-        }
-        ISAKMPMessage messageReceived = ISAKMPMessageFromByteArray(rxData);
-        messages.add(new WireMessage(rxData, messageReceived, false));
-        return messageReceived;
-    }
-
     protected byte[] exchangeData(byte[] txData) throws IOException {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
@@ -99,7 +79,7 @@ public final class IKEv1Handshake {
         if (rxData.length == 0) {
             return null;
         }
-        Set<ByteBuffer> rxMsgs = messages.stream().filter(wm -> wm.isSentByMe == false).map(WireMessage::getData).collect(Collectors.toSet());
+        Set<ByteBuffer> rxMsgs = messages.stream().filter(wm -> wm.isSentByMe() == false).map(WireMessage::getData).collect(Collectors.toSet());
         if (rxMsgs.contains(ByteBuffer.wrap(rxData))) {
             return null; //only a retransmission
         }

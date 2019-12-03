@@ -40,5 +40,15 @@ public class ISAKMPParsingException extends Exception {
     public ISAKMPParsingException(Throwable cause) {
         super(cause);
     }
-    
+
+    /**
+     * Constructs an instance of <code>ISAKMPParsingException</code> with the
+     * specified detail message and specified inner Throwable.
+     *
+     * @param cause the inner Throwable.
+     */
+    public ISAKMPParsingException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
+
 }

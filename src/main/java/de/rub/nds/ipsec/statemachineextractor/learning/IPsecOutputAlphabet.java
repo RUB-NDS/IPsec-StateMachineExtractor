@@ -14,22 +14,22 @@ import net.automatalib.words.impl.SimpleAlphabet;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEOutputAlphabet extends SimpleAlphabet<String> {
+public class IPsecOutputAlphabet extends SimpleAlphabet<String> {
 
     public static final String NO_RESPONSE = "NO_RESPONSE";
     public static final String PARSING_ERROR = "PARSING_ERROR";
 
-    private static IKEOutputAlphabet instance;
+    private static IPsecOutputAlphabet instance;
 
-    private IKEOutputAlphabet() {
+    private IPsecOutputAlphabet() {
         super();
         this.add(NO_RESPONSE);
         this.add(PARSING_ERROR);
     }
 
-    public static IKEOutputAlphabet get() {
+    public static IPsecOutputAlphabet get() {
         if (instance == null) {
-            instance = new IKEOutputAlphabet();
+            instance = new IPsecOutputAlphabet();
         }
         return instance;
     }

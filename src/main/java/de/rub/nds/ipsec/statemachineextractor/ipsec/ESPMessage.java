@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
+import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,9 +26,7 @@ import javax.crypto.spec.IvParameterSpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class ESPMessage {
-
-    protected static final int ESP_PAYLOAD_DATA_BOUNDARY = 32;
+public class ESPMessage implements SerializableMessage {
 
     private byte[] spi;
     private int sequenceNumber;
@@ -57,12 +56,7 @@ public class ESPMessage {
         }
     }
 
-    public byte[] getBytes() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        writeBytes(baos);
-        return baos.toByteArray();
-    }
-
+    @Override
     public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(spi, 0, 4);
         baos.write(DatatypeHelper.intTo4ByteArray(sequenceNumber), 0, 4);
@@ -177,7 +171,7 @@ public class ESPMessage {
         this.nextHeader = nextHeader;
     }
 
-    public boolean isIsInSync() {
+    public boolean isInSync() {
         return isInSync;
     }
 
@@ -195,8 +189,8 @@ public class ESPMessage {
     public static ESPMessage fromBytes(byte[] msgBytes, SecretKey secretKey, String algo, String mode) throws GeneralSecurityException, IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(msgBytes);
         ESPMessage result = new ESPMessage(secretKey, algo, mode);
-        result.setSpi(read4ByteFromStream(bais));
-        result.setSequenceNumber(ByteBuffer.wrap(read4ByteFromStream(bais)).getInt());
+        result.setSpi(DatatypeHelper.read4ByteFromStream(bais));
+        result.setSequenceNumber(ByteBuffer.wrap(DatatypeHelper.read4ByteFromStream(bais)).getInt());
         byte[] iv = new byte[result.cipher.getBlockSize()];
         bais.read(iv);
         result.IV = new IvParameterSpec(iv);
@@ -207,12 +201,4 @@ public class ESPMessage {
         return result;
     }
 
-    protected static byte[] read4ByteFromStream(ByteArrayInputStream bais) throws IOException {
-        byte[] buffer = new byte[4];
-        int read = bais.read(buffer);
-        if (read != 4) {
-            throw new IOException("Reading from InputStream failed!");
-        }
-        return buffer;
-    }
 }
