@@ -167,6 +167,15 @@ public final class IKEv1Handshake {
         PayloadTypeEnum payloadType = nextPayload;
         for (ISAKMPPayload payload : decMessage.getPayloads()) {
             switch (payloadType) {
+                case SecurityAssociation:
+                    SecurityAssociationPayload sa = (SecurityAssociationPayload) payload;
+                    if (sa.getProposalPayloads().size() != 1) {
+                        throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+                    }
+                    ProposalPayload pp = sa.getProposalPayloads().get(0);
+                    SecurityAssociationSecrets sas = this.getMostRecentSecurityAssociation();
+                    sas.setInboundSpi(pp.getSPI());
+                    break;
                 case Hash:
                     byte[] expectedHash = null;
                     switch (decMessage.getExchangeType()) {
@@ -331,9 +340,28 @@ public final class IKEv1Handshake {
         secrets.setMostRecentMessageID(mostRecentMessageID);
     }
 
+    public SecurityAssociationSecrets getMostRecentSecurityAssociation() {
+        return secrets.getSA(secrets.getMostRecentMessageID());
+    }
+
+    public void computeIPsecKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException {
+        secrets.computeKeyMaterial(sas);
+    }
+
+    public SecurityAssociationSecrets addOutboundSPIAndProtocolToIPsecSecurityAssociation(SecurityAssociationPayload payload) throws GeneralSecurityException, IKEHandshakeException {
+        if (payload.getProposalPayloads().size() != 1) {
+            throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+        }
+        ProposalPayload pp = payload.getProposalPayloads().get(0);
+        SecurityAssociationSecrets sas = this.getMostRecentSecurityAssociation();
+        sas.setOutboundSpi(pp.getSPI());
+        sas.setProtocol(pp.getProtocolId());
+        return sas;
+    }
+
     public KeyExchangePayload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException {
         KeyExchangePayload result = new KeyExchangePayload();
-        SASecrets sas = this.secrets.getSA(msgID);
+        SecurityAssociationSecrets sas = this.secrets.getSA(msgID);
         result.setKeyExchangeData(sas.generateKeyExchangeData());
         return result;
     }
@@ -365,7 +393,7 @@ public final class IKEv1Handshake {
 
     public ISAKMPPayload prepareNoncePayload(byte[] msgID) throws GeneralSecurityException {
         NoncePayload result = new NoncePayload();
-        SASecrets sas = this.secrets.getSA(msgID);
+        SecurityAssociationSecrets sas = this.secrets.getSA(msgID);
         if (sas.getInitiatorNonce() == null) {
             SecureRandom random = new SecureRandom();
             byte[] initiatorNonce = new byte[ciphersuite.getNonceLen()];

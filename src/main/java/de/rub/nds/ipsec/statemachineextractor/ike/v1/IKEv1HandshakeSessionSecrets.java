@@ -12,6 +12,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnu
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
@@ -34,12 +35,12 @@ public class IKEv1HandshakeSessionSecrets {
     private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private final Map<String, byte[]> IVs = new HashMap<>();
-    private final Map<String, SASecrets> SAs = new HashMap<>();
+    private final Map<String, SecurityAssociationSecrets> SAs = new HashMap<>();
     private byte[] skeyid, skeyid_d, skeyid_a, skeyid_e, ka;
     private byte[] identificationPayloadBody;
     private byte[] peerIdentificationPayloadBody;
     private byte[] mostRecentMessageID;
-    private SASecrets ISAKMPSA;
+    private SecurityAssociationSecrets ISAKMPSA;
 
     private final IKEv1Ciphersuite ciphersuite;
     private final IKEv1HandshakeLongtermSecrets ltsecrets;
@@ -52,12 +53,12 @@ public class IKEv1HandshakeSessionSecrets {
 
     public final void updateISAKMPSA() {
         if (this.ISAKMPSA == null || this.ciphersuite.getDhGroup() != this.ISAKMPSA.getDHGroup()) {
-            this.ISAKMPSA = new SASecrets(this.ciphersuite.getDhGroup());
+            this.ISAKMPSA = new SecurityAssociationSecrets(this.ciphersuite.getDhGroup());
             this.SAs.put("00000000", this.ISAKMPSA);
         }
     }
 
-    public SASecrets getISAKMPSA() {
+    public SecurityAssociationSecrets getISAKMPSA() {
         return ISAKMPSA;
     }
 
@@ -183,9 +184,10 @@ public class IKEv1HandshakeSessionSecrets {
     }
 
     public byte[] getHASH_I() throws GeneralSecurityException {
+        final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
         this.computeSecretKeys();
-        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
-        prf.init(new SecretKeySpec(this.getSKEYID(), "Hmac" + ciphersuite.getHash().toString()));
+        Mac prf = Mac.getInstance(HmacIdentifier);
+        prf.init(new SecretKeySpec(this.getSKEYID(), HmacIdentifier));
         prf.update(this.ISAKMPSA.getKeyExchangeData());
         prf.update(this.ISAKMPSA.getPeerKeyExchangeData());
         prf.update(this.initiatorCookie);
@@ -195,9 +197,10 @@ public class IKEv1HandshakeSessionSecrets {
     }
 
     public byte[] getHASH_R() throws GeneralSecurityException {
+        final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
         this.computeSecretKeys();
-        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
-        prf.init(new SecretKeySpec(this.getSKEYID(), "Hmac" + ciphersuite.getHash().toString()));
+        Mac prf = Mac.getInstance(HmacIdentifier);
+        prf.init(new SecretKeySpec(this.getSKEYID(), HmacIdentifier));
         prf.update(this.ISAKMPSA.getPeerKeyExchangeData());
         prf.update(this.ISAKMPSA.getKeyExchangeData());
         prf.update(this.getResponderCookie());
@@ -236,9 +239,10 @@ public class IKEv1HandshakeSessionSecrets {
     }
 
     protected byte[] getQuickModeHASH(ISAKMPMessage msg, int index) throws GeneralSecurityException {
+        final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
         this.computeSecretKeys();
-        Mac prf = Mac.getInstance("Hmac" + ciphersuite.getHash().toString());
-        prf.init(new SecretKeySpec(this.getSKEYID_a(), "Hmac" + ciphersuite.getHash().toString()));
+        Mac prf = Mac.getInstance(HmacIdentifier);
+        prf.init(new SecretKeySpec(this.getSKEYID_a(), HmacIdentifier));
         if (index == 3) {
             prf.update((byte) 0x0);
         }
@@ -261,10 +265,33 @@ public class IKEv1HandshakeSessionSecrets {
         return prf.doFinal(Arrays.copyOfRange(bytes, offset, bytes.length));
     }
 
-    public SASecrets getSA(byte[] msgID) {
+    public void computeKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException {
+        final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
+        this.computeSecretKeys();
+        Mac prfIn = Mac.getInstance(HmacIdentifier);
+        Mac prfOut = Mac.getInstance(HmacIdentifier);
+        prfIn.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
+        prfOut.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
+        if (sas.getDHSecret() != null) {
+            prfIn.update(sas.getDHSecret());
+            prfOut.update(sas.getDHSecret());
+        }
+        prfIn.update(sas.getProtocol().getValue());
+        prfOut.update(sas.getProtocol().getValue());
+        prfIn.update(sas.getInboundSpi());
+        prfOut.update(sas.getOutboundSpi());
+        prfIn.update(sas.getInitiatorNonce());
+        prfOut.update(sas.getInitiatorNonce());
+        prfIn.update(sas.getResponderNonce());
+        prfOut.update(sas.getResponderNonce());
+        sas.setInboundKeyMaterial(prfIn.doFinal());
+        sas.setOutboundKeyMaterial(prfOut.doFinal());
+    }
+
+    public SecurityAssociationSecrets getSA(byte[] msgID) {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
         if (!SAs.containsKey(msgIDStr)) {
-            SAs.put(msgIDStr, new SASecrets(ISAKMPSA.getDHGroup()));
+            SAs.put(msgIDStr, new SecurityAssociationSecrets(ISAKMPSA.getDHGroup())); //TODO: Set group based on Security Association payload
         }
         return SAs.get(msgIDStr);
     }

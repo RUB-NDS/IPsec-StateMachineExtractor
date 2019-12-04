@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -21,7 +22,7 @@ import javax.crypto.spec.DHParameterSpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class SASecrets {
+public class SecurityAssociationSecrets implements Cloneable {
 
     private final DHGroupAttributeEnum DHGroup;
     private KeyPair dhKeyPair;
@@ -33,9 +34,17 @@ public class SASecrets {
     private byte[] securityAssociationOfferBody;
     private byte[] keyExchangeData;
     private byte[] peerKeyExchangeData;
+    private byte[] inboundSPI, outboundSPI;
+    private byte[] inboundKeyMaterial, outboundKeyMaterial;
+    private ProtocolIDEnum protocol;
 
-    public SASecrets(DHGroupAttributeEnum DHGroup) {
+    public SecurityAssociationSecrets(DHGroupAttributeEnum DHGroup) {
         this.DHGroup = DHGroup;
+    }
+
+    @Override
+    public SecurityAssociationSecrets clone() throws CloneNotSupportedException {
+        return (SecurityAssociationSecrets) super.clone();
     }
 
     public DHGroupAttributeEnum getDHGroup() {
@@ -163,5 +172,51 @@ public class SASecrets {
 
     public void setPeerKeyExchangeData(byte[] peerKeyExchangeData) {
         this.peerKeyExchangeData = peerKeyExchangeData;
+    }
+
+    public byte[] getInboundSpi() {
+        return inboundSPI.clone();
+    }
+
+    public void setInboundSpi(byte[] spi) {
+        if (spi.length != 4) {
+            throw new IllegalArgumentException("An SPI has to be 4 bytes long!");
+        }
+        this.inboundSPI = spi.clone();
+    }
+    
+    public byte[] getOutboundSpi() {
+        return outboundSPI.clone();
+    }
+
+    public void setOutboundSpi(byte[] spi) {
+        if (spi.length != 4) {
+            throw new IllegalArgumentException("An SPI has to be 4 bytes long!");
+        }
+        this.outboundSPI = spi.clone();
+    }
+
+    public ProtocolIDEnum getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(ProtocolIDEnum protocol) {
+        this.protocol = protocol;
+    }
+
+    public byte[] getInboundKeyMaterial() {
+        return inboundKeyMaterial.clone();
+    }
+
+    protected void setInboundKeyMaterial(byte[] inboundKeyMaterial) {
+        this.inboundKeyMaterial = inboundKeyMaterial.clone();
+    }
+
+    public byte[] getOutboundKeyMaterial() {
+        return outboundKeyMaterial.clone();
+    }
+
+    protected void setOutboundKeyMaterial(byte[] outboundKeyMaterial) {
+        this.outboundKeyMaterial = outboundKeyMaterial.clone();
     }
 }

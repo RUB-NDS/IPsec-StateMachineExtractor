@@ -27,9 +27,9 @@ import de.learnlib.mapper.SULMappers;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.oracle.equivalence.RandomWordsEQOracle.MealyRandomWordsEQOracle;
 import de.learnlib.oracle.membership.SULOracle;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.IPsecConnection;
 import de.rub.nds.ipsec.statemachineextractor.learning.IPsecInputAlphabet;
-import de.rub.nds.ipsec.statemachineextractor.learning.IKEv1HandshakeContextHandler;
+import de.rub.nds.ipsec.statemachineextractor.learning.IPsecConnectionContextHandler;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import net.automatalib.serialization.dot.GraphDOT;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class Main {
-    
+
     static {
         CryptoHelper.prepare();
     }
@@ -51,12 +51,12 @@ public class Main {
     private static final long timeout = 600;
     private static final String host = "10.0.3.2";
     private static final int port = 500;
-    
+
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
         IPsecInputAlphabet inputAlphabet = new IPsecInputAlphabet();
-        final IKEv1HandshakeContextHandler contextHandler = new IKEv1HandshakeContextHandler(timeout, host, port);
-        final ContextExecutableInputSUL<ContextExecutableInput<SerializableMessage, IKEv1Handshake>, SerializableMessage, IKEv1Handshake> ceiSUL;
+        final IPsecConnectionContextHandler contextHandler = new IPsecConnectionContextHandler(timeout, host, port);
+        final ContextExecutableInputSUL<ContextExecutableInput<SerializableMessage, IPsecConnection>, SerializableMessage, IPsecConnection> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
         SUL<String, String> sul = SULMappers.apply(new IPsecMessageMapper(), ceiSUL);
         SULOracle<String, String> oracle = new SULOracle<>(sul);
