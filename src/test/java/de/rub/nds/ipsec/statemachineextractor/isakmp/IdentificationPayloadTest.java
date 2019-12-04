@@ -35,7 +35,7 @@ public class IdentificationPayloadTest {
     @Test
     public void testWriteBytes() {
         IdentificationPayload instance = new IdentificationPayload();
-        instance.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+        instance.setIdType(IDTypeEnum.IPV4_ADDR);
         instance.setIdentificationData(new byte[]{10, 11, 12, 13});
         byte[] expResult = new byte[]{0x00, 0x00, 0x00, 0x0C, 0x01, 0x00, 0x00, 0x00, 0x0a, 0x0b, 0x0c, 0x0d};
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -50,7 +50,7 @@ public class IdentificationPayloadTest {
     @Test
     public void testFromStream() throws Exception {
         IdentificationPayload origInstance = new IdentificationPayload();
-        origInstance.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+        origInstance.setIdType(IDTypeEnum.IPV4_ADDR);
         origInstance.setIdentificationData(new byte[]{10, 11, 12, 13});
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         origInstance.writeBytes(baos);

@@ -21,17 +21,17 @@ import java.util.Map;
 public enum IDTypeEnum implements ByteValueEnum {
 
     RESERVED((byte) 0),
-    ID_IPV4_ADDR((byte) 1),
-    ID_FQDN((byte) 2),
-    ID_USER_FQDN((byte) 3),
-    ID_IPV4_ADDR_SUBNET((byte) 4),
-    ID_IPV6_ADDR((byte) 5),
-    ID_IPV6_ADDR_SUBNET((byte) 6),
-    ID_IPV4_ADDR_RANGE((byte) 7),
-    ID_IPV6_ADDR_RANGE((byte) 8),
-    ID_DER_ASN1_DN((byte) 9),
-    ID_DER_ASN1_GN((byte) 10),
-    ID_KEY_ID((byte) 11);
+    IPV4_ADDR((byte) 1),
+    FQDN((byte) 2),
+    USER_FQDN((byte) 3),
+    IPV4_ADDR_SUBNET((byte) 4),
+    IPV6_ADDR((byte) 5),
+    IPV6_ADDR_SUBNET((byte) 6),
+    IPV4_ADDR_RANGE((byte) 7),
+    IPV6_ADDR_RANGE((byte) 8),
+    DER_ASN1_DN((byte) 9),
+    DER_ASN1_GN((byte) 10),
+    KEY_ID((byte) 11);
 
     private final byte value;
 

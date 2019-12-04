@@ -22,7 +22,7 @@ import javax.crypto.Cipher;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implements EncryptedISAKMPPayload {
+public class PKCS1EncryptedISAKMPPayload extends ISAKMPPayload implements EncryptedISAKMPPayload {
 
     private final PrivateKey myPrivateKey;
     private final PublicKey peerPublicKey;
@@ -30,7 +30,7 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
     protected byte[] encryptedBody = new byte[0];
     private final ISAKMPPayload underlyingPayload;
 
-    public ISAKMPPayloadWithPKCS1EncryptedBody(ISAKMPPayload payload, PrivateKey myPrivateKey, PublicKey peerPublicKey) {
+    public PKCS1EncryptedISAKMPPayload(ISAKMPPayload payload, PrivateKey myPrivateKey, PublicKey peerPublicKey) {
         super(payload.getType());
         this.underlyingPayload = payload;
         if (!(myPrivateKey instanceof RSAPrivateKey && peerPublicKey instanceof RSAPublicKey)) {
@@ -58,10 +58,10 @@ public class ISAKMPPayloadWithPKCS1EncryptedBody extends ISAKMPPayload implement
         this.isInSync = true;
     }
 
-    public static <T extends ISAKMPPayload> ISAKMPPayloadWithPKCS1EncryptedBody fromStream(Class<T> payloadType, ByteArrayInputStream bais, PrivateKey myPrivateKey, PublicKey peerPublicKey) throws ISAKMPParsingException {
+    public static <T extends ISAKMPPayload> PKCS1EncryptedISAKMPPayload fromStream(Class<T> payloadType, ByteArrayInputStream bais, PrivateKey myPrivateKey, PublicKey peerPublicKey) throws ISAKMPParsingException {
         try {
             T payload = payloadType.getConstructor((Class<?>[]) null).newInstance((Object[]) null);
-            ISAKMPPayloadWithPKCS1EncryptedBody encPayload = new ISAKMPPayloadWithPKCS1EncryptedBody(payload, myPrivateKey, peerPublicKey);
+            PKCS1EncryptedISAKMPPayload encPayload = new PKCS1EncryptedISAKMPPayload(payload, myPrivateKey, peerPublicKey);
             int length = encPayload.fillGenericPayloadHeaderFromStream(bais);
             byte[] buffer = new byte[length - ISAKMP_PAYLOAD_HEADER_LEN];
             bais.read(buffer);

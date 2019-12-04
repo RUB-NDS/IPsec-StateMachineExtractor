@@ -23,12 +23,14 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayloadWithPKCS1EncryptedBody;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
@@ -231,20 +233,33 @@ public final class IKEv1Handshake {
                     adjustCiphersuite(receivedSAPayload);
                     break;
                 case KeyExchange:
-                    payload = KeyExchangePayload.fromStream(bais);
-                    secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                    switch (ciphersuite.getAuthMethod()) {
+                        case RevPKE:
+                            SecretKeySpec ke_r = new SecretKeySpec(secrets.getKe_r(), ciphersuite.getCipher().cipherJCEName());
+                            SymmetricallyEncryptedISAKMPPayload symmPayload = SymmetricallyEncryptedISAKMPPayload.fromStream(KeyExchangePayload.class, bais, ciphersuite, ke_r, secrets.getRPKEIV());
+                            secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) symmPayload.getUnderlyingPayload()).getKeyExchangeData());
+                            payload = symmPayload;
+                            break;
+                        default:
+                            payload = KeyExchangePayload.fromStream(bais);
+                            secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                            break;
+                    }
                     secrets.getISAKMPSA().computeDHSecret();
                     break;
                 case Identification:
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
-                            ISAKMPPayloadWithPKCS1EncryptedBody encPayload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
-                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) encPayload.getUnderlyingPayload()).getBody());
-                            payload = encPayload;
+                            PKCS1EncryptedISAKMPPayload pkcs1Payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) pkcs1Payload.getUnderlyingPayload()).getBody());
+                            payload = pkcs1Payload;
                             break;
                         case RevPKE:
-                            throw new UnsupportedOperationException("Not supported yet.");
-                        //break;
+                            SecretKeySpec ke_r = new SecretKeySpec(secrets.getKe_r(), ciphersuite.getCipher().cipherJCEName());
+                            SymmetricallyEncryptedIdentificationPayloadHuaweiStyle symmPayload = SymmetricallyEncryptedIdentificationPayloadHuaweiStyle.fromStream(bais, ciphersuite, ke_r, secrets.getRPKEIV());
+                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) symmPayload.getUnderlyingPayload()).getBody());
+                            payload = symmPayload;
+                            break;
                         default:
                             payload = IdentificationPayload.fromStream(bais);
                             secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
@@ -264,7 +279,7 @@ public final class IKEv1Handshake {
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
                         case RevPKE:
-                            ISAKMPPayloadWithPKCS1EncryptedBody encPayload = ISAKMPPayloadWithPKCS1EncryptedBody.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                            PKCS1EncryptedISAKMPPayload encPayload = PKCS1EncryptedISAKMPPayload.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
                             secrets.getISAKMPSA().setResponderNonce(((NoncePayload) encPayload.getUnderlyingPayload()).getNonceData());
                             payload = encPayload;
                             break;
@@ -300,7 +315,7 @@ public final class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
         prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
         secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
-        secrets.getISAKMPSA().setSAOfferBody(SecurityAssociationPayloadFactory.P1_PSK_DES_MD5_G1.getBody());
+        secrets.getISAKMPSA().setSAOfferBody(null);
         secrets.generateDefaults();
     }
 
@@ -359,10 +374,18 @@ public final class IKEv1Handshake {
         return sas;
     }
 
-    public KeyExchangePayload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException {
+    public ISAKMPPayload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException {
         KeyExchangePayload result = new KeyExchangePayload();
         SecurityAssociationSecrets sas = this.secrets.getSA(msgID);
         result.setKeyExchangeData(sas.generateKeyExchangeData());
+        if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
+            // this authentication method encrypts the key exchange value using a derived key
+            secrets.computeSecretKeys();
+            SymmetricallyEncryptedISAKMPPayload rpke = new SymmetricallyEncryptedISAKMPPayload(result, ciphersuite, new SecretKeySpec(secrets.getKe_i(), ciphersuite.getCipher().cipherJCEName()), secrets.getRPKEIV());
+            rpke.encrypt();
+            secrets.setRPKEIV(rpke.getNextIV());
+            return rpke;
+        }
         return result;
     }
 
@@ -373,20 +396,26 @@ public final class IKEv1Handshake {
         InetAddress addr = udpTH.getLocalAddress();
         IdentificationPayload result = new IdentificationPayload();
         if (addr instanceof Inet6Address) {
-            result.setIdType(IDTypeEnum.ID_IPV6_ADDR);
+            result.setIdType(IDTypeEnum.IPV6_ADDR);
         } else if (addr instanceof Inet4Address) {
-            result.setIdType(IDTypeEnum.ID_IPV4_ADDR);
+            result.setIdType(IDTypeEnum.IPV4_ADDR);
         }
         result.setIdentificationData(addr.getAddress());
         secrets.setIdentificationPayloadBody(result.getBody());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
             // this authentication method encrypts the identification using the public key of the peer
-            ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
             return pke;
         }
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
             // this authentication method encrypts the identification using a derived key
-            throw new UnsupportedOperationException("Not supported yet.");
+            result.setIdType(IDTypeEnum.KEY_ID);
+            secrets.setIdentificationPayloadBody(result.getBody());
+            secrets.computeSecretKeys();
+            SymmetricallyEncryptedIdentificationPayloadHuaweiStyle rpke = new SymmetricallyEncryptedIdentificationPayloadHuaweiStyle(result, ciphersuite, new SecretKeySpec(secrets.getKe_i(), ciphersuite.getCipher().cipherJCEName()), secrets.getRPKEIV());
+            rpke.encrypt();
+            secrets.setRPKEIV(rpke.getNextIV());
+            return rpke;
         }
         return result;
     }
@@ -403,7 +432,7 @@ public final class IKEv1Handshake {
         result.setNonceData(sas.getInitiatorNonce());
         if (Arrays.equals(msgID, new byte[4]) && (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE)) {
             // these authentication methods encrypt the nonce using the public key of the peer
-            ISAKMPPayloadWithPKCS1EncryptedBody pke = new ISAKMPPayloadWithPKCS1EncryptedBody(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
             return pke;
         }
         return result;

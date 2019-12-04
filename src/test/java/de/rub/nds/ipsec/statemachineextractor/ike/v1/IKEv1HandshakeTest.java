@@ -44,7 +44,7 @@ public class IKEv1HandshakeTest {
     @Test
     public void testPrepareKeyExchangePayload() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        KeyExchangePayload result = instance.prepareKeyExchangePayload(new byte[4]);
+        ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
         assertTrue(result.getLength() <= instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4);
     }
 
@@ -56,7 +56,7 @@ public class IKEv1HandshakeTest {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
         instance.ciphersuite.setDhGroup(DHGroupAttributeEnum.GROUP19);
         instance.secrets.generateDefaults();
-        KeyExchangePayload result = instance.prepareKeyExchangePayload(new byte[4]);
+        ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
         assertEquals(instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4, result.getLength());
     }
 
@@ -129,11 +129,11 @@ public class IKEv1HandshakeTest {
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
         msg.addPayload(id);
         id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
         msg.addPayload(id);
         handshake.addPhase2Hash1Payload(msg);
@@ -186,11 +186,11 @@ public class IKEv1HandshakeTest {
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000100ffffff00"));
         msg.addPayload(id);
         id = new IdentificationPayload();
-        id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+        id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000200ffffff00"));
         msg.addPayload(id);
         handshake.addPhase2Hash1Payload(msg);

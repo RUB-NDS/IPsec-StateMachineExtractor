@@ -73,10 +73,11 @@ public class SecurityAssociationPayloadFactory {
         return securityAssociationPayload;
     }
 
-    public static final SecurityAssociationPayload P1_PSK_DES_MD5_G1     = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.DES_CBC, null, HashAttributeEnum.MD5, DHGroupAttributeEnum.GROUP1, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
-    public static final SecurityAssociationPayload P1_PSK_AES128_SHA1_G2 = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP2, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
-    public static final SecurityAssociationPayload P1_PSK_AES128_SHA1_G5 = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
-    public static final SecurityAssociationPayload P1_PKE_AES128_SHA1_G5 = createP1SA(AuthAttributeEnum.PKE, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
+    public static final SecurityAssociationPayload P1_PSK_DES_MD5_G1      = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.DES_CBC, null, HashAttributeEnum.MD5, DHGroupAttributeEnum.GROUP1, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
+    public static final SecurityAssociationPayload P1_PSK_AES128_SHA1_G2  = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP2, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
+    public static final SecurityAssociationPayload P1_PSK_AES128_SHA1_G5  = createP1SA(AuthAttributeEnum.PSK, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
+    public static final SecurityAssociationPayload P1_PKE_AES128_SHA1_G5  = createP1SA(AuthAttributeEnum.PKE, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
+    public static final SecurityAssociationPayload P1_RPKE_AES128_SHA1_G5 = createP1SA(AuthAttributeEnum.RevPKE, CipherAttributeEnum.AES_CBC, KeyLengthAttributeEnum.L128, HashAttributeEnum.SHA1, DHGroupAttributeEnum.GROUP5, LifeTypeAttributeEnum.SECONDS, LifeDurationAttribute.get(28800));
 
     public static SecurityAssociationPayload getP2_ESP_TUNNEL_AES128_SHA1() {
         return createP2ESPSA(ESPTransformIDEnum.AES, EncapsulationModeAttributeEnum.Tunnel, de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA, SALifeTypeAttributeEnum.SECONDS, SALifeDurationAttribute.get(3600));

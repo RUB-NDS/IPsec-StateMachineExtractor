@@ -23,7 +23,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.IOException;
@@ -114,6 +113,9 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                             case "PKE":
                                 sa = SecurityAssociationPayloadFactory.P1_PKE_AES128_SHA1_G5;
                                 break;
+                            case "RPKE":
+                                sa = SecurityAssociationPayloadFactory.P1_RPKE_AES128_SHA1_G5;
+                                break;
                             case "SA":
                                 switch (msg.getExchangeType()) {
                                     case QuickMode:
@@ -128,6 +130,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 msg.addPayload(sa);
                                 break;
                             case "KE":
+                            case "(KE)":
                                 msg.addPayload(conn.getHandshake().prepareKeyExchangePayload(msg.getMessageId()));
                                 break;
                             case "No":
@@ -136,17 +139,18 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 break;
                             case "ID":
                             case "<ID>":
+                            case "(ID)":
                                 msg.addPayload(conn.getHandshake().prepareIdentificationPayload());
                                 break;
                             case "IDci":
                                 id = new IdentificationPayload();
-                                id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+                                id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
                                 id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000100ffffff00"));
                                 msg.addPayload(id);
                                 break;
                             case "IDcr":
                                 id = new IdentificationPayload();
-                                id.setIdType(IDTypeEnum.ID_IPV4_ADDR_SUBNET);
+                                id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
                                 id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000200ffffff00"));
                                 msg.addPayload(id);
                                 break;

@@ -30,7 +30,7 @@ public enum KeyLengthAttributeEnum implements IKEv1Attribute, ISAKMPSerializable
         this.keySize = size;
         IKEv1AttributeFactory.register(this, value);
     }
-
+    
     public int getKeySize() {
         return this.keySize;
     }

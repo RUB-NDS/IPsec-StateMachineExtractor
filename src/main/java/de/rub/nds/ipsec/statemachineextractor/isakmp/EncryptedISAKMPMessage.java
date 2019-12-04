@@ -167,34 +167,4 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
         return enc;
     }
 
-//    byte[] addRFC2409Padding(byte[] in) {
-//        int byteLength = ((int) Math.ceil((float) in.length / cipher.getBlockSize())) * cipher.getBlockSize();
-//        if (in.length % cipher.getBlockSize() == 0) {
-//            byteLength += cipher.getBlockSize();
-//        }
-//        byte[] out = new byte[byteLength];
-//        System.arraycopy(in, 0, out, 0, in.length);
-//        out[out.length - 1] = (byte) (out.length - in.length - 1);
-//        return out;
-//    }
-//
-//    byte[] removeRFC2409Padding(byte[] in) throws BadPaddingException, IllegalBlockSizeException {
-//        if (in.length % cipher.getBlockSize() != 0) {
-//            throw new IllegalBlockSizeException();
-//        }
-//        int padLength = in[in.length - 1] + 1;
-//        if (padLength > cipher.getBlockSize() || padLength <= 0) {
-//            throw new BadPaddingException();
-//        }
-//        int i = padLength;
-//        while (i > 1) {
-//            if (in[in.length - i] != 0) {
-//                throw new BadPaddingException();
-//            }
-//            i--;
-//        }
-//        byte[] out = new byte[in.length - padLength];
-//        System.arraycopy(in, 0, out, 0, in.length - padLength);
-//        return out;
-//    }
 }

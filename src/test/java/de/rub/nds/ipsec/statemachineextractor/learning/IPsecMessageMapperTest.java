@@ -28,7 +28,7 @@ public class IPsecMessageMapperTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void testMapInputMapOutput() throws Exception {
         String abstractInput, abstractOutput;
         ContextExecutableInput<SerializableMessage, IPsecConnection> executableInput;
