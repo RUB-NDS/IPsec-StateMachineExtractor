@@ -48,14 +48,14 @@ public class Main {
         CryptoHelper.prepare();
     }
 
-    private static final long timeout = 600;
+    private static final int timeout = 600;
     private static final String host = "10.0.3.2";
     private static final int port = 500;
 
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
         IPsecInputAlphabet inputAlphabet = new IPsecInputAlphabet();
-        final IPsecConnectionContextHandler contextHandler = new IPsecConnectionContextHandler(timeout, host, port);
+        final IPsecConnectionContextHandler contextHandler = new IPsecConnectionContextHandler(host, port, timeout);
         final ContextExecutableInputSUL<ContextExecutableInput<SerializableMessage, IPsecConnection>, SerializableMessage, IPsecConnection> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
         SUL<String, String> sul = SULMappers.apply(new IPsecMessageMapper(), ceiSUL);

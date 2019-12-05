@@ -34,7 +34,7 @@ public class SecurityAssociationSecrets implements Cloneable {
     private byte[] securityAssociationOfferBody;
     private byte[] keyExchangeData;
     private byte[] peerKeyExchangeData;
-    private byte[] inboundSPI, outboundSPI;
+    private byte[] inboundSPI = new byte[0], outboundSPI = new byte[0];
     private byte[] inboundKeyMaterial, outboundKeyMaterial;
     private ProtocolIDEnum protocol;
 
@@ -184,7 +184,7 @@ public class SecurityAssociationSecrets implements Cloneable {
         }
         this.inboundSPI = spi.clone();
     }
-    
+
     public byte[] getOutboundSpi() {
         return outboundSPI.clone();
     }

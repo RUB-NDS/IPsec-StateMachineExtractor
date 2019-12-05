@@ -23,22 +23,22 @@ import java.util.logging.Logger;
  */
 public class IPsecConnectionContextHandler implements ContextHandler<IPsecConnection> {
 
-    private final long timeout;
+    private final int timeout;
     private final int port;
     private final InetAddress remoteAddress;
 
-    private IPsecConnectionContextHandler(long timeout, InetAddress addr, int port) throws UnknownHostException {
+    private IPsecConnectionContextHandler(InetAddress addr, int port, int timeout) throws UnknownHostException {
         this.timeout = timeout;
         this.port = port;
         this.remoteAddress = addr;
     }
 
-    public IPsecConnectionContextHandler(long timeout, byte[] addr, int port) throws UnknownHostException {
-        this(timeout, InetAddress.getByAddress(addr), port);
+    public IPsecConnectionContextHandler(byte[] addr, int port, int timeout) throws UnknownHostException {
+        this(InetAddress.getByAddress(addr), port, timeout);
     }
 
-    public IPsecConnectionContextHandler(long timeout, String host, int port) throws UnknownHostException {
-        this(timeout, InetAddress.getByName(host), port);
+    public IPsecConnectionContextHandler(String host, int port, int timeout) throws UnknownHostException {
+        this(InetAddress.getByName(host), port, timeout);
     }
 
     /**
@@ -47,7 +47,7 @@ public class IPsecConnectionContextHandler implements ContextHandler<IPsecConnec
     @Override
     public IPsecConnection createContext() {
         try {
-            return new IPsecConnection(timeout, remoteAddress, port);
+            return new IPsecConnection(remoteAddress, port, timeout);
         } catch (IOException | GeneralSecurityException ex) {
             throw new RuntimeException(ex);
         }

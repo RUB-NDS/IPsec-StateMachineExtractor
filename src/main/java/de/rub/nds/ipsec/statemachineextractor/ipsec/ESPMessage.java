@@ -13,6 +13,9 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.Random;
@@ -21,12 +24,16 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import org.savarese.vserv.tcpip.IPPacket;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class ESPMessage implements SerializableMessage {
+
+    public static final int PROTOCOL_NUMBER_ESP = 50;
+    private static final int IPv4_HEADER_LENGTH = 20;
 
     private byte[] spi;
     private int sequenceNumber;
@@ -70,7 +77,36 @@ public class ESPMessage implements SerializableMessage {
             }
         }
         baos.write(this.ciphertext, 0, this.ciphertext.length);
-        baos.write(authenticationData, 0, authenticationData.length);
+        baos.write(this.authenticationData, 0, this.authenticationData.length);
+    }
+
+    public IPPacket getIPPacket(InetAddress localAddress, InetAddress remoteAddress) {
+        int length = 8; // SPI and sequence number
+        length += this.IV.getIV().length;
+        length += this.ciphertext.length;
+        length += this.authenticationData.length;
+        if (remoteAddress instanceof Inet6Address) {
+            length += 40;
+            return null;
+        } else if (remoteAddress instanceof Inet4Address) {
+            length += IPv4_HEADER_LENGTH;
+            IPPacket pkt = new IPPacket(IPv4_HEADER_LENGTH);
+            pkt.setIPVersion(4);
+            pkt.setIPHeaderLength(5);
+            pkt.setIPPacketLength(length);
+            pkt.setIdentification(new Random().nextInt());
+            pkt.setTTL(255);
+            pkt.setProtocol(PROTOCOL_NUMBER_ESP);
+            pkt.setSourceAsWord(ByteBuffer.wrap(localAddress.getAddress()).getInt());
+            pkt.setDestinationAsWord(ByteBuffer.wrap(remoteAddress.getAddress()).getInt());
+            pkt.computeIPChecksum();
+            byte[] data = new byte[length];
+            pkt.getData(data);
+            System.arraycopy(this.getBytes(), 0, data, IPv4_HEADER_LENGTH, length);
+            pkt.setData(data);
+            return pkt;
+        }
+        return null;
     }
 
     public void decrypt() throws GeneralSecurityException {

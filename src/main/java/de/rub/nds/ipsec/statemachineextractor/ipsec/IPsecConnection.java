@@ -10,7 +10,10 @@ package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.security.GeneralSecurityException;
 
@@ -21,16 +24,23 @@ import java.security.GeneralSecurityException;
 public final class IPsecConnection {
 
     private IKEv1Handshake handshake;
-    private final long timeout;
-    private final InetAddress remoteAddress;
+    private final int timeout;
+    private final InetAddress localAddress, remoteAddress;
     private final int remotePort;
     private SecurityAssociationSecrets SA;
 
-    public IPsecConnection(long timeout, InetAddress remoteAddress, int remotePort) throws IOException, GeneralSecurityException {
+    public IPsecConnection(InetAddress remoteAddress, int remotePort, int timeout) throws IOException, GeneralSecurityException {
         this.timeout = timeout;
         this.remoteAddress = remoteAddress;
+        try (final DatagramSocket socket = new DatagramSocket()) {
+            socket.connect(remoteAddress, remotePort);
+            this.localAddress = socket.getLocalAddress();
+        }
         this.remotePort = remotePort;
         this.handshake = new IKEv1Handshake(timeout, remoteAddress, remotePort);
+        this.SA = new SecurityAssociationSecrets(DHGroupAttributeEnum.GROUP1);
+        this.SA.setProtocol(ProtocolIDEnum.IPSEC_ESP);
+        this.handshake.computeIPsecKeyMaterial(this.SA);
     }
 
     public void dispose() throws IOException {
