@@ -57,11 +57,16 @@
     </dependencies>
     <build>
         <finalName>IPsec-StateMachineExtractor</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
-            <plugin> 
-                <artifactId>maven-dependency-plugin</artifactId> 
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
-                    <execution>             
+                    <execution> 
                         <id>copy</id>
                         <phase>package</phase>
                         <goals>
@@ -82,17 +87,17 @@
                     </execution>
                     <execution>
                         <id>copy-dependencies</id>
-                        <phase>package</phase> 
-                        <goals> 
-                            <goal>copy-dependencies</goal> 
-                        </goals> 
-                        <configuration> 
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
                             <outputDirectory>${basedir}/apps/lib</outputDirectory>
-                            <!--Ensures only runnable dependencies are included-->
-                            <includeScope>compile</includeScope> 
-                        </configuration> 
-                    </execution> 
-                </executions> 
+                            <!-- Ensures only runnable dependencies are included -->
+                            <includeScope>compile</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <!-- Build an executable JAR -->
@@ -152,6 +157,7 @@
                 <version>2.19.1</version>
                 <configuration>
                     <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
+                    <argLine>-Djava.library.path=${basedir}/src/main/resources/lib:${java.library.path}</argLine>
                 </configuration>
             </plugin>
         </plugins>

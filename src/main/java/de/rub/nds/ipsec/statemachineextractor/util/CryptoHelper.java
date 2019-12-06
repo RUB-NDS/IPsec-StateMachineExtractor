@@ -10,6 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.util;
 
 import de.rub.nds.tlsattacker.util.UnlimitedStrengthEnabler;
 import static java.lang.Math.ceil;
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -44,6 +45,15 @@ public class CryptoHelper {
         if (!(Security.getProviders()[0] instanceof BouncyCastleProvider)) {
             BouncyCastleProvider bouncyCastleProvider = new BouncyCastleProvider();
             Security.insertProviderAt(bouncyCastleProvider, 1);
+        }
+        try {
+            // http://web.archive.org/web/20160214203937/http://blog.cedarsoft.com/2010/11/setting-java-library-path-programmatically/
+            System.setProperty("java.library.path", "src/main/resources/lib:lib");
+            Field fieldSysPath = ClassLoader.class.getDeclaredField("sys_paths");
+            fieldSysPath.setAccessible(true);
+            fieldSysPath.set(null, null);
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
+            throw new Error("Library path could not be set!", ex);
         }
     }
 
@@ -97,7 +107,7 @@ public class CryptoHelper {
         System.arraycopy(wy, start, publicKeyBytes, paramLen, paramLen);
         return publicKeyBytes;
     }
-    
+
     public static byte[] byteArrayPrepend(byte[] a, byte b) {
         byte[] na = new byte[a.length + 1];
         System.arraycopy(a, 0, na, 1, a.length);
