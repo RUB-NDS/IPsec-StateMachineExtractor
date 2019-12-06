@@ -10,6 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import de.rub.nds.ipsec.statemachineextractor.util.IPProtocolsEnum;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,7 +33,6 @@ import org.savarese.vserv.tcpip.IPPacket;
  */
 public class ESPMessage implements SerializableMessage {
 
-    public static final int PROTOCOL_NUMBER_ESP = 50;
     private static final int IPv4_HEADER_LENGTH = 20;
 
     private byte[] spi;
@@ -80,33 +80,32 @@ public class ESPMessage implements SerializableMessage {
         baos.write(this.authenticationData, 0, this.authenticationData.length);
     }
 
-    public IPPacket getIPPacket(InetAddress localAddress, InetAddress remoteAddress) {
-        int length = 8; // SPI and sequence number
-        length += this.IV.getIV().length;
-        length += this.ciphertext.length;
-        length += this.authenticationData.length;
+    public IPPacket getIPPacket(InetAddress localAddress, InetAddress remoteAddress) throws GeneralSecurityException {
+        if (!isInSync) {
+            this.encrypt();
+        }
+        byte[] espBytes = this.getBytes();
         if (remoteAddress instanceof Inet6Address) {
-            length += 40;
-            return null;
+            throw new UnsupportedOperationException("Not supported yet!");
         } else if (remoteAddress instanceof Inet4Address) {
-            length += IPv4_HEADER_LENGTH;
-            IPPacket pkt = new IPPacket(IPv4_HEADER_LENGTH);
+            int length = espBytes.length + IPv4_HEADER_LENGTH;
+            IPPacket pkt = new IPPacket(length);
             pkt.setIPVersion(4);
             pkt.setIPHeaderLength(5);
             pkt.setIPPacketLength(length);
             pkt.setIdentification(new Random().nextInt());
             pkt.setTTL(255);
-            pkt.setProtocol(PROTOCOL_NUMBER_ESP);
+            pkt.setProtocol(IPProtocolsEnum.ESP.value());
             pkt.setSourceAsWord(ByteBuffer.wrap(localAddress.getAddress()).getInt());
             pkt.setDestinationAsWord(ByteBuffer.wrap(remoteAddress.getAddress()).getInt());
             pkt.computeIPChecksum();
             byte[] data = new byte[length];
             pkt.getData(data);
-            System.arraycopy(this.getBytes(), 0, data, IPv4_HEADER_LENGTH, length);
+            System.arraycopy(espBytes, 0, data, IPv4_HEADER_LENGTH, espBytes.length);
             pkt.setData(data);
             return pkt;
         }
-        return null;
+        throw new UnsupportedOperationException("Not supported yet!");
     }
 
     public void decrypt() throws GeneralSecurityException {

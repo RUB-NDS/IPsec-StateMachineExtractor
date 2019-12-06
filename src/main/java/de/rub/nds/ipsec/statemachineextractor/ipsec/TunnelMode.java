@@ -9,12 +9,18 @@
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import com.savarese.rocksaw.net.RawSocket;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
+import de.rub.nds.ipsec.statemachineextractor.util.IPProtocolsEnum;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import javax.crypto.spec.SecretKeySpec;
+import static jdk.nashorn.internal.objects.NativeRegExpExecResult.length;
 import org.savarese.vserv.tcpip.IPPacket;
 
 /**
@@ -24,42 +30,62 @@ import org.savarese.vserv.tcpip.IPPacket;
 public class TunnelMode {
 
     protected RawSocket socket;
-    private final long timeout;
     private final InetAddress localAddress, remoteAddress;
+    private final SecurityAssociationSecrets secrets;
 
-    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, int timeout) throws IOException {
-        this.timeout = timeout;
+    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, int timeout) throws IOException {
         this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
+        this.secrets = sas;
         this.socket = new RawSocket();
-        if (localAddress instanceof Inet6Address && remoteAddress instanceof Inet6Address) {
-            this.socket.open(RawSocket.PF_INET6, ESPMessage.PROTOCOL_NUMBER_ESP);
-        } else if (localAddress instanceof Inet4Address && remoteAddress instanceof Inet4Address) {
-            this.socket.open(RawSocket.PF_INET, ESPMessage.PROTOCOL_NUMBER_ESP);
-        } else {
-            throw new UnsupportedOperationException("Not supported yet!");
+        try {
+            if (remoteAddress instanceof Inet6Address) {
+                throw new UnsupportedOperationException("Not supported yet!");
+            } else if (remoteAddress instanceof Inet4Address) {
+                this.socket.open(RawSocket.PF_INET, IPProtocolsEnum.ESP.value());
+            } else {
+                throw new UnsupportedOperationException("Not supported yet!");
+            }
+        } catch (IOException ex) {
+            if (ex.getStackTrace()[0].getMethodName().equals("__throwIOException")) {
+                throw new Error("Opening raw socket failed! Most probably your java executable is missing the 'cap_net_raw' capability!", ex);
+            }
         }
         try {
             socket.setSendTimeout(timeout);
             socket.setReceiveTimeout(timeout);
-        } catch (final SocketException se) {
+        } catch (SocketException se) {
             socket.setUseSelectTimeout(true);
             socket.setSendTimeout(timeout);
             socket.setReceiveTimeout(timeout);
         }
     }
 
-    public void send(IPPacket packet) throws IOException {
+    public IPPacket sendAndReceive(IPPacket packet) throws IOException, GeneralSecurityException {
         byte[] data = new byte[packet.getIPPacketLength()];
         packet.getData(data);
-        this.socket.write(remoteAddress, data);
+        ESPMessage msg = new ESPMessage(new SecretKeySpec(secrets.getOutboundKeyMaterial(), "AES"), "AES", "CBC");
+        msg.setSpi(secrets.getOutboundSpi());
+        msg.setSequenceNumber(1);
+        msg.setPayloadData(data);
+        msg.setNextHeader(IPProtocolsEnum.IPv4.value());
+        IPPacket espPacket = msg.getIPPacket(localAddress, remoteAddress);
+        int ipHeaderByteLength = espPacket.getIPHeaderByteLength();
+        data = new byte[espPacket.getIPPacketLength()];
+        espPacket.getData(data);
+        this.socket.write(remoteAddress, data, ipHeaderByteLength, data.length - ipHeaderByteLength);
+        return this.receive();
     }
 
-    public IPPacket receive() throws IOException {
+    protected IPPacket receive() throws IOException {
         byte[] buffer = new byte[20000];
-        int length = socket.read(buffer);
-        IPPacket pkt = new IPPacket(length);
-        pkt.setData(Arrays.copyOf(buffer, length));
-        return pkt;
+        try {
+            int length = socket.read(buffer);
+            IPPacket pkt = new IPPacket(length);
+            pkt.setData(Arrays.copyOf(buffer, length));
+            return pkt;
+        } catch (InterruptedIOException ex) {
+            return null; // Timeout
+        }
     }
 }
