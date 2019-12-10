@@ -10,6 +10,9 @@ package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import com.savarese.rocksaw.net.RawSocket;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
+import static de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage.IPv4_HEADER_LENGTH;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.IPProtocolsEnum;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -20,8 +23,8 @@ import java.net.SocketException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import javax.crypto.spec.SecretKeySpec;
-import static jdk.nashorn.internal.objects.NativeRegExpExecResult.length;
 import org.savarese.vserv.tcpip.IPPacket;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -32,11 +35,38 @@ public class TunnelMode {
     protected RawSocket socket;
     private final InetAddress localAddress, remoteAddress;
     private final SecurityAssociationSecrets secrets;
+    private final ESPTransformIDEnum cipher;
+    private final int keySize;
+    private int nextOutboundSequenceNumber = 1;
+    private Integer nextInboundSequenceNumber;
+    private final SecretKeySpec outboundKey, inboundKey;
 
-    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, int timeout) throws IOException {
+    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, int timeout) throws IOException {
         this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
         this.secrets = sas;
+        this.cipher = cipher;
+        if (cipher.isIsFixedKeySize()) {
+            this.keySize = cipher.getKeySize();
+        } else {
+            if (keylength == null) {
+                throw new IllegalArgumentException("keylength is null!");
+            }
+            this.keySize = keylength.getKeySize();
+        }
+        
+        byte[] keymat = secrets.getOutboundKeyMaterial();
+        if (keymat.length < cipher.getKeySize()) {
+            throw new UnsupportedOperationException("Not supported yet!");
+        }
+        this.outboundKey = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+        
+        keymat = secrets.getInboundKeyMaterial();
+        if (keymat.length < cipher.getKeySize()) {
+            throw new UnsupportedOperationException("Not supported yet!");
+        }
+        this.inboundKey = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+
         this.socket = new RawSocket();
         try {
             if (remoteAddress instanceof Inet6Address) {
@@ -61,23 +91,38 @@ public class TunnelMode {
         }
     }
 
-    public IPPacket sendAndReceive(IPPacket packet) throws IOException, GeneralSecurityException {
-        byte[] data = new byte[packet.getIPPacketLength()];
-        packet.getData(data);
-        ESPMessage msg = new ESPMessage(new SecretKeySpec(secrets.getOutboundKeyMaterial(), "AES"), "AES", "CBC");
-        msg.setSpi(secrets.getOutboundSpi());
-        msg.setSequenceNumber(1);
-        msg.setPayloadData(data);
-        msg.setNextHeader(IPProtocolsEnum.IPv4.value());
-        IPPacket espPacket = msg.getIPPacket(localAddress, remoteAddress);
+    public ESPMessage sendAndReceive(IPPacket packet) throws IOException, GeneralSecurityException {
+        byte[] pktToSendData = new byte[packet.getIPPacketLength()];
+        packet.getData(pktToSendData);
+        ESPMessage msgOut = new ESPMessage(outboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
+        msgOut.setSpi(secrets.getOutboundSpi());
+        msgOut.setSequenceNumber(nextOutboundSequenceNumber++);
+        msgOut.setPayloadData(pktToSendData);
+        msgOut.setNextHeader(IPProtocolsEnum.IPv4.value());
+        IPPacket espPacket = msgOut.getIPPacket(localAddress, remoteAddress);
         int ipHeaderByteLength = espPacket.getIPHeaderByteLength();
-        data = new byte[espPacket.getIPPacketLength()];
-        espPacket.getData(data);
-        this.socket.write(remoteAddress, data, ipHeaderByteLength, data.length - ipHeaderByteLength);
-        return this.receive();
+        byte[] espPktToSendData = new byte[espPacket.getIPPacketLength()];
+        espPacket.getData(espPktToSendData);
+        this.socket.write(remoteAddress, espPktToSendData, ipHeaderByteLength, espPktToSendData.length - ipHeaderByteLength);
+        IPPacket unparsedPkt = this.receiveUnparsed();
+        byte[] rcvdEspPktDataWithIPHeader = new byte[unparsedPkt.getIPPacketLength()];
+        unparsedPkt.getData(rcvdEspPktDataWithIPHeader);
+        byte [] rcvdEspPktData = Arrays.copyOfRange(rcvdEspPktDataWithIPHeader, IPv4_HEADER_LENGTH, rcvdEspPktDataWithIPHeader.length);
+        ESPMessage msgIn = ESPMessage.fromBytes(rcvdEspPktData, inboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
+        if (!Arrays.equals(msgIn.getSpi(), secrets.getInboundSpi())) {
+            LoggerFactory.getLogger(TunnelMode.class).warn("Decryption succeeded, but SPIs do not match; Received {} vs expected {}!", DatatypeHelper.byteArrayToHexDump(msgIn.getSpi()), DatatypeHelper.byteArrayToHexDump(secrets.getInboundSpi()));
+        }
+        if (nextInboundSequenceNumber == null) {
+            nextInboundSequenceNumber = msgIn.getSequenceNumber();
+        } else if (nextInboundSequenceNumber != msgIn.getSequenceNumber()) {
+            LoggerFactory.getLogger(TunnelMode.class).warn("Received sequence number {}, expected {}!", msgIn.getSequenceNumber(), nextInboundSequenceNumber);
+            nextInboundSequenceNumber = msgIn.getSequenceNumber();
+        }
+        nextInboundSequenceNumber++;
+        return msgIn;
     }
 
-    protected IPPacket receive() throws IOException {
+    protected IPPacket receiveUnparsed() throws IOException {
         byte[] buffer = new byte[20000];
         try {
             int length = socket.read(buffer);
@@ -86,6 +131,12 @@ public class TunnelMode {
             return pkt;
         } catch (InterruptedIOException ex) {
             return null; // Timeout
+        }
+    }
+
+    void dispose() throws IOException {
+        if (socket.isOpen()) {
+            socket.close();
         }
     }
 }

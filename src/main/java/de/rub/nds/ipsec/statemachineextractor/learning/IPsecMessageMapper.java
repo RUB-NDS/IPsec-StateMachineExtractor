@@ -17,7 +17,9 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.IPsecConnection;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
@@ -26,6 +28,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.security.GeneralSecurityException;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -119,8 +122,8 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                             case "SA":
                                 switch (msg.getExchangeType()) {
                                     case QuickMode:
-                                        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
-                                        conn.getHandshake().addOutboundSPIAndProtocolToIPsecSecurityAssociation(sa);
+                                        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_NONE();
+                                        conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
                                         break;
 
                                     default:
@@ -166,7 +169,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 conn.getHandshake().addPhase2Hash3Payload(msg);
                                 SecurityAssociationSecrets sas = conn.getHandshake().getMostRecentSecurityAssociation();
                                 conn.getHandshake().computeIPsecKeyMaterial(sas);
-                                conn.setSA(sas);
+                                conn.establishTunnel(sas, ESPTransformIDEnum.AES, KeyLengthAttributeEnum.L128);
                                 break;
 
                             default:
@@ -190,12 +193,11 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                 msg.setMessageId(handshake.getMostRecentMessageID());
             }
 
-            private ESPMessage executeESP(IPsecConnection conn) {
-                if (!abstractInput.equals("ESP_ping")) {
+            private ESPMessage executeESP(IPsecConnection conn) throws IOException, GeneralSecurityException {
+                if (!abstractInput.equals("ESP_SSH_SYN")) {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
-//                conn.getHandshake().ESPMessage msg = new ESPMessage(secretKey, algo, mode, IV);
-                return null;
+                return conn.exchangeTCPSYN(InetAddress.getByName("10.0.1.1"), InetAddress.getByName("10.0.2.1"), 22);
             }
         };
     }

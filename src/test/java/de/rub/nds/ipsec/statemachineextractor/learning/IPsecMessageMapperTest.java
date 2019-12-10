@@ -34,7 +34,7 @@ public class IPsecMessageMapperTest {
         ContextExecutableInput<SerializableMessage, IPsecConnection> executableInput;
         SerializableMessage concreteOutput;
         IPsecMessageMapper instance = new IPsecMessageMapper();
-        IPsecConnection conn = new IPsecConnection(500, InetAddress.getByName("10.0.3.10"), 500);
+        IPsecConnection conn = new IPsecConnection(InetAddress.getByName("10.0.3.10"), 500, 600);
 
         abstractInput = "v1_MM_PSK-SA";
         executableInput = instance.mapInput(abstractInput);
@@ -46,25 +46,31 @@ public class IPsecMessageMapperTest {
         executableInput = instance.mapInput(abstractInput);
         concreteOutput = executableInput.execute(conn);
         abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_MM_<No>-(KE)-(ID)", abstractOutput);
-        
-        abstractInput = "v1_MM*_HASH";
+        assertEquals("v1_MM_KE-No", abstractOutput);
+
+        abstractInput = "v1_MM*_ID-HASH";
         executableInput = instance.mapInput(abstractInput);
         concreteOutput = executableInput.execute(conn);
         abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_MM*_HASH)", abstractOutput);
+        assertEquals("v1_MM*_ID-HASH", abstractOutput);
 
         abstractInput = "v1_QM*_HASH1-SA-No-IDci-IDcr";
         executableInput = instance.mapInput(abstractInput);
         concreteOutput = executableInput.execute(conn);
         abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_QM*-HASH-SA-No-ID-ID-ResponderLifetime", abstractOutput);
+        assertEquals("v1_QM*_HASH-SA-No-ID-ID", abstractOutput);
 
         abstractInput = "v1_QM*_HASH3";
         executableInput = instance.mapInput(abstractInput);
         concreteOutput = executableInput.execute(conn);
         abstractOutput = instance.mapOutput(concreteOutput);
         assertEquals("NO_RESPONSE", abstractOutput);
+
+        abstractInput = "ESP_SSH_SYN";
+        executableInput = instance.mapInput(abstractInput);
+        concreteOutput = executableInput.execute(conn);
+        abstractOutput = instance.mapOutput(concreteOutput);
+        assertEquals("ESP", abstractOutput);
     }
 
 }

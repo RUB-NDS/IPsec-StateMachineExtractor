@@ -17,32 +17,36 @@ import java.util.Map;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public enum ESPTransformIDEnum implements ByteValueEnum {
-    RESERVED((byte) 0, ProtocolTransformIDEnum.ESP_RESERVED, true),
-    DES_IV64((byte) 1, ProtocolTransformIDEnum.ESP_DES_IV64, true),
-    DES((byte) 2, ProtocolTransformIDEnum.ESP_DES, true),
-    TrippleDES((byte) 3, ProtocolTransformIDEnum.ESP_3DES, true),
-    RC5((byte) 4, ProtocolTransformIDEnum.ESP_RC5, false),
-    IDEA((byte) 5, ProtocolTransformIDEnum.ESP_IDEA, true),
-    CAST((byte) 6, ProtocolTransformIDEnum.ESP_CAST, false),
-    BLOWFISH((byte) 7, ProtocolTransformIDEnum.ESP_BLOWFISH, false),
-    TrippleIDEA((byte) 8, ProtocolTransformIDEnum.ESP_3IDEA, true),
-    DES_IV32((byte) 9, ProtocolTransformIDEnum.ESP_DES_IV32, true),
-    RC4((byte) 10, ProtocolTransformIDEnum.ESP_RC4, false),
-    NULL((byte) 11, ProtocolTransformIDEnum.ESP_NULL, true),
-    AES((byte) 12, ProtocolTransformIDEnum.ESP_AES, false);
+    RESERVED((byte) 0, ProtocolTransformIDEnum.ESP_RESERVED, 0),
+    DES_IV64((byte) 1, ProtocolTransformIDEnum.ESP_DES_IV64, 8),
+    DES((byte) 2, ProtocolTransformIDEnum.ESP_DES, 8),
+    TrippleDES((byte) 3, ProtocolTransformIDEnum.ESP_3DES, 24),
+    RC5((byte) 4, ProtocolTransformIDEnum.ESP_RC5, 0),
+    IDEA((byte) 5, ProtocolTransformIDEnum.ESP_IDEA, 16),
+    CAST((byte) 6, ProtocolTransformIDEnum.ESP_CAST, 0),
+    BLOWFISH((byte) 7, ProtocolTransformIDEnum.ESP_BLOWFISH, 0),
+    TrippleIDEA((byte) 8, ProtocolTransformIDEnum.ESP_3IDEA, 48),
+    DES_IV32((byte) 9, ProtocolTransformIDEnum.ESP_DES_IV32, 8),
+    RC4((byte) 10, ProtocolTransformIDEnum.ESP_RC4, 0),
+    NULL((byte) 11, ProtocolTransformIDEnum.ESP_NULL, 0),
+    AES((byte) 12, ProtocolTransformIDEnum.ESP_AES, 0);
 
     private final byte value;
+    private final int keySize;
     private final ProtocolTransformIDEnum protocolTransformIDEnum;
-    private final boolean isFixedKeySize;
 
-    private ESPTransformIDEnum(byte value, ProtocolTransformIDEnum protocolTransformIDEnum, boolean isFixedKeySize) {
+    private ESPTransformIDEnum(byte value, ProtocolTransformIDEnum protocolTransformIDEnum, int keySize) {
         this.value = value;
         this.protocolTransformIDEnum = protocolTransformIDEnum;
-        this.isFixedKeySize = isFixedKeySize;
+        this.keySize = keySize;
     }
-    
+
+    public int getKeySize() {
+        return keySize;
+    }
+
     public boolean isIsFixedKeySize() {
-        return isFixedKeySize;
+        return keySize != 0;
     }
 
     @Override
@@ -52,6 +56,28 @@ public enum ESPTransformIDEnum implements ByteValueEnum {
 
     public ProtocolTransformIDEnum toProtocolTransformIDEnum() {
         return protocolTransformIDEnum;
+    }
+
+    public String cipherJCEName() {
+        switch (this) {
+            case DES:
+            case DES_IV32:
+            case DES_IV64:
+                return "DES";
+            case BLOWFISH:
+                return "Blowfish";
+            case RC5:
+                return "RC5-64";
+            case TrippleDES:
+                return "DESede";
+            case AES:
+                return "AES";
+        }
+        throw new UnsupportedOperationException("Not supported yet!");
+    }
+
+    public String modeOfOperationJCEName() {
+        return "CBC"; // it's as simple as that ¯\_(ツ)_/¯
     }
 
     // Reverse-lookup map

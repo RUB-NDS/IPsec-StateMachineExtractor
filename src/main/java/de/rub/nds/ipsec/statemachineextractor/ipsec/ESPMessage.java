@@ -33,7 +33,7 @@ import org.savarese.vserv.tcpip.IPPacket;
  */
 public class ESPMessage implements SerializableMessage {
 
-    private static final int IPv4_HEADER_LENGTH = 20;
+    public static final int IPv4_HEADER_LENGTH = 20;
 
     private byte[] spi;
     private int sequenceNumber;
@@ -68,7 +68,6 @@ public class ESPMessage implements SerializableMessage {
         baos.write(spi, 0, 4);
         baos.write(DatatypeHelper.intTo4ByteArray(sequenceNumber), 0, 4);
         baos.write(this.IV.getIV(), 0, this.IV.getIV().length);
-        this.paddedPayloadData[paddedPayloadData.length - 1] = nextHeader;
         if (!isInSync) {
             try {
                 this.encrypt();
@@ -81,9 +80,6 @@ public class ESPMessage implements SerializableMessage {
     }
 
     public IPPacket getIPPacket(InetAddress localAddress, InetAddress remoteAddress) throws GeneralSecurityException {
-        if (!isInSync) {
-            this.encrypt();
-        }
         byte[] espBytes = this.getBytes();
         if (remoteAddress instanceof Inet6Address) {
             throw new UnsupportedOperationException("Not supported yet!");
@@ -111,10 +107,12 @@ public class ESPMessage implements SerializableMessage {
     public void decrypt() throws GeneralSecurityException {
         cipher.init(Cipher.DECRYPT_MODE, secretKey, IV);
         this.paddedPayloadData = cipher.doFinal(this.ciphertext);
+        this.isInSync = true;
     }
 
     public void encrypt() throws GeneralSecurityException {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, IV);
+        this.paddedPayloadData[paddedPayloadData.length - 1] = nextHeader;
         this.ciphertext = cipher.doFinal(this.paddedPayloadData);
         this.isInSync = true;
     }
@@ -184,6 +182,7 @@ public class ESPMessage implements SerializableMessage {
 
     public void setPayloadData(byte[] payloadData) {
         this.paddedPayloadData = this.addRFC2406Padding(payloadData.clone());
+        this.isInSync = false;
     }
 
     public byte[] getAuthenticationData() {
@@ -204,6 +203,7 @@ public class ESPMessage implements SerializableMessage {
 
     public void setNextHeader(byte nextHeader) {
         this.nextHeader = nextHeader;
+        this.isInSync = false;
     }
 
     public boolean isInSync() {
@@ -219,6 +219,7 @@ public class ESPMessage implements SerializableMessage {
             throw new IllegalArgumentException("Ciphertext has to be a multiple of the cipher's block size!");
         }
         this.ciphertext = ciphertext.clone();
+        this.isInSync = false;
     }
 
     public static ESPMessage fromBytes(byte[] msgBytes, SecretKey secretKey, String algo, String mode) throws GeneralSecurityException, IOException {
@@ -234,6 +235,11 @@ public class ESPMessage implements SerializableMessage {
         result.decrypt();
         result.setNextHeader(result.paddedPayloadData[result.paddedPayloadData.length - 1]);
         return result;
+    }
+    
+    @Override
+    public String toString() {
+        return "ESP";
     }
 
 }

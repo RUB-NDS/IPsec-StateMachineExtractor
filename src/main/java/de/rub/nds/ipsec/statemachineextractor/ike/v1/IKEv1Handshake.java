@@ -176,7 +176,7 @@ public final class IKEv1Handshake {
                     }
                     ProposalPayload pp = sa.getProposalPayloads().get(0);
                     SecurityAssociationSecrets sas = this.getMostRecentSecurityAssociation();
-                    sas.setInboundSpi(pp.getSPI());
+                    sas.setOutboundSpi(pp.getSPI());
                     break;
                 case Hash:
                     byte[] expectedHash = null;
@@ -363,13 +363,13 @@ public final class IKEv1Handshake {
         secrets.computeKeyMaterial(sas);
     }
 
-    public SecurityAssociationSecrets addOutboundSPIAndProtocolToIPsecSecurityAssociation(SecurityAssociationPayload payload) throws GeneralSecurityException, IKEHandshakeException {
+    public SecurityAssociationSecrets addInboundSPIAndProtocolToIPsecSecurityAssociation(SecurityAssociationPayload payload) throws GeneralSecurityException, IKEHandshakeException {
         if (payload.getProposalPayloads().size() != 1) {
             throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
         }
         ProposalPayload pp = payload.getProposalPayloads().get(0);
         SecurityAssociationSecrets sas = this.getMostRecentSecurityAssociation();
-        sas.setOutboundSpi(pp.getSPI());
+        sas.setInboundSpi(pp.getSPI());
         sas.setProtocol(pp.getProtocolId());
         return sas;
     }
