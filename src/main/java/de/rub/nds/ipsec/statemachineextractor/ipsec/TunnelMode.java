@@ -54,13 +54,13 @@ public class TunnelMode {
             }
             this.keySize = keylength.getKeySize();
         }
-        
+
         byte[] keymat = secrets.getOutboundKeyMaterial();
         if (keymat.length < cipher.getKeySize()) {
             throw new UnsupportedOperationException("Not supported yet!");
         }
         this.outboundKey = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
-        
+
         keymat = secrets.getInboundKeyMaterial();
         if (keymat.length < cipher.getKeySize()) {
             throw new UnsupportedOperationException("Not supported yet!");
@@ -105,9 +105,12 @@ public class TunnelMode {
         espPacket.getData(espPktToSendData);
         this.socket.write(remoteAddress, espPktToSendData, ipHeaderByteLength, espPktToSendData.length - ipHeaderByteLength);
         IPPacket unparsedPkt = this.receiveUnparsed();
+        if (unparsedPkt == null) {
+            return null;
+        }
         byte[] rcvdEspPktDataWithIPHeader = new byte[unparsedPkt.getIPPacketLength()];
         unparsedPkt.getData(rcvdEspPktDataWithIPHeader);
-        byte [] rcvdEspPktData = Arrays.copyOfRange(rcvdEspPktDataWithIPHeader, IPv4_HEADER_LENGTH, rcvdEspPktDataWithIPHeader.length);
+        byte[] rcvdEspPktData = Arrays.copyOfRange(rcvdEspPktDataWithIPHeader, IPv4_HEADER_LENGTH, rcvdEspPktDataWithIPHeader.length);
         ESPMessage msgIn = ESPMessage.fromBytes(rcvdEspPktData, inboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
         if (!Arrays.equals(msgIn.getSpi(), secrets.getInboundSpi())) {
             LoggerFactory.getLogger(TunnelMode.class).warn("Decryption succeeded, but SPIs do not match; Received {} vs expected {}!", DatatypeHelper.byteArrayToHexDump(msgIn.getSpi()), DatatypeHelper.byteArrayToHexDump(secrets.getInboundSpi()));

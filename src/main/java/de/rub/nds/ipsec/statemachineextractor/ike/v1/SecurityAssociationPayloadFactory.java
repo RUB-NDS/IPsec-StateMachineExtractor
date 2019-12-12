@@ -84,7 +84,7 @@ public class SecurityAssociationPayloadFactory {
     public static SecurityAssociationPayload getP2_ESP_TUNNEL_AES128_SHA1() {
         return createP2ESPSA(ESPTransformIDEnum.AES, EncapsulationModeAttributeEnum.Tunnel, de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA, SALifeTypeAttributeEnum.SECONDS, SALifeDurationAttribute.get(3600));
     }
-    
+
     public static SecurityAssociationPayload getP2_ESP_TUNNEL_AES128_NONE() {
         return createP2ESPSA(ESPTransformIDEnum.AES, EncapsulationModeAttributeEnum.Tunnel, de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum.L128, null, SALifeTypeAttributeEnum.SECONDS, SALifeDurationAttribute.get(3600));
     }

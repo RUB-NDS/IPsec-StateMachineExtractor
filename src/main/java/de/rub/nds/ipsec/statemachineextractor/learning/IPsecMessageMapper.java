@@ -194,7 +194,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
             }
 
             private ESPMessage executeESP(IPsecConnection conn) throws IOException, GeneralSecurityException {
-                if (!abstractInput.equals("ESP_SSH_SYN")) {
+                if (!abstractInput.equals("ESP_IPv4_TCP_SYN_SSH")) {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
                 return conn.exchangeTCPSYN(InetAddress.getByName("10.0.1.1"), InetAddress.getByName("10.0.2.1"), 22);

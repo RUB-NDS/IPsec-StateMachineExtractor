@@ -19,13 +19,16 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Random;
+import java.util.StringJoiner;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import org.savarese.vserv.tcpip.IPPacket;
+import org.savarese.vserv.tcpip.TCPPacket;
 
 /**
  *
@@ -236,10 +239,32 @@ public class ESPMessage implements SerializableMessage {
         result.setNextHeader(result.paddedPayloadData[result.paddedPayloadData.length - 1]);
         return result;
     }
-    
+
     @Override
     public String toString() {
-        return "ESP";
+        StringJoiner name = new StringJoiner("_");
+        name.add("ESP");
+        name.add(IPProtocolsEnum.byNumber(nextHeader).name());
+        byte[] payloadData = this.getPayloadData();
+        name.add(IPProtocolsEnum.byNumber(payloadData[IPPacket.OFFSET_PROTOCOL]).name());
+        if (IPProtocolsEnum.byNumber(payloadData[IPPacket.OFFSET_PROTOCOL]) == IPProtocolsEnum.TCP) {
+            TCPPacket tcpPacket = new TCPPacket(1);
+            tcpPacket.setData(Arrays.copyOfRange(payloadData, IPv4_HEADER_LENGTH, payloadData.length));
+            StringBuilder flags = new StringBuilder();
+            if (tcpPacket.isSet(TCPPacket.MASK_SYN)) {
+                flags.append("SYN");
+            }
+            if (tcpPacket.isSet(TCPPacket.MASK_ACK)) {
+                flags.append("ACK");
+            }
+            if (tcpPacket.isSet(TCPPacket.MASK_FIN)) {
+                flags.append("FIN");
+            }
+            name.add(flags.toString());
+            //TODO: Examine port and retrieve protocol
+        }
+        //TODO: Details if a UDP packet is payload
+        return name.toString();
     }
 
 }

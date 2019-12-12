@@ -66,11 +66,11 @@ public class IPsecMessageMapperTest {
         abstractOutput = instance.mapOutput(concreteOutput);
         assertEquals("NO_RESPONSE", abstractOutput);
 
-        abstractInput = "ESP_SSH_SYN";
+        abstractInput = "ESP_IPv4_TCP_SYN";
         executableInput = instance.mapInput(abstractInput);
         concreteOutput = executableInput.execute(conn);
         abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("ESP", abstractOutput);
+        assertEquals("ESP_IPv4_TCP_SYNACK", abstractOutput);
     }
 
 }

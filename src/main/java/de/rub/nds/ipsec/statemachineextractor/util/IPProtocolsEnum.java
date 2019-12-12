@@ -8,11 +8,16 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.util;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.AHTransformIDEnum;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * The Internet Protocol numbers found in the Protocol field of the IPv4 header
  * and the Next Header field of the IPv6 header. Based on the Assigned Internet
  * Protocol Numbers list maintained be IANA.
- * 
+ *
  * @see http://www.iana.org/assignments/protocol-numbers
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
@@ -164,7 +169,7 @@ public enum IPProtocolsEnum {
 
     private final String protocolName;
     private final byte protocolNumber;
-
+    
     private IPProtocolsEnum(String name, int number) {
         protocolName = name;
         protocolNumber = (byte) number;
@@ -180,11 +185,23 @@ public enum IPProtocolsEnum {
     }
 
     public static String getProtocolName(byte number) {
-        for (IPProtocolsEnum proto : IPProtocolsEnum.values()) {
-            if (proto.protocolNumber == number) {
-                return proto.toString();
-            }
+        IPProtocolsEnum result = byNumber(number);
+        if (result != null) {
+            return result.toString();
         }
         return "Unknown protocol 0x" + Integer.toHexString(number);
+    }
+    
+    // Reverse-lookup map
+    private static final Map<Byte, IPProtocolsEnum> lookup = new HashMap<Byte, IPProtocolsEnum>();
+
+    static {
+        for (IPProtocolsEnum proto : IPProtocolsEnum.values()) {
+            lookup.put(proto.value(), proto);
+        }
+    }
+
+    public static IPProtocolsEnum byNumber(byte number) {
+        return lookup.get(number);
     }
 }

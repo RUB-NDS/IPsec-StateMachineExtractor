@@ -34,9 +34,10 @@ public class SecurityAssociationSecrets implements Cloneable {
     private byte[] securityAssociationOfferBody;
     private byte[] keyExchangeData;
     private byte[] peerKeyExchangeData;
-    private byte[] inboundSPI = new byte[0], outboundSPI = new byte[0];
+    private byte[] inboundSPI = new byte[]{0x7f, 0x7f, 0x7f, 0x7f};
+    private byte[] outboundSPI = new byte[]{0x7f, 0x7f, 0x7f, 0x7f};
     private byte[] inboundKeyMaterial, outboundKeyMaterial;
-    private ProtocolIDEnum protocol;
+    private ProtocolIDEnum protocol = ProtocolIDEnum.ISAKMP;
 
     public SecurityAssociationSecrets(DHGroupAttributeEnum DHGroup) {
         this.DHGroup = DHGroup;
