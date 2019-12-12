@@ -56,7 +56,7 @@ public final class IPsecConnection {
         }
     }
 
-    public void reset() throws IOException, GeneralSecurityException {
+    protected void reset() throws IOException, GeneralSecurityException {
         this.dispose();
         this.handshake = new IKEv1Handshake(timeout, remoteTunnelEndpoint, remotePort);
         this.SA = new SecurityAssociationSecrets(DHGroupAttributeEnum.GROUP1);
@@ -81,7 +81,7 @@ public final class IPsecConnection {
 
     public void establishTunnel(SecurityAssociationSecrets SA, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength) throws IOException {
         this.SA = SA;
-        this.tunnel = new TunnelMode(localTunnelEndpoint, remoteTunnelEndpoint, SA, cipher, keylength, timeout);
+        this.tunnel.rekey(SA, cipher, keylength);
     }
 
     public ESPMessage exchangeTCPSYN(InetAddress localClient, InetAddress remoteServer, int port) throws IOException, GeneralSecurityException {

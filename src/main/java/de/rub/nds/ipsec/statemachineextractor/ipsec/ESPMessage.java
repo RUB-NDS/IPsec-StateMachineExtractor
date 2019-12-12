@@ -175,12 +175,8 @@ public class ESPMessage implements SerializableMessage {
         this.sequenceNumber = sequenceNumber;
     }
 
-    public byte[] getPayloadData() {
-        try {
-            return this.removeRFC2406Padding(this.paddedPayloadData);
-        } catch (BadPaddingException | IllegalBlockSizeException ex) {
-            throw new IllegalStateException("Whatever you did, you really messed with the data of this object!", ex);
-        }
+    public byte[] getPayloadData() throws BadPaddingException, IllegalBlockSizeException {
+        return this.removeRFC2406Padding(this.paddedPayloadData);
     }
 
     public void setPayloadData(byte[] payloadData) {
@@ -245,7 +241,12 @@ public class ESPMessage implements SerializableMessage {
         StringJoiner name = new StringJoiner("_");
         name.add("ESP");
         name.add(IPProtocolsEnum.byNumber(nextHeader).name());
-        byte[] payloadData = this.getPayloadData();
+        byte[] payloadData;
+        try {
+            payloadData = this.getPayloadData();
+        } catch (BadPaddingException | IllegalBlockSizeException ex) {
+            return "ESP_DECRYPT_FAILED";
+        }
         name.add(IPProtocolsEnum.byNumber(payloadData[IPPacket.OFFSET_PROTOCOL]).name());
         if (IPProtocolsEnum.byNumber(payloadData[IPPacket.OFFSET_PROTOCOL]) == IPProtocolsEnum.TCP) {
             TCPPacket tcpPacket = new TCPPacket(1);

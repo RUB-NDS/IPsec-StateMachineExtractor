@@ -13,6 +13,8 @@ import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.IPsecConnection;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.net.InetAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Ignore;
@@ -30,47 +32,58 @@ public class IPsecMessageMapperTest {
     @Test
     @Ignore
     public void testMapInputMapOutput() throws Exception {
-        String abstractInput, abstractOutput;
-        ContextExecutableInput<SerializableMessage, IPsecConnection> executableInput;
-        SerializableMessage concreteOutput;
-        IPsecMessageMapper instance = new IPsecMessageMapper();
-        IPsecConnection conn = new IPsecConnection(InetAddress.getByName("10.0.3.10"), 500, 600);
+        try {
+            String abstractInput, abstractOutput;
+            ContextExecutableInput<SerializableMessage, IPsecConnection> executableInput;
+            SerializableMessage concreteOutput;
+            IPsecMessageMapper instance = new IPsecMessageMapper();
+            IPsecConnection conn = new IPsecConnection(InetAddress.getByName("10.0.3.10"), 500, 2000);
 
-        abstractInput = "v1_MM_PSK-SA";
-        executableInput = instance.mapInput(abstractInput);
-        concreteOutput = executableInput.execute(conn);
-        abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_MM_SA-V-V", abstractOutput);
+            abstractInput = "v1_MM_PSK-SA";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("v1_MM_SA-V-V", abstractOutput);
 
-        abstractInput = "v1_MM_KE-No";
-        executableInput = instance.mapInput(abstractInput);
-        concreteOutput = executableInput.execute(conn);
-        abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_MM_KE-No", abstractOutput);
+            abstractInput = "v1_MM_KE-No";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("v1_MM_KE-No", abstractOutput);
 
-        abstractInput = "v1_MM*_ID-HASH";
-        executableInput = instance.mapInput(abstractInput);
-        concreteOutput = executableInput.execute(conn);
-        abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_MM*_ID-HASH", abstractOutput);
+            abstractInput = "v1_MM*_ID-HASH";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("v1_MM*_ID-HASH", abstractOutput);
 
-        abstractInput = "v1_QM*_HASH1-SA-No-IDci-IDcr";
-        executableInput = instance.mapInput(abstractInput);
-        concreteOutput = executableInput.execute(conn);
-        abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("v1_QM*_HASH-SA-No-ID-ID", abstractOutput);
+            abstractInput = "v1_QM*_HASH1-SA-No-IDci-IDcr";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("v1_QM*_HASH-SA-No-ID-ID", abstractOutput);
 
-        abstractInput = "v1_QM*_HASH3";
-        executableInput = instance.mapInput(abstractInput);
-        concreteOutput = executableInput.execute(conn);
-        abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("NO_RESPONSE", abstractOutput);
+            abstractInput = "v1_QM*_HASH3";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("NO_RESPONSE", abstractOutput);
 
-        abstractInput = "ESP_IPv4_TCP_SYN";
-        executableInput = instance.mapInput(abstractInput);
-        concreteOutput = executableInput.execute(conn);
-        abstractOutput = instance.mapOutput(concreteOutput);
-        assertEquals("ESP_IPv4_TCP_SYNACK", abstractOutput);
+            abstractInput = "ESP_IPv4_TCP_SYN_SSH";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("ESP_IPv4_TCP_SYNACK", abstractOutput);
+
+            abstractInput = "ESP_IPv4_TCP_SYN_SSH";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("ESP_IPv4_TCP_SYNACK", abstractOutput);
+        } catch (Exception ex) {
+            Logger.getLogger(IPsecMessageMapperTest.class.getName()).log(Level.SEVERE, null, ex);
+            throw ex;
+        }
     }
 
 }
