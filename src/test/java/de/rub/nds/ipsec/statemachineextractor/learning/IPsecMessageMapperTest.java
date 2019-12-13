@@ -15,9 +15,9 @@ import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.net.InetAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  *

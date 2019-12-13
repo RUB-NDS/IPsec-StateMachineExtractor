@@ -34,7 +34,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKM
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
-import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
+import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;

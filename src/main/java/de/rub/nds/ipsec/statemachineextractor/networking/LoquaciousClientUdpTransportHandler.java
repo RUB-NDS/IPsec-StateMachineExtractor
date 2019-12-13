@@ -6,13 +6,8 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.util;
+package de.rub.nds.ipsec.statemachineextractor.networking;
 
-import de.rub.nds.tlsattacker.transport.Connection;
-import de.rub.nds.tlsattacker.transport.ConnectionEndType;
-import de.rub.nds.tlsattacker.transport.TransportHandler;
-import de.rub.nds.tlsattacker.transport.udp.stream.UdpInputStream;
-import de.rub.nds.tlsattacker.transport.udp.stream.UdpOutputStream;
 import java.io.IOException;
 import java.io.PushbackInputStream;
 import java.net.DatagramSocket;
@@ -21,15 +16,13 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 /**
- * Copied from:
- * TLS-Attacker - A Modular Penetration Testing Framework for TLS
+ * Taken and modified from: TLS-Attacker - A Modular Penetration Testing
+ * Framework for TLS Copyright 2014-2017 Ruhr University Bochum / Hackmanit GmbH
+ * Licensed under Apache License 2.0 http://www.apache.org/licenses/LICENSE-2.0
  *
- * Copyright 2014-2017 Ruhr University Bochum / Hackmanit GmbH
- *
- * Licensed under Apache License 2.0
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
  * Extended to add getters and query the socket for data.
+ *
+ * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class LoquaciousClientUdpTransportHandler extends TransportHandler {
 
@@ -68,18 +61,18 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
     public int getLocalPort() throws IOException {
         return getLocalSocketAddress().getPort();
     }
-    
+
     public InetAddress getLocalAddress() throws IOException {
         return getLocalSocketAddress().getAddress();
     }
-    
+
     public InetSocketAddress getLocalSocketAddress() throws IOException {
         if (socket.isConnected()) {
             SocketAddress localSocketAddress = socket.getLocalSocketAddress();
-            if(!(localSocketAddress instanceof InetSocketAddress)) {
+            if (!(localSocketAddress instanceof InetSocketAddress)) {
                 throw new IOException("You're using a weird implementation of java.net");
             }
-            return (InetSocketAddress)localSocketAddress;
+            return (InetSocketAddress) localSocketAddress;
         }
         throw new IOException("Cannot retrieve local Address. Socket not connected");
     }

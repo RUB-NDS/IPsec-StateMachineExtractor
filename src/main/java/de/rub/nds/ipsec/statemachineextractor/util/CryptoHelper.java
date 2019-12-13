@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.util;
 
-import de.rub.nds.tlsattacker.util.UnlimitedStrengthEnabler;
 import static java.lang.Math.ceil;
 import java.lang.reflect.Field;
 import java.math.BigInteger;

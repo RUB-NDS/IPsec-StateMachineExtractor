@@ -18,7 +18,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
-import de.rub.nds.ipsec.statemachineextractor.util.LoquaciousClientUdpTransportHandler;
+import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
