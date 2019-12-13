@@ -448,8 +448,12 @@ public final class IKEv1Handshake {
     public ISAKMPPayload prepareDeletePayload() throws GeneralSecurityException, IOException {
         DeletePayload deletePayload = new DeletePayload();
         byte[] concatCookies = new byte[ISAKMPMessage.COOKIE_LEN * 2];
-        System.arraycopy(secrets.getInitiatorCookie(), 0, concatCookies, 0, ISAKMPMessage.COOKIE_LEN);
-        System.arraycopy(secrets.getResponderCookie(), 0, concatCookies, ISAKMPMessage.COOKIE_LEN, ISAKMPMessage.COOKIE_LEN);
+        if (secrets.getInitiatorCookie() != null) {
+            System.arraycopy(secrets.getInitiatorCookie(), 0, concatCookies, 0, ISAKMPMessage.COOKIE_LEN);
+        }
+        if (secrets.getResponderCookie() != null) {
+            System.arraycopy(secrets.getResponderCookie(), 0, concatCookies, ISAKMPMessage.COOKIE_LEN, ISAKMPMessage.COOKIE_LEN);
+        }
         deletePayload.addSPI(concatCookies);
         return deletePayload;
     }
