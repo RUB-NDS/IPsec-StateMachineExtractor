@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.networking;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PushbackInputStream;
 import java.net.DatagramSocket;
@@ -56,6 +57,32 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
         socket.connect(new InetSocketAddress(hostname, port));
         socket.setSoTimeout((int) getTimeout());
         setStreams(new PushbackInputStream(new UdpInputStream(socket, false)), new UdpOutputStream(socket));
+    }
+    
+    @Override
+    public byte[] fetchData() throws IOException {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        long minTimeMillies = System.currentTimeMillis() + timeout;
+        socket.setSoTimeout(5);
+        while ((System.currentTimeMillis() < minTimeMillies)) {
+            if (inStream.available() != 0) {
+                while (inStream.available() != 0) {
+                    int read = inStream.read();
+                    stream.write(read);
+                }
+                break;
+            }
+        }
+        socket.setSoTimeout((int) getTimeout());
+        return stream.toByteArray();
+    }
+
+    @Override
+    public void sendData(byte[] data) throws IOException {
+        // Discard all data that was received after the last call to fetchData()
+        // Creating new streams is much faster than "inStream.skip(inStream.available())"
+        setStreams(new PushbackInputStream(new UdpInputStream(socket, false)), new UdpOutputStream(socket)); 
+        super.sendData(data);
     }
 
     public int getLocalPort() throws IOException {
