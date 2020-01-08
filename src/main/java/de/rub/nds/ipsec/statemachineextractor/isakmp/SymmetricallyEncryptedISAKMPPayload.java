@@ -47,7 +47,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
         this.ke = ke;
         this.isInSync = false;
         this.cipher = Cipher.getInstance(ciphersuite.getCipher().cipherJCEName() + '/' + ciphersuite.getCipher().modeOfOperationJCEName() + "/NoPadding");
-        if (!ciphersuite.getCipher().isIsFixedKeySize() && (ke.getEncoded().length != ciphersuite.getKeylength().getKeySize())) {
+        if (!ciphersuite.getCipher().isFixedKeySize() && (ke.getEncoded().length != ciphersuite.getKeylength().getKeySize())) {
             throw new IllegalArgumentException("Key length does not match the ciphersuite!");
         }
         if (iv == null) {

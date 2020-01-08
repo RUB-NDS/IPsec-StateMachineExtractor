@@ -15,9 +15,9 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.util.Arrays;
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -33,9 +33,11 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
     protected byte[] ciphertext = new byte[0];
     protected byte[] plaintext;
     private PayloadTypeEnum nextPayload = PayloadTypeEnum.NONE;
+    private final CipherAttributeEnum mode;
 
     public EncryptedISAKMPMessage(SecretKey secretKey, CipherAttributeEnum mode, byte[] IV) throws GeneralSecurityException {
         this.secretKey = secretKey;
+        this.mode = mode;
         this.cipherDec = Cipher.getInstance(mode.cipherJCEName() + '/' + mode.modeOfOperationJCEName() + "/NoPadding");
         this.cipherEnc = Cipher.getInstance(mode.cipherJCEName() + '/' + mode.modeOfOperationJCEName() + "/ZeroBytePadding");
         this.IV = new IvParameterSpec(IV);
@@ -49,10 +51,14 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
         try {
             cipherEnc.init(Cipher.ENCRYPT_MODE, secretKey, IV);
         } catch (InvalidKeyException ex) {
-            // Generate a random key if there is no good key material available
-            KeyGenerator kg = KeyGenerator.getInstance(cipherEnc.getParameters().getAlgorithm());
-            SecretKey randomKey = kg.generateKey();
-            cipherEnc.init(Cipher.ENCRYPT_MODE, randomKey, IV);
+            // Generate a null key if there is no good key material available
+            byte[] nullKeyArr;
+            if (mode.isFixedKeySize()) {
+                nullKeyArr = new byte[mode.getKeySize()];
+            } else {
+                nullKeyArr = new byte[16]; // 128 bit has good chances to work with the majority of cipher algorithms
+            }
+            cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(nullKeyArr, mode.cipherJCEName()), IV);
         }
         this.plaintext = baos.toByteArray();
         this.ciphertext = cipherEnc.doFinal(this.plaintext);

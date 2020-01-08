@@ -37,7 +37,7 @@ public class SecurityAssociationPayloadFactory {
     public static SecurityAssociationPayload createP1SA(AuthAttributeEnum authMethod, CipherAttributeEnum cipher, de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum keylength, HashAttributeEnum hash, DHGroupAttributeEnum group, LifeTypeAttributeEnum lifetype, LifeDurationAttribute duration) {
         TransformPayload transformPayload = new TransformPayload();
         transformPayload.addAttribute(cipher);
-        if (!cipher.isIsFixedKeySize()) {
+        if (!cipher.isFixedKeySize()) {
             transformPayload.addAttribute(keylength);
         }
         transformPayload.addAttribute(hash);

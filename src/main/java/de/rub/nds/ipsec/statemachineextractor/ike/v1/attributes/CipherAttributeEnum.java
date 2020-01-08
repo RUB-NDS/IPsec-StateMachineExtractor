@@ -38,7 +38,7 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
         IKEv1AttributeFactory.register(this, value);
     }
 
-    public boolean isIsFixedKeySize() {
+    public boolean isFixedKeySize() {
         return keySize != 0;
     }
 
