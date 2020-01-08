@@ -12,8 +12,10 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeE
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.util.Arrays;
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
@@ -44,7 +46,14 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
     public void encrypt() throws GeneralSecurityException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         this.writeBytesOfPayloads(baos);
-        cipherEnc.init(Cipher.ENCRYPT_MODE, secretKey, IV);
+        try {
+            cipherEnc.init(Cipher.ENCRYPT_MODE, secretKey, IV);
+        } catch (InvalidKeyException ex) {
+            // Generate a random key if there is no good key material available
+            KeyGenerator kg = KeyGenerator.getInstance(cipherEnc.getParameters().getAlgorithm());
+            SecretKey randomKey = kg.generateKey();
+            cipherEnc.init(Cipher.ENCRYPT_MODE, randomKey, IV);
+        }
         this.plaintext = baos.toByteArray();
         this.ciphertext = cipherEnc.doFinal(this.plaintext);
         this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipherEnc.getBlockSize(), this.ciphertext.length);
