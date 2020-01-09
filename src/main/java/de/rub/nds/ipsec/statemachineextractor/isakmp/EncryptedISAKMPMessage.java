@@ -28,7 +28,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
     private final SecretKey secretKey;
     private final IvParameterSpec IV;
     private byte[] nextIV = new byte[0];
-    private final Cipher cipherEnc, cipherDec;
+    private Cipher cipherEnc, cipherDec;
     protected boolean isInSync = false;
     protected byte[] ciphertext = new byte[0];
     protected byte[] plaintext;
@@ -58,6 +58,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIS
             } else {
                 nullKeyArr = new byte[16]; // 128 bit has good chances to work with the majority of cipher algorithms
             }
+            cipherEnc = Cipher.getInstance(cipherEnc.getAlgorithm()); // we need a new object to circumvent a bug in openJDK-8
             cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(nullKeyArr, mode.cipherJCEName()), IV);
         }
         this.plaintext = baos.toByteArray();
