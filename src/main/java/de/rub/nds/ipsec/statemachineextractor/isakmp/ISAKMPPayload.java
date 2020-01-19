@@ -68,7 +68,7 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
     protected byte[] getGenericPayloadHeader() {
         int length = getLength();
         if (length > 0x0000FFFF) {
-            throw new IllegalStateException("Payload too large");
+            throw new IllegalStateException("Payload too large!");
         }
         byte[] genericPayloadHeader = DatatypeHelper.intTo4ByteArray(length);
         genericPayloadHeader[0] = this.getNextPayload().getValue();
@@ -77,7 +77,11 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
 
     protected int fillGenericPayloadHeaderFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         byte[] genericPayloadHeader = read4ByteFromStream(bais);
-        this.setNextPayload(PayloadTypeEnum.get((byte)genericPayloadHeader[0]));
+        PayloadTypeEnum next = PayloadTypeEnum.get((byte)genericPayloadHeader[0]);
+        if (next == null) {
+            throw new ISAKMPParsingException("Unknown payload type, probably decryption failed!");
+        }
+        this.setNextPayload(next);
         return ((genericPayloadHeader[2] & 0xff) << 8) | (genericPayloadHeader[3] & 0xff);
     }
     
