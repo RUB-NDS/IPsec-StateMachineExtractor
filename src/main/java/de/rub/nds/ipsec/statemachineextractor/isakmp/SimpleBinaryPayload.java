@@ -66,7 +66,7 @@ public abstract class SimpleBinaryPayload extends ISAKMPPayload {
             throw new ISAKMPParsingException(ex);
         }
         if (readBytes < length - HEADER_LEN) {
-            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - HEADER_LEN) + "bytes)!");
+            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - HEADER_LEN) + " bytes)!");
         }
         this.setBody(buffer);
         if (length != this.getLength()) {
