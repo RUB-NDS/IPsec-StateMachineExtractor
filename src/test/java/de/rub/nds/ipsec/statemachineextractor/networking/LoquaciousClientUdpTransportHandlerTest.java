@@ -100,7 +100,7 @@ public class LoquaciousClientUdpTransportHandlerTest {
             throw ex;
         }
         long endTime = System.currentTimeMillis();
-        assertTrue(endTime - startTime > 200);
+        assertTrue(endTime - startTime >= 200);
         udpTH.closeConnection();
     }
     
@@ -132,7 +132,7 @@ public class LoquaciousClientUdpTransportHandlerTest {
             long endTime = System.currentTimeMillis();
             assertEquals("Confirm size of the received data", allSentData.length, allReceivedData.length);
             assertArrayEquals("Confirm received data equals sent data", allSentData, allReceivedData);
-            assertTrue(endTime - startTime < 1000);
+            assertTrue(endTime - startTime <= 1000);
 
             udpTH.closeConnection();
         }
