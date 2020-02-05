@@ -127,7 +127,7 @@ public class IKEv1HandshakeIT {
         // Main PKE qm3
         msgPairs.put("11e79c308ebbd7172ca4eb67438cfda90810200145c9ec040000003c35317d8f719beefd2f8a8e1864b573c0ac45077d8189f42db3728710a59ed5a2",
                 "");
-        
+
         // Messages for testMoreThanOneMessageHandshake()
         msgPairs.put("3bc6ed46d2f233aa00000000000000000110020000000000000000540000003800000001000000010000002c00010001000000240001000080010007800e0080800200028004000580030004800b0001800c7080",
                 "3bc6ed46d2f233aa5b5fbd354bbd28f60110020000000000000000540000003800000001000000010000002c01010001000000240101000080010007800e0080800200028004000580030004800b0001800c7080");
@@ -148,7 +148,7 @@ public class IKEv1HandshakeIT {
         handshake.ltsecrets.setMyPrivateKey(kf.generatePrivate(spec));
         decoded = Base64.getDecoder().decode(CSR2PubPEM);
         spec = new X509EncodedKeySpec(decoded);
-        handshake.ltsecrets.setPeerPublicKey(kf.generatePublic(spec));
+        handshake.ltsecrets.setPeerPublicKeyPKE(kf.generatePublic(spec));
     }
 
     class ClientUdpTransportHandlerMock extends LoquaciousClientUdpTransportHandler {
@@ -474,16 +474,15 @@ public class IKEv1HandshakeIT {
         encryptedBodyField.setAccessible(true);
         encryptedBodyField.set(identificationPayload, DatatypeHelper.hexDumpToByteArray("428eabd734da66543900fee747990d5be354067da5bf7594355ea424c62727cd8563c0caf8ebba0e57b187fbf36d27a5dc02362cbbbd0ff6f9a7a3700de74c7cd0799bbf06be7446f9b5d4d485cd122c199c21117c041677a9ae2e47374f28fc78ef839e6910664951afa4bd2d1f6333cbb302e4440b33b10aac6f5359f14590b491ea1978edd4d1c2ff0ae212e118190ae1856bb6f6f635d5a22aa31e74aadb0d9bcf27bd5b4d311ad147b5f84949ddc81f84a94b90139589a389c689771977e0b30ed29e6a88ce41d74016d4363d852df589ce707a7a17248a0dbbeb1beddf72ba4f624ad44c75b3ec331d8a48dce89e23359aea45843f9b221d6644290b2e"));
         msg.addPayload(identificationPayload);
-        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));        
+        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
         PKCS1EncryptedISAKMPPayload noncePayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareNoncePayload(new byte[4]);
         noncePayload.encrypt();
         encryptedBodyField = noncePayload.getClass().getDeclaredField("encryptedBody");
         encryptedBodyField.setAccessible(true);
         encryptedBodyField.set(noncePayload, DatatypeHelper.hexDumpToByteArray("a49e8f892c471b86f0744d3164f3b70699f65f00d17470d89860e3f43d033409d37824509c0f46e6f0fef4f3e34fcabbc2de91ec5b50432cda858af91751198d1ea68cb2dc7ff817ac0104b2d704833b3781c68fdb28469a0be397be3f9b9b20bae3a470afe9b94dd6e16671b54da58f22d810327cbe876b75a383678673dd01d950f8cea34a08d60310781d9175e9116d97fcfe84b2e33e69cf5a8284a7a224db1be54292397194c44743cfb7993715403e1264b046a8d4bc71a8443ded6363f4bc6f5da6472935559604eb7af14d0fc99583f1234e43da033e5870b6334e7947ef5d03e268222f52b57daf4a1d138bac8800b56a7aa04ecfbc16b97a72dd7b"));
         msg.addPayload(noncePayload);
-        
-        answer = handshake.exchangeMessage(msg);
 
+        answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);

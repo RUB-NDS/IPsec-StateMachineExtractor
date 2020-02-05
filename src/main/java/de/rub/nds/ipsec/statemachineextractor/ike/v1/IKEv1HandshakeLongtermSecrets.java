@@ -24,7 +24,7 @@ import java.util.Base64;
 public class IKEv1HandshakeLongtermSecrets {
 
     private byte[] preSharedKey = "AAAA".getBytes();
-    private PublicKey peerPublicKey;
+    private PublicKey peerPublicKeyPKE, peerPublicKeyRPKE;
     private PrivateKey myPrivateKey;
 
     private final String CSR1PrivPEM
@@ -55,6 +55,15 @@ public class IKEv1HandshakeLongtermSecrets {
             + "YuuKKgdda6kh4/eFa7Ko9uCSmCJyNouo6l21a3I4LeKfsSuddZK6sio=";
 
     private final String CSR2PubPEM
+            = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxWJ9sySuB3FKqYRwTIPC"
+            + "08zDntEo0ywCnRWNSY9bknJ2zBU4F1YliiH5//Li9DdR/j/Ls+ipH5M/ZOFrVuZW"
+            + "bbkaqcF5aWmy8LcA/IykimzcgfR3wy+gjtxjP4Igjm/NvHVV3/x3x4Zu4bi34X+G"
+            + "z+D3dUNLmNvPe2CGshLjc9BwqohjVozbBe5gNqTzZOGxNIH1EOvTRAqYFtaYwffY"
+            + "QLU/JAvE3XRCYhk45zoIeJfHs8w9URDIXkcXyMdBMRfGzZFsyNrjvnwQMyvOwbLb"
+            + "N4PWepQqGLMbKJ06NsDcQ8QYMFINw2lGekfxukoWWwOBIe8VOOb3HVCXrSuCe0+d"
+            + "bwIDAQAB";
+    
+    private final String USG2205BSRPubPEM
             = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCr7TcTUIPfXO2Ly1vptfTPws92"
             + "2g9FpIfMJLpbu2JL/2++stk/VVmJeqssidZNW1uMP8XeHLUby/LdRk5z8lFehHvn"
             + "uQwYyWMbaMJq9s/yCiFB5DD1TkzyOaGgXiiDUWYIIIbUzpt5CnUgXq8CkVvR8OJ7"
@@ -67,15 +76,22 @@ public class IKEv1HandshakeLongtermSecrets {
         myPrivateKey = kf.generatePrivate(spec);
         decoded = Base64.getDecoder().decode(CSR2PubPEM);
         spec = new X509EncodedKeySpec(decoded);
-        peerPublicKey = kf.generatePublic(spec);
+        peerPublicKeyPKE = kf.generatePublic(spec);
+        decoded = Base64.getDecoder().decode(USG2205BSRPubPEM);
+        spec = new X509EncodedKeySpec(decoded);
+        peerPublicKeyRPKE = kf.generatePublic(spec);
     }
 
     public byte[] getPreSharedKey() {
         return preSharedKey;
     }
 
-    public PublicKey getPeerPublicKey() {
-        return peerPublicKey;
+    public PublicKey getPeerPublicKeyPKE() {
+        return peerPublicKeyPKE;
+    }
+    
+    public PublicKey getPeerPublicKeyRPKE() {
+        return peerPublicKeyRPKE;
     }
 
     public PrivateKey getMyPrivateKey() {
@@ -86,8 +102,12 @@ public class IKEv1HandshakeLongtermSecrets {
         this.preSharedKey = preSharedKey;
     }
 
-    public void setPeerPublicKey(PublicKey peerPublicKey) {
-        this.peerPublicKey = peerPublicKey;
+    public void setPeerPublicKeyPKE(PublicKey peerPublicKey) {
+        this.peerPublicKeyPKE = peerPublicKey;
+    }
+    
+    public void setPeerPublicKeyRPKE(PublicKey peerPublicKey) {
+        this.peerPublicKeyRPKE = peerPublicKey;
     }
 
     public void setMyPrivateKey(PrivateKey myPrivateKey) {

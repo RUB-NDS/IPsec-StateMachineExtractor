@@ -267,7 +267,7 @@ public final class IKEv1Handshake {
                             break;
                         case PKE:
                             try {
-                                PKCS1EncryptedISAKMPPayload pkcs1Payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                                PKCS1EncryptedISAKMPPayload pkcs1Payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKeyPKE());
                                 secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) pkcs1Payload.getUnderlyingPayload()).getBody());
                                 payload = pkcs1Payload;
                                 break; // only executed when there's no exception
@@ -299,7 +299,7 @@ public final class IKEv1Handshake {
                         case RevPKE:
                             bais.mark(0);
                             try {
-                                PKCS1EncryptedISAKMPPayload encPayload = PKCS1EncryptedISAKMPPayload.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                                PKCS1EncryptedISAKMPPayload encPayload = PKCS1EncryptedISAKMPPayload.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKeyRPKE());
                                 secrets.getISAKMPSA().setResponderNonce(((NoncePayload) encPayload.getUnderlyingPayload()).getNonceData());
                                 payload = encPayload;
                                 break; // only executed when there's no exception
@@ -431,7 +431,7 @@ public final class IKEv1Handshake {
         secrets.setIdentificationPayloadBody(result.getBody());
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
             // this authentication method encrypts the identification using the public key of the peer
-            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKeyPKE());
             return pke;
         }
         if (ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
@@ -457,10 +457,14 @@ public final class IKEv1Handshake {
             sas.setInitiatorNonce(initiatorNonce);
         }
         result.setNonceData(sas.getInitiatorNonce());
-        if (Arrays.equals(msgID, new byte[4]) && (ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE || ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE)) {
-            // these authentication methods encrypt the nonce using the public key of the peer
-            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+        // these authentication methods encrypt the nonce using the public key of the peer
+        if (Arrays.equals(msgID, new byte[4]) && ciphersuite.getAuthMethod() == AuthAttributeEnum.PKE) {
+            PKCS1EncryptedISAKMPPayload pke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKeyPKE());
             return pke;
+        }
+        if (Arrays.equals(msgID, new byte[4]) && ciphersuite.getAuthMethod() == AuthAttributeEnum.RevPKE) {
+            PKCS1EncryptedISAKMPPayload rpke = new PKCS1EncryptedISAKMPPayload(result, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKeyRPKE());
+            return rpke;
         }
         return result;
     }
