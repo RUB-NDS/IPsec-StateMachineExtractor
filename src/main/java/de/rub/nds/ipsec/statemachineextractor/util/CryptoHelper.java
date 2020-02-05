@@ -45,15 +45,6 @@ public class CryptoHelper {
             BouncyCastleProvider bouncyCastleProvider = new BouncyCastleProvider();
             Security.insertProviderAt(bouncyCastleProvider, 1);
         }
-        try {
-            // http://web.archive.org/web/20160214203937/http://blog.cedarsoft.com/2010/11/setting-java-library-path-programmatically/
-            System.setProperty("java.library.path", "src/main/resources/lib:lib");
-            Field fieldSysPath = ClassLoader.class.getDeclaredField("sys_paths");
-            fieldSysPath.setAccessible(true);
-            fieldSysPath.set(null, null);
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
-            throw new Error("Library path could not be set!", ex);
-        }
     }
 
     public static KeyPair generateKeyPair(String algoName, AlgorithmParameterSpec algoSpec) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
