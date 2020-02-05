@@ -55,12 +55,10 @@ public class LoquaciousClientUdpTransportHandlerTest {
     @Test
     public void testFetchData() throws Exception {
         try (DatagramSocket testSocket = new DatagramSocket()) {
-            LoquaciousClientUdpTransportHandler udpTH = new LoquaciousClientUdpTransportHandler(1, localhost.getHostName(),
-                    testSocket.getLocalPort());
+            LoquaciousClientUdpTransportHandler udpTH = new LoquaciousClientUdpTransportHandler(100, localhost.getHostName(), testSocket.getLocalPort());
 
             udpTH.initialize();
             testSocket.connect(localhost, udpTH.getLocalPort());
-            udpTH.setTimeout(1);
 
             byte[] allSentData = new byte[0];
             byte[] allReceivedData = new byte[0];
@@ -87,11 +85,11 @@ public class LoquaciousClientUdpTransportHandlerTest {
 
     @Test
     public void testFetchTimeout() throws Exception {
-        LoquaciousClientUdpTransportHandler udpTH = new LoquaciousClientUdpTransportHandler(1, localhost.getHostName(), 12345);
+        LoquaciousClientUdpTransportHandler udpTH = new LoquaciousClientUdpTransportHandler(100, localhost.getHostName(), 12345);
         udpTH.initialize();
-        udpTH.setTimeout(1);
 
         byte[] rxData;
+        long startTime = System.currentTimeMillis();
         try {
             rxData = udpTH.fetchData();
             assertEquals(0, rxData.length);
@@ -101,7 +99,43 @@ public class LoquaciousClientUdpTransportHandlerTest {
             LOG.severe("You seem to use a TLS-Attacker version <3.0. There are known bugs with the UdpInputStream in these versions, please use an up-to-date TLS-Attacker version!");
             throw ex;
         }
+        long endTime = System.currentTimeMillis();
+        assertTrue(endTime - startTime >= 200);
         udpTH.closeConnection();
+    }
+    
+    @Test
+    public void testNonGreedyness() throws Exception {
+        try (DatagramSocket testSocket = new DatagramSocket()) {
+            LoquaciousClientUdpTransportHandler udpTH = new LoquaciousClientUdpTransportHandler(1000, localhost.getHostName(), testSocket.getLocalPort());
+
+            udpTH.initialize();
+            testSocket.connect(localhost, udpTH.getLocalPort());
+
+            byte[] allSentData = new byte[0];
+            byte[] allReceivedData = new byte[0];
+            byte[] txData;
+            byte[] rxData;
+            DatagramPacket txPacket;
+            int numTestPackets = 15;
+
+            long startTime = System.currentTimeMillis();
+            for (int i = 0; i < numTestPackets; i++) {
+                txData = new byte[new Random().nextInt(16383) + 1];
+                new Random().nextBytes(txData);
+                txPacket = new DatagramPacket(txData, txData.length, localhost, udpTH.getLocalPort());
+                testSocket.send(txPacket);
+                allSentData = concatenate(allSentData, txData);
+                rxData = udpTH.fetchData();
+                allReceivedData = concatenate(allReceivedData, rxData);
+            }
+            long endTime = System.currentTimeMillis();
+            assertEquals("Confirm size of the received data", allSentData.length, allReceivedData.length);
+            assertArrayEquals("Confirm received data equals sent data", allSentData, allReceivedData);
+            assertTrue(endTime - startTime <= 1000);
+
+            udpTH.closeConnection();
+        }
     }
 
     private byte[] concatenate(byte[] a, byte[] b) {
