@@ -6,7 +6,7 @@
     <artifactId>IPsec-StateMachineExtractor</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <inceptionYear>2019</inceptionYear>
+    <inceptionYear>2020</inceptionYear>
     <dependencyManagement>
         <dependencies>
             <dependency>
