@@ -99,7 +99,7 @@ public class SecurityAssociationSecrets implements Cloneable {
 
     public byte[] computeDHSecret() throws GeneralSecurityException, IllegalStateException {
         if (dhKeyPair == null) {
-            throw new IllegalStateException("No key pair; use generateDhKeyPair() or setDhKeyPair() first!");
+            generateDhKeyPair();
         }
         try {
             computePeerPublicKey();
