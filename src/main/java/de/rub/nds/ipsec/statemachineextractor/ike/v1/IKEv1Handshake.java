@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.crypto.BadPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
@@ -249,18 +250,27 @@ public final class IKEv1Handshake {
                     secrets.getISAKMPSA().computeDHSecret();
                     break;
                 case Identification:
+                    bais.mark(0);
                     switch (ciphersuite.getAuthMethod()) {
-                        case PKE:
-                            PKCS1EncryptedISAKMPPayload pkcs1Payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
-                            secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) pkcs1Payload.getUnderlyingPayload()).getBody());
-                            payload = pkcs1Payload;
-                            break;
                         case RevPKE:
                             SecretKeySpec ke_r = new SecretKeySpec(secrets.getKe_r(), ciphersuite.getCipher().cipherJCEName());
                             SymmetricallyEncryptedIdentificationPayloadHuaweiStyle symmPayload = SymmetricallyEncryptedIdentificationPayloadHuaweiStyle.fromStream(bais, ciphersuite, ke_r, secrets.getRPKEIV());
                             secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) symmPayload.getUnderlyingPayload()).getBody());
                             payload = symmPayload;
                             break;
+                        case PKE:
+                            try {
+                                PKCS1EncryptedISAKMPPayload pkcs1Payload = PKCS1EncryptedISAKMPPayload.fromStream(IdentificationPayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                                secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) pkcs1Payload.getUnderlyingPayload()).getBody());
+                                payload = pkcs1Payload;
+                                break; // only executed when there's no exception
+                            } catch (ISAKMPParsingException ex) {
+                                if (!(ex.getCause() instanceof BadPaddingException)) {
+                                    throw ex;
+                                }
+                                // Payload was probably not encrypted, let's use the default case
+                                bais.reset();
+                            }
                         default:
                             payload = IdentificationPayload.fromStream(bais);
                             secrets.setPeerIdentificationPayloadBody(((IdentificationPayload) payload).getBody());
@@ -280,10 +290,19 @@ public final class IKEv1Handshake {
                     switch (ciphersuite.getAuthMethod()) {
                         case PKE:
                         case RevPKE:
-                            PKCS1EncryptedISAKMPPayload encPayload = PKCS1EncryptedISAKMPPayload.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
-                            secrets.getISAKMPSA().setResponderNonce(((NoncePayload) encPayload.getUnderlyingPayload()).getNonceData());
-                            payload = encPayload;
-                            break;
+                            bais.mark(0);
+                            try {
+                                PKCS1EncryptedISAKMPPayload encPayload = PKCS1EncryptedISAKMPPayload.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKey());
+                                secrets.getISAKMPSA().setResponderNonce(((NoncePayload) encPayload.getUnderlyingPayload()).getNonceData());
+                                payload = encPayload;
+                                break; // only executed when there's no exception
+                            } catch (ISAKMPParsingException ex) {
+                                if (!(ex.getCause() instanceof BadPaddingException)) {
+                                    throw ex;
+                                }
+                                // Payload was probably not encrypted, let's use the default case
+                                bais.reset();
+                            }
                         default:
                             payload = NoncePayload.fromStream(bais);
                             secrets.getISAKMPSA().setResponderNonce(((NoncePayload) payload).getNonceData());
