@@ -49,7 +49,7 @@ public class Main {
     }
 
     private static final int timeout = 800;
-    private static final String host = "10.0.3.10";
+    private static final String host = "10.13.37.1"; //change to my docker IP 
     private static final int port = 500;
 
     public static void main(String[] args) throws UnknownHostException {
