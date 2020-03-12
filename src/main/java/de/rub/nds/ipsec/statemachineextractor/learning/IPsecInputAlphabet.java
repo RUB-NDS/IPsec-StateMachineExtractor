@@ -54,6 +54,8 @@ public class IPsecInputAlphabet extends ArrayAlphabet<String> {
             "v1_INFO*_DEL",
             
             "ESP_IPv4_TCP_SYN_SSH",
+            
+            "v2_Testvalue",
         }));
     }
 
