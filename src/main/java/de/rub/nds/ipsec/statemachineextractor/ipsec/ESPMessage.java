@@ -25,6 +25,7 @@ import java.util.StringJoiner;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import org.savarese.vserv.tcpip.IPPacket;
@@ -37,6 +38,7 @@ import org.savarese.vserv.tcpip.TCPPacket;
 public class ESPMessage implements SerializableMessage {
 
     public static final int IPv4_HEADER_LENGTH = 20;
+    public static final int MAC_LENGTH = 12; // 96 bit
 
     private byte[] spi;
     private int sequenceNumber;
@@ -45,15 +47,20 @@ public class ESPMessage implements SerializableMessage {
     private byte nextHeader;
     private boolean isInSync = false;
     private final Cipher cipher;
+    private final Mac mac;
     private final SecretKey secretKey;
     private IvParameterSpec IV;
     private byte[] ciphertext;
 
     public ESPMessage(SecretKey secretKey, String algo, String mode) throws GeneralSecurityException {
-        this(secretKey, algo, mode, null);
+        this(secretKey, algo, mode, null, null);
     }
 
-    protected ESPMessage(SecretKey secretKey, String algo, String mode, byte[] IV) throws GeneralSecurityException {
+    public ESPMessage(SecretKey secretKey, String algo, String mode, String mac) throws GeneralSecurityException {
+        this(secretKey, algo, mode, null, mac);
+    }
+
+    protected ESPMessage(SecretKey secretKey, String algo, String mode, byte[] IV, String mac) throws GeneralSecurityException {
         this.secretKey = secretKey;
         this.cipher = Cipher.getInstance(algo + "/" + mode + "/NoPadding");
         if (IV == null) {
@@ -63,6 +70,11 @@ public class ESPMessage implements SerializableMessage {
             this.IV = new IvParameterSpec(iv);
         } else {
             this.IV = new IvParameterSpec(IV);
+        }
+        if (mac != null) {
+            this.mac = Mac.getInstance(mac);
+        } else {
+            this.mac = null;
         }
     }
 
@@ -107,16 +119,21 @@ public class ESPMessage implements SerializableMessage {
         throw new UnsupportedOperationException("Not supported yet!");
     }
 
-    public void decrypt() throws GeneralSecurityException {
+    protected void decrypt() throws GeneralSecurityException {
         cipher.init(Cipher.DECRYPT_MODE, secretKey, IV);
         this.paddedPayloadData = cipher.doFinal(this.ciphertext);
         this.isInSync = true;
     }
 
-    public void encrypt() throws GeneralSecurityException {
+    protected void encrypt() throws GeneralSecurityException {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, IV);
         this.paddedPayloadData[paddedPayloadData.length - 1] = nextHeader;
         this.ciphertext = cipher.doFinal(this.paddedPayloadData);
+        if (mac != null) {
+            mac.init(secretKey);
+            byte[] macBytes = mac.doFinal(paddedPayloadData);
+            this.authenticationData = Arrays.copyOf(macBytes, MAC_LENGTH);
+        }
         this.isInSync = true;
     }
 
@@ -221,7 +238,7 @@ public class ESPMessage implements SerializableMessage {
         this.isInSync = false;
     }
 
-    public static ESPMessage fromBytes(byte[] msgBytes, SecretKey secretKey, String algo, String mode) throws GeneralSecurityException, IOException {
+    public static ESPMessage fromBytes(byte[] msgBytes, SecretKey secretKey, String algo, String mode, String mac) throws GeneralSecurityException, IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(msgBytes);
         ESPMessage result = new ESPMessage(secretKey, algo, mode);
         result.setSpi(DatatypeHelper.read4ByteFromStream(bais));
@@ -229,8 +246,16 @@ public class ESPMessage implements SerializableMessage {
         byte[] iv = new byte[result.cipher.getBlockSize()];
         bais.read(iv);
         result.IV = new IvParameterSpec(iv);
-        result.ciphertext = new byte[bais.available()];
-        bais.read(result.ciphertext);
+        if (mac == null) {
+            result.ciphertext = new byte[bais.available()];
+            bais.read(result.ciphertext);
+        } else {
+            result.ciphertext = new byte[bais.available() - MAC_LENGTH];
+            bais.read(result.ciphertext);
+            result.authenticationData = new byte[MAC_LENGTH];
+            bais.read(result.authenticationData);
+            //TODO: Verify authenticationData
+        }
         result.decrypt();
         result.setNextHeader(result.paddedPayloadData[result.paddedPayloadData.length - 1]);
         return result;

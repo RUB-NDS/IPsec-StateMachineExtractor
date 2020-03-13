@@ -15,7 +15,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest.getTestIKEv1MainModeSecurityAssociationMessage;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.NotifyMessageTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;

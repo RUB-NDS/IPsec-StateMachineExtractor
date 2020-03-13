@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.ipsec;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
@@ -64,7 +65,7 @@ public final class IPsecConnection {
         this.SA.setInboundSpi(DatatypeHelper.intTo4ByteArray(new Random().nextInt()));
         this.SA.setOutboundSpi(DatatypeHelper.intTo4ByteArray(new Random().nextInt()));
         this.handshake.computeIPsecKeyMaterial(this.SA);
-        this.tunnel = new TunnelMode(localTunnelEndpoint, remoteTunnelEndpoint, SA, ESPTransformIDEnum.DES, null, timeout);
+        this.tunnel = new TunnelMode(localTunnelEndpoint, remoteTunnelEndpoint, SA, ESPTransformIDEnum.DES, null, null, timeout);
     }
 
     public IKEv1Handshake getHandshake() {
@@ -79,9 +80,9 @@ public final class IPsecConnection {
         return SA;
     }
 
-    public void establishTunnel(SecurityAssociationSecrets SA, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength) throws IOException {
+    public void establishTunnel(SecurityAssociationSecrets SA, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo) throws IOException {
         this.SA = SA;
-        this.tunnel.rekey(SA, cipher, keylength);
+        this.tunnel.rekey(SA, cipher, keylength, authAlgo);
     }
 
     public ESPMessage exchangeTCPSYN(InetAddress localClient, InetAddress remoteServer, int port) throws IOException, GeneralSecurityException {

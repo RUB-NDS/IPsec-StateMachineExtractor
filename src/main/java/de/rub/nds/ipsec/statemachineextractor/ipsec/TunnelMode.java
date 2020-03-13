@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.ipsec;
 import com.savarese.rocksaw.net.RawSocket;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
 import static de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage.IPv4_HEADER_LENGTH;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.IPProtocolsEnum;
 import java.io.IOException;
@@ -35,15 +36,16 @@ public class TunnelMode {
     private final InetAddress localAddress, remoteAddress;
     private SecurityAssociationSecrets secrets;
     private ESPTransformIDEnum cipher;
+    private AuthenticationAlgorithmAttributeEnum authAlgo;
     private int keySize;
     private int nextOutboundSequenceNumber = 1;
     private Integer nextInboundSequenceNumber;
     private SecretKeySpec outboundKey, inboundKey;
 
-    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, int timeout) throws IOException {
+    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo, int timeout) throws IOException {
         this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
-        this.rekey(sas, cipher, keylength);
+        this.rekey(sas, cipher, keylength, authAlgo);
         this.socket = new RawSocket();
         try {
             if (remoteAddress instanceof Inet6Address) {
@@ -68,11 +70,12 @@ public class TunnelMode {
         }
     }
 
-    public final void rekey(SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength) {
+    public final void rekey(SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo) {
         if (this.secrets != null && Arrays.equals(this.secrets.getInboundSpi(), sas.getInboundSpi()) && Arrays.equals(this.secrets.getOutboundSpi(), sas.getOutboundSpi())) {
             return;
         }
         this.secrets = sas;
+        this.authAlgo = authAlgo;
         this.cipher = cipher;
         if (cipher.isIsFixedKeySize()) {
             this.keySize = cipher.getKeySize();
@@ -102,7 +105,12 @@ public class TunnelMode {
         {
             byte[] pktToSendData = new byte[packet.getIPPacketLength()];
             packet.getData(pktToSendData);
-            ESPMessage msgOut = new ESPMessage(outboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
+            ESPMessage msgOut;
+            if (this.authAlgo != null) {
+                msgOut = new ESPMessage(outboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName(), authAlgo.macJCEName());
+            } else {
+                msgOut = new ESPMessage(outboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
+            }
             msgOut.setSpi(secrets.getOutboundSpi());
             msgOut.setSequenceNumber(nextOutboundSequenceNumber++);
             msgOut.setPayloadData(pktToSendData);
@@ -123,7 +131,7 @@ public class TunnelMode {
             unparsedPkt.getData(rcvdEspPktDataWithIPHeader);
             byte[] rcvdEspPktData = Arrays.copyOfRange(rcvdEspPktDataWithIPHeader, IPv4_HEADER_LENGTH, rcvdEspPktDataWithIPHeader.length);
             try {
-                msgIn = ESPMessage.fromBytes(rcvdEspPktData, inboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
+                msgIn = ESPMessage.fromBytes(rcvdEspPktData, inboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName(), authAlgo != null ? authAlgo.macJCEName() : null);
             } catch (GeneralSecurityException ex) {
                 msgIn = null; // Decrypt error, probably we received garbage
                 continue;

@@ -19,6 +19,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.IPsecConnection;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
@@ -122,7 +123,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                             case "SA":
                                 switch (msg.getExchangeType()) {
                                     case QuickMode:
-                                        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_NONE();
+                                        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
                                         conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
                                         break;
 
@@ -172,7 +173,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 conn.getHandshake().addPhase2Hash3Payload(msg);
                                 SecurityAssociationSecrets sas = conn.getHandshake().getMostRecentSecurityAssociation();
                                 conn.getHandshake().computeIPsecKeyMaterial(sas);
-                                conn.establishTunnel(sas, ESPTransformIDEnum.AES, KeyLengthAttributeEnum.L128);
+                                conn.establishTunnel(sas, ESPTransformIDEnum.AES, KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA);
                                 break;
 
                             default:

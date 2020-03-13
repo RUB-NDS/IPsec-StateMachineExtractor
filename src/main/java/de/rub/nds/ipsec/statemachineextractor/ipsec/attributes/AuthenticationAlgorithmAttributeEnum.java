@@ -34,4 +34,15 @@ public enum AuthenticationAlgorithmAttributeEnum implements IPsecAttribute, ISAK
     public byte[] getBytes() {
         return bytes.clone();
     }
+    
+    public String macJCEName() {
+        switch (this) {
+            case HMAC_MD5:
+                return "HmacMD5";
+            case HMAC_SHA:
+                return "HmacSHA1";
+            default:
+                throw new UnsupportedOperationException("Not supported yet!");
+        }
+    }
 }
