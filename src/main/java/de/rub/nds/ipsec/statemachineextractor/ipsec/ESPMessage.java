@@ -22,6 +22,7 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.StringJoiner;
+import javax.crypto.AEADBadTagException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -258,7 +259,21 @@ public class ESPMessage implements SerializableMessage {
             bais.read(result.ciphertext);
             result.authenticationData = new byte[MAC_LENGTH];
             bais.read(result.authenticationData);
-            //TODO: Verify authenticationData
+            {
+                result.mac.init(result.authKey);
+                result.mac.update(result.spi, 0, 4);
+                result.mac.update(DatatypeHelper.intTo4ByteArray(result.sequenceNumber), 0, 4);
+                result.mac.update(result.IV.getIV(), 0, result.IV.getIV().length);
+                byte[] macBytes = result.mac.doFinal(result.ciphertext);
+                byte[] computedAuthenticationData = Arrays.copyOf(macBytes, MAC_LENGTH);
+                if(!Arrays.equals(computedAuthenticationData, result.authenticationData)) {
+                    // this is not quite the right exception, but close enough
+                    throw new AEADBadTagException("ESP authentication verification failed! Expected 0x"
+                            + DatatypeHelper.byteArrayToHexDump(computedAuthenticationData)
+                            + ", but received 0x"
+                            + DatatypeHelper.byteArrayToHexDump(result.authenticationData));
+                }
+            }
         }
         result.decrypt();
         result.setNextHeader(result.paddedPayloadData[result.paddedPayloadData.length - 1]);

@@ -10,6 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import javax.crypto.AEADBadTagException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.Test;
@@ -27,6 +28,9 @@ public class ESPMessageTest {
 
     private static final SecretKey CASE56_KEY = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("90d382b410eeba7ad938c46cec1a82bf"), "AES");
     private static final SecretKey CASE78_KEY = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("0123456789abcdef0123456789abcdef"), "AES");
+    private static final SecretKey WITHAUTH_ENC_KEY = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("bd30891c6cb5f9a353be9184897260c9"), "AES");
+    private static final SecretKey WITHAUTH_AUTH_KEY = new SecretKeySpec(DatatypeHelper.hexDumpToByteArray("d42291170f2c984835553a1b83373735723fe256"), "AES");
+    
     private static final byte[] CASE5_MSG = DatatypeHelper.hexDumpToByteArray("0000432100000001e96e8c08ab465763fd098d45dd3ff893f663c25d325c18c6a9453e194e120849a4870b66cc6b9965330013b4898dc856a4699e523a55db080b59ec3a8e4b7e52775b07d1db34ed9c538ab50c551b874aa269add047ad2d5913ac19b7cfbad4a6");
     private static final byte[] CASE5_PAYLOAD = DatatypeHelper.hexDumpToByteArray("08000ebda70a00008e9c083db95b070008090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637");
     private static final byte[] CASE6_MSG = DatatypeHelper.hexDumpToByteArray("000043210000000869d08df7d203329db093fc4924e5bd80f51995881ec4e0c4488987ce742e8109689bb379d2d750c0d915dca346a89f75");
@@ -35,6 +39,8 @@ public class ESPMessageTest {
     private static final byte[] CASE7_PAYLOAD = DatatypeHelper.hexDumpToByteArray("45000054090400004001f988c0a87b03c0a87bc808009f76a90a0100b49c083d02a2040008090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637");
     private static final byte[] CASE8_MSG = DatatypeHelper.hexDumpToByteArray("000087650000000585d47224b5f3dd5d2101d4ea8dffab2215b92683819596a8047232cc00f7048fe45318e11f8a0f62ede3c3fc61203bb50f980a08c9843fd3a1b06d5c07ff9639b7eb7dfb3512e5de435e7207ed971ef3d2726d9b5ef6affc6d17a0decbb13892");
     private static final byte[] CASE8_PAYLOAD = DatatypeHelper.hexDumpToByteArray("45000044090c00004001f990c0a87b03c0a87bc80800d63caa0a0200c69c083da3de0300ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    private static final byte[] WITHAUTH_MSG = DatatypeHelper.hexDumpToByteArray("c6494f6100000001173250acefbfe2e43b769697701347ba745dc8a99379ac042280924deb4a6e63da66513996098e0cd046d7c8c839cfd779eafcb6ac8cf25c3bf84a4dcbf7dcf9bb53725c2b2785c76c4c3fab");
+    private static final byte[] WITHAUTH_PAYLOAD = DatatypeHelper.hexDumpToByteArray("45000028966700004006CD670A0001010A000201CBC00016C978662800000000500272102B590000");
 
     @Test
     public void testRFC3602TestVectorCase5() throws Exception {
@@ -123,6 +129,35 @@ public class ESPMessageTest {
         assertEquals(5, instance.getSequenceNumber());
         assertArrayEquals(CASE8_PAYLOAD, instance.getPayloadData());
         assertEquals(4, instance.getNextHeader());
+    }
+    
+    @Test
+    public void testWithAuthentication() throws Exception {
+        final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("173250acefbfe2e43b769697701347ba");
+        ESPMessage instance = new ESPMessage(WITHAUTH_ENC_KEY, "AES", "CBC", TEST_IV, WITHAUTH_AUTH_KEY, "HmacSHA1");
+        instance.setSpi(new byte[]{(byte)0xc6, 0x49, 0x4f, 0x61});
+        instance.setSequenceNumber(1);
+        instance.setPayloadData(WITHAUTH_PAYLOAD);
+        instance.setNextHeader((byte) 0x04);
+        byte[] result = instance.getBytes();
+        byte[] expResult = WITHAUTH_MSG;
+        assertArrayEquals(expResult, result);
+    }
+
+    @Test
+    public void testWithAuthenticationReverse() throws Exception {
+        ESPMessage instance = ESPMessage.fromBytes(WITHAUTH_MSG, WITHAUTH_ENC_KEY, "AES", "CBC", WITHAUTH_AUTH_KEY, "HmacSHA1");
+        assertArrayEquals(new byte[]{(byte)0xc6, 0x49, 0x4f, 0x61}, instance.getSpi());
+        assertEquals(1, instance.getSequenceNumber());
+        assertArrayEquals(WITHAUTH_PAYLOAD, instance.getPayloadData());
+        assertEquals(4, instance.getNextHeader());
+    }
+    
+    @Test(expected=AEADBadTagException.class)
+    public void testWithAuthenticationReverseBadAuth() throws Exception {
+        byte[] badAuthMsg = WITHAUTH_MSG.clone();
+        badAuthMsg[72] = 0x00;
+        ESPMessage instance = ESPMessage.fromBytes(badAuthMsg, WITHAUTH_ENC_KEY, "AES", "CBC", WITHAUTH_AUTH_KEY, "HmacSHA1");
     }
 
     /**
