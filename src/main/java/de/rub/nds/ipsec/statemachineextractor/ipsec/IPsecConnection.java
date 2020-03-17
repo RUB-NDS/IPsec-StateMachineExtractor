@@ -21,6 +21,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import org.savarese.vserv.tcpip.TCPPacket;
 
@@ -80,7 +81,7 @@ public final class IPsecConnection {
         return SA;
     }
 
-    public void establishTunnel(SecurityAssociationSecrets SA, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo) throws IOException {
+    public void establishTunnel(SecurityAssociationSecrets SA, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo) throws IOException, NoSuchAlgorithmException {
         this.SA = SA;
         this.tunnel.rekey(SA, cipher, keylength, authAlgo);
     }

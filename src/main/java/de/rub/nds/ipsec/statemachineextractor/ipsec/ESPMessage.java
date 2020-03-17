@@ -48,20 +48,21 @@ public class ESPMessage implements SerializableMessage {
     private boolean isInSync = false;
     private final Cipher cipher;
     private final Mac mac;
-    private final SecretKey secretKey;
+    private final SecretKey secretKey, authKey;
     private IvParameterSpec IV;
     private byte[] ciphertext;
 
     public ESPMessage(SecretKey secretKey, String algo, String mode) throws GeneralSecurityException {
-        this(secretKey, algo, mode, null, null);
+        this(secretKey, algo, mode, null, null, null);
     }
 
-    public ESPMessage(SecretKey secretKey, String algo, String mode, String mac) throws GeneralSecurityException {
-        this(secretKey, algo, mode, null, mac);
+    public ESPMessage(SecretKey secretKey, String algo, String mode, SecretKey authKey, String mac) throws GeneralSecurityException {
+        this(secretKey, algo, mode, null, authKey, mac);
     }
 
-    protected ESPMessage(SecretKey secretKey, String algo, String mode, byte[] IV, String mac) throws GeneralSecurityException {
+    protected ESPMessage(SecretKey secretKey, String algo, String mode, byte[] IV, SecretKey authKey, String mac) throws GeneralSecurityException {
         this.secretKey = secretKey;
+        this.authKey = authKey;
         this.cipher = Cipher.getInstance(algo + "/" + mode + "/NoPadding");
         if (IV == null) {
             byte[] iv = new byte[cipher.getBlockSize()];
@@ -130,8 +131,11 @@ public class ESPMessage implements SerializableMessage {
         this.paddedPayloadData[paddedPayloadData.length - 1] = nextHeader;
         this.ciphertext = cipher.doFinal(this.paddedPayloadData);
         if (mac != null) {
-            mac.init(secretKey);
-            byte[] macBytes = mac.doFinal(paddedPayloadData);
+            mac.init(authKey);
+            mac.update(spi, 0, 4);
+            mac.update(DatatypeHelper.intTo4ByteArray(sequenceNumber), 0, 4);
+            mac.update(this.IV.getIV(), 0, this.IV.getIV().length);
+            byte[] macBytes = mac.doFinal(this.ciphertext);
             this.authenticationData = Arrays.copyOf(macBytes, MAC_LENGTH);
         }
         this.isInSync = true;
@@ -238,15 +242,15 @@ public class ESPMessage implements SerializableMessage {
         this.isInSync = false;
     }
 
-    public static ESPMessage fromBytes(byte[] msgBytes, SecretKey secretKey, String algo, String mode, String mac) throws GeneralSecurityException, IOException {
+    public static ESPMessage fromBytes(byte[] msgBytes, SecretKey secretKey, String algo, String mode, SecretKey authKey, String mac) throws GeneralSecurityException, IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(msgBytes);
-        ESPMessage result = new ESPMessage(secretKey, algo, mode);
+        ESPMessage result = new ESPMessage(secretKey, algo, mode, authKey, mac);
         result.setSpi(DatatypeHelper.read4ByteFromStream(bais));
         result.setSequenceNumber(ByteBuffer.wrap(DatatypeHelper.read4ByteFromStream(bais)).getInt());
         byte[] iv = new byte[result.cipher.getBlockSize()];
         bais.read(iv);
         result.IV = new IvParameterSpec(iv);
-        if (mac == null) {
+        if (result.mac == null) {
             result.ciphertext = new byte[bais.available()];
             bais.read(result.ciphertext);
         } else {

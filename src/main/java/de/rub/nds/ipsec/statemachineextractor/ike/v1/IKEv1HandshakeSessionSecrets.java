@@ -14,6 +14,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -27,6 +28,8 @@ import javax.crypto.spec.SecretKeySpec;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class IKEv1HandshakeSessionSecrets {
+
+    protected static final int KEY_MATERIAL_AMOUNT = 512;
 
     private boolean isInitiatorCookieChosen = false;
     private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -295,20 +298,31 @@ public class IKEv1HandshakeSessionSecrets {
         Mac prfOut = Mac.getInstance(HmacIdentifier);
         prfIn.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
         prfOut.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
-        if (sas.getDHSecret() != null) {
-            prfIn.update(sas.getDHSecret());
-            prfOut.update(sas.getDHSecret());
+        ByteArrayOutputStream inboundKeyMaterialOutputStream = new ByteArrayOutputStream((int)(KEY_MATERIAL_AMOUNT * 1.3));
+        ByteArrayOutputStream outboundKeyMaterialOutputStream = new ByteArrayOutputStream((int)(KEY_MATERIAL_AMOUNT * 1.3));                
+        byte[] lastBlockIn = new byte[0], lastBlockOut = new byte[0];
+        while (inboundKeyMaterialOutputStream.size() < KEY_MATERIAL_AMOUNT || outboundKeyMaterialOutputStream.size() < KEY_MATERIAL_AMOUNT) {
+            prfIn.update(lastBlockIn);
+            prfOut.update(lastBlockOut);
+            if (sas.getDHSecret() != null) {
+                prfIn.update(sas.getDHSecret());
+                prfOut.update(sas.getDHSecret());
+            }
+            prfIn.update(sas.getProtocol().getValue());
+            prfOut.update(sas.getProtocol().getValue());
+            prfIn.update(sas.getInboundSpi());
+            prfOut.update(sas.getOutboundSpi());
+            prfIn.update(sas.getInitiatorNonce());
+            prfOut.update(sas.getInitiatorNonce());
+            prfIn.update(sas.getResponderNonce());
+            prfOut.update(sas.getResponderNonce());
+            lastBlockIn = prfIn.doFinal();
+            lastBlockOut = prfOut.doFinal();
+            inboundKeyMaterialOutputStream.write(lastBlockIn, 0, lastBlockIn.length);
+            outboundKeyMaterialOutputStream.write(lastBlockOut, 0, lastBlockOut.length);
         }
-        prfIn.update(sas.getProtocol().getValue());
-        prfOut.update(sas.getProtocol().getValue());
-        prfIn.update(sas.getInboundSpi());
-        prfOut.update(sas.getOutboundSpi());
-        prfIn.update(sas.getInitiatorNonce());
-        prfOut.update(sas.getInitiatorNonce());
-        prfIn.update(sas.getResponderNonce());
-        prfOut.update(sas.getResponderNonce());
-        sas.setInboundKeyMaterial(prfIn.doFinal());
-        sas.setOutboundKeyMaterial(prfOut.doFinal());
+        sas.setInboundKeyMaterial(inboundKeyMaterialOutputStream.toByteArray());
+        sas.setOutboundKeyMaterial(outboundKeyMaterialOutputStream.toByteArray());
     }
 
     public SecurityAssociationSecrets getSA(byte[] msgID) {

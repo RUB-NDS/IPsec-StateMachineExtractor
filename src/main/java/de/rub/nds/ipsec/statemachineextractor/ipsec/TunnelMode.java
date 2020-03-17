@@ -21,7 +21,9 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.savarese.vserv.tcpip.IPPacket;
 import org.slf4j.LoggerFactory;
@@ -40,9 +42,9 @@ public class TunnelMode {
     private int keySize;
     private int nextOutboundSequenceNumber = 1;
     private Integer nextInboundSequenceNumber;
-    private SecretKeySpec outboundKey, inboundKey;
+    private SecretKeySpec outboundKeyEnc, inboundKeyEnc, outboundKeyAuth, inboundKeyAuth;
 
-    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo, int timeout) throws IOException {
+    public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo, int timeout) throws IOException, NoSuchAlgorithmException {
         this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
         this.rekey(sas, cipher, keylength, authAlgo);
@@ -70,7 +72,7 @@ public class TunnelMode {
         }
     }
 
-    public final void rekey(SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo) {
+    public final void rekey(SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo) throws NoSuchAlgorithmException {
         if (this.secrets != null && Arrays.equals(this.secrets.getInboundSpi(), sas.getInboundSpi()) && Arrays.equals(this.secrets.getOutboundSpi(), sas.getOutboundSpi())) {
             return;
         }
@@ -86,17 +88,32 @@ public class TunnelMode {
             this.keySize = keylength.getKeySize();
         }
 
+        int macLength = 0;
         byte[] keymat = secrets.getOutboundKeyMaterial();
         if (keymat.length < cipher.getKeySize()) {
-            throw new UnsupportedOperationException("Not supported yet!");
+            throw new UnsupportedOperationException("Not enough key material!");
         }
-        this.outboundKey = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+        this.outboundKeyEnc = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+        if (this.authAlgo != null) {
+            macLength = Mac.getInstance(this.authAlgo.macJCEName()).getMacLength();
+            if (keymat.length < cipher.getKeySize() + macLength) {
+                throw new UnsupportedOperationException("Not enough key material!");
+            }
+            this.outboundKeyAuth = new SecretKeySpec(Arrays.copyOfRange(keymat, this.keySize, this.keySize + macLength), this.authAlgo.macJCEName());
+        }
 
         keymat = secrets.getInboundKeyMaterial();
         if (keymat.length < cipher.getKeySize()) {
-            throw new UnsupportedOperationException("Not supported yet!");
+            throw new UnsupportedOperationException("Not enough key material!");
         }
-        this.inboundKey = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+        this.inboundKeyEnc = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+        if (this.authAlgo != null) {
+            if (keymat.length < cipher.getKeySize() + macLength) {
+                throw new UnsupportedOperationException("Not enough key material!");
+            }
+            this.inboundKeyAuth = new SecretKeySpec(Arrays.copyOfRange(keymat, this.keySize, this.keySize + macLength), this.authAlgo.macJCEName());
+        }
+
         nextOutboundSequenceNumber = 1;
         nextInboundSequenceNumber = 1;
     }
@@ -107,9 +124,9 @@ public class TunnelMode {
             packet.getData(pktToSendData);
             ESPMessage msgOut;
             if (this.authAlgo != null) {
-                msgOut = new ESPMessage(outboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName(), authAlgo.macJCEName());
+                msgOut = new ESPMessage(outboundKeyEnc, cipher.cipherJCEName(), cipher.modeOfOperationJCEName(), outboundKeyAuth, authAlgo.macJCEName());
             } else {
-                msgOut = new ESPMessage(outboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
+                msgOut = new ESPMessage(outboundKeyEnc, cipher.cipherJCEName(), cipher.modeOfOperationJCEName());
             }
             msgOut.setSpi(secrets.getOutboundSpi());
             msgOut.setSequenceNumber(nextOutboundSequenceNumber++);
@@ -131,7 +148,11 @@ public class TunnelMode {
             unparsedPkt.getData(rcvdEspPktDataWithIPHeader);
             byte[] rcvdEspPktData = Arrays.copyOfRange(rcvdEspPktDataWithIPHeader, IPv4_HEADER_LENGTH, rcvdEspPktDataWithIPHeader.length);
             try {
-                msgIn = ESPMessage.fromBytes(rcvdEspPktData, inboundKey, cipher.cipherJCEName(), cipher.modeOfOperationJCEName(), authAlgo != null ? authAlgo.macJCEName() : null);
+                if (this.authAlgo != null) {
+                    msgIn = ESPMessage.fromBytes(rcvdEspPktData, inboundKeyEnc, cipher.cipherJCEName(), cipher.modeOfOperationJCEName(), inboundKeyAuth, authAlgo.macJCEName());
+                } else {
+                    msgIn = ESPMessage.fromBytes(rcvdEspPktData, inboundKeyEnc, cipher.cipherJCEName(), cipher.modeOfOperationJCEName(), null, null);
+                }
             } catch (GeneralSecurityException ex) {
                 msgIn = null; // Decrypt error, probably we received garbage
                 continue;

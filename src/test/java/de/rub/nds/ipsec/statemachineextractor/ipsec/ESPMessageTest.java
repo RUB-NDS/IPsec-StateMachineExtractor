@@ -39,7 +39,7 @@ public class ESPMessageTest {
     @Test
     public void testRFC3602TestVectorCase5() throws Exception {
         final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("e96e8c08ab465763fd098d45dd3ff893");
-        ESPMessage instance = new ESPMessage(CASE56_KEY, "AES", "CBC", TEST_IV, null);
+        ESPMessage instance = new ESPMessage(CASE56_KEY, "AES", "CBC", TEST_IV, null, null);
         instance.setSpi(new byte[]{0x00, 0x00, 0x43, 0x21});
         instance.setSequenceNumber(1);
         instance.setPayloadData(CASE5_PAYLOAD);
@@ -51,7 +51,7 @@ public class ESPMessageTest {
 
     @Test
     public void testRFC3602TestVectorCase5Reverse() throws Exception {
-        ESPMessage instance = ESPMessage.fromBytes(CASE5_MSG, CASE56_KEY, "AES", "CBC", null);
+        ESPMessage instance = ESPMessage.fromBytes(CASE5_MSG, CASE56_KEY, "AES", "CBC", null, null);
         assertArrayEquals(new byte[]{0x00, 0x00, 0x43, 0x21}, instance.getSpi());
         assertEquals(1, instance.getSequenceNumber());
         assertArrayEquals(CASE5_PAYLOAD, instance.getPayloadData());
@@ -62,7 +62,7 @@ public class ESPMessageTest {
     @Test
     public void testRFC3602TestVectorCase6() throws Exception {
         final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("69d08df7d203329db093fc4924e5bd80");
-        ESPMessage instance = new ESPMessage(CASE56_KEY, "AES", "CBC", TEST_IV, null);
+        ESPMessage instance = new ESPMessage(CASE56_KEY, "AES", "CBC", TEST_IV, null, null);
         instance.setSpi(new byte[]{0x00, 0x00, 0x43, 0x21});
         instance.setSequenceNumber(8);
         instance.setPayloadData(CASE6_PAYLOAD);
@@ -74,7 +74,7 @@ public class ESPMessageTest {
 
     @Test
     public void testRFC3602TestVectorCase6Reverse() throws Exception {
-        ESPMessage instance = ESPMessage.fromBytes(CASE6_MSG, CASE56_KEY, "AES", "CBC", null);
+        ESPMessage instance = ESPMessage.fromBytes(CASE6_MSG, CASE56_KEY, "AES", "CBC", null, null);
         assertArrayEquals(new byte[]{0x00, 0x00, 0x43, 0x21}, instance.getSpi());
         assertEquals(8, instance.getSequenceNumber());
         assertArrayEquals(CASE6_PAYLOAD, instance.getPayloadData());
@@ -84,7 +84,7 @@ public class ESPMessageTest {
     @Test
     public void testRFC3602TestVectorCase7() throws Exception {
         final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("f4e765244f6407adf13dc1380f673f37");
-        ESPMessage instance = new ESPMessage(CASE78_KEY, "AES", "CBC", TEST_IV, null);
+        ESPMessage instance = new ESPMessage(CASE78_KEY, "AES", "CBC", TEST_IV, null, null);
         instance.setSpi(new byte[]{0x00, 0x00, (byte) 0x87, (byte) 0x65});
         instance.setSequenceNumber(2);
         instance.setPayloadData(CASE7_PAYLOAD);
@@ -96,7 +96,7 @@ public class ESPMessageTest {
 
     @Test
     public void testRFC3602TestVectorCase7Reverse() throws Exception {
-        ESPMessage instance = ESPMessage.fromBytes(CASE7_MSG, CASE78_KEY, "AES", "CBC", null);
+        ESPMessage instance = ESPMessage.fromBytes(CASE7_MSG, CASE78_KEY, "AES", "CBC", null, null);
         assertArrayEquals(new byte[]{0x00, 0x00, (byte) 0x87, (byte) 0x65}, instance.getSpi());
         assertEquals(2, instance.getSequenceNumber());
         assertArrayEquals(CASE7_PAYLOAD, instance.getPayloadData());
@@ -106,7 +106,7 @@ public class ESPMessageTest {
     @Test
     public void testRFC3602TestVectorCase8() throws Exception {
         final byte[] TEST_IV = DatatypeHelper.hexDumpToByteArray("85d47224b5f3dd5d2101d4ea8dffab22");
-        ESPMessage instance = new ESPMessage(CASE78_KEY, "AES", "CBC", TEST_IV, null);
+        ESPMessage instance = new ESPMessage(CASE78_KEY, "AES", "CBC", TEST_IV, null, null);
         instance.setSpi(new byte[]{0x00, 0x00, (byte) 0x87, (byte) 0x65});
         instance.setSequenceNumber(5);
         instance.setPayloadData(CASE8_PAYLOAD);
@@ -118,7 +118,7 @@ public class ESPMessageTest {
 
     @Test
     public void testRFC3602TestVectorCase8Reverse() throws Exception {
-        ESPMessage instance = ESPMessage.fromBytes(CASE8_MSG, CASE78_KEY, "AES", "CBC", null);
+        ESPMessage instance = ESPMessage.fromBytes(CASE8_MSG, CASE78_KEY, "AES", "CBC", null, null);
         assertArrayEquals(new byte[]{0x00, 0x00, (byte) 0x87, (byte) 0x65}, instance.getSpi());
         assertEquals(5, instance.getSequenceNumber());
         assertArrayEquals(CASE8_PAYLOAD, instance.getPayloadData());
