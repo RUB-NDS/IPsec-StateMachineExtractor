@@ -28,6 +28,7 @@ public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     CAST_CBC(0x80010006, 0),
     AES_CBC(0x80010007, 0);
 
+    protected static final int FORMAT_TYPE = 0x8001;
     private final int keySize;
     private final byte[] bytes;
     private int blockSize;

@@ -21,6 +21,7 @@ public enum KeyLengthAttributeEnum implements IPsecAttribute, ISAKMPSerializable
     L192(0x800600C0, 24),
     L256(0x80060100, 32);
 
+    protected static final int FORMAT_TYPE = 0x8006;
     private final byte[] bytes;
     private final int keySize;
 

@@ -22,6 +22,7 @@ public enum KeyLengthAttributeEnum implements IKEv1Attribute, ISAKMPSerializable
     L192(0x800e00C0, 24),
     L256(0x800e0100, 32);
 
+    protected static final int FORMAT_TYPE = 0x800e;
     private final byte[] bytes;
     private final int keySize;
 

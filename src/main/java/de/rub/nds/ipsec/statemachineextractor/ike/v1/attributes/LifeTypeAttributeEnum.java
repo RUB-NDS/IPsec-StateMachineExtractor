@@ -21,6 +21,7 @@ public enum LifeTypeAttributeEnum implements IKEv1Attribute, ISAKMPSerializable 
     SECONDS(0x800b0001),
     KILOBYTES(0x800b0002);
 
+    protected static final int FORMAT_TYPE = 0x800b;
     private final byte[] bytes;
 
     private LifeTypeAttributeEnum(int value) {

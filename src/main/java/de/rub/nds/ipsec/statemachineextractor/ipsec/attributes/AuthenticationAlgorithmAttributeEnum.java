@@ -23,6 +23,7 @@ public enum AuthenticationAlgorithmAttributeEnum implements IPsecAttribute, ISAK
     DES_MAC(0x80050003),
     KPDK(0x80050004);
 
+    protected static final int FORMAT_TYPE = 0x8005;
     private final byte[] bytes;
 
     private AuthenticationAlgorithmAttributeEnum(int value) {

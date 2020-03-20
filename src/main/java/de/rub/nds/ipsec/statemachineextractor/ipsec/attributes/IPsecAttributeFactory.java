@@ -17,11 +17,11 @@ import java.util.Map;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public final class IPsecAttributeFactory {
-    
+
     private IPsecAttributeFactory() {
-        
+
     }
-    
+
     // Reverse-lookup map
     private static final Map<Integer, IPsecAttribute> LOOKUP = new HashMap<>();
 
@@ -29,12 +29,28 @@ public final class IPsecAttributeFactory {
         if (LOOKUP.containsKey(value)) {
             return LOOKUP.get(value);
         }
-        if ((value >>> 16) == SALifeDurationAttribute.FORMAT_TYPE) { // it's a SALifeDurationAttribute
-            return SALifeDurationAttribute.generate(value & 0xFFFF);
+        IPsecAttribute att;
+        int formatType = value >>> 16;
+        switch (formatType) {
+            // Intialize the attributes and fill the LOOKUP hashmap
+            case AuthenticationAlgorithmAttributeEnum.FORMAT_TYPE:
+                att = AuthenticationAlgorithmAttributeEnum.RESERVED;
+                return LOOKUP.get(value);
+            case EncapsulationModeAttributeEnum.FORMAT_TYPE:
+                att = EncapsulationModeAttributeEnum.RESERVED;
+                return LOOKUP.get(value);
+            case KeyLengthAttributeEnum.FORMAT_TYPE:
+                att = KeyLengthAttributeEnum.L128;
+                return LOOKUP.get(value);
+            case SALifeTypeAttributeEnum.FORMAT_TYPE:
+                att = SALifeTypeAttributeEnum.RESERVED;
+                return LOOKUP.get(value);
+            case SALifeDurationAttribute.FORMAT_TYPE:
+                return SALifeDurationAttribute.generate(value & 0xFFFF);
         }
         throw new ISAKMPParsingException("Encountered unknown attribute.");
     }
-    
+
     static void register(IPsecAttribute attr, int value) {
         LOOKUP.put(value, attr);
     }

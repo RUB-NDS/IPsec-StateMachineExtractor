@@ -31,6 +31,7 @@ public enum DHGroupAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     GROUP20(0x80040014, IKEDHGroupEnum.GROUP20_384),
     GROUP21(0x80040015, IKEDHGroupEnum.GROUP21_521);
 
+    protected static final int FORMAT_TYPE = 0x8004;
     private final IKEDHGroupEnum group;
     private final byte[] bytes;
 

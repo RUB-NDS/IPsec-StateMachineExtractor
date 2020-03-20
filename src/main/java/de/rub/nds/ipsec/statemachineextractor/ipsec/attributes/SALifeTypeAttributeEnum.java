@@ -21,6 +21,7 @@ public enum SALifeTypeAttributeEnum implements IPsecAttribute, ISAKMPSerializabl
     SECONDS(0x80010001),
     KILOBYTES(0x80010002);
 
+    protected static final int FORMAT_TYPE = 0x8001;
     private final byte[] bytes;
 
     private SALifeTypeAttributeEnum(int value) {

@@ -24,6 +24,7 @@ public enum AuthAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     PKE(0x80030004),
     RevPKE(0x80030005);
 
+    protected static final int FORMAT_TYPE = 0x8003;
     private final byte[] bytes;
 
     private AuthAttributeEnum(int value) {

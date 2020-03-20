@@ -22,6 +22,7 @@ public enum HashAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
     SHA1(0x80020002),
     TIGER(0x80020003);
 
+    protected static final int FORMAT_TYPE = 0x8002;
     private final byte[] bytes;
 
     private HashAttributeEnum(int value) {

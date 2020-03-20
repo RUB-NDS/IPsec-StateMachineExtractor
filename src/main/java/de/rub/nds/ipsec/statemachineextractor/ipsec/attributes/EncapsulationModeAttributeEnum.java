@@ -21,6 +21,7 @@ public enum EncapsulationModeAttributeEnum implements IPsecAttribute, ISAKMPSeri
     Tunnel(0x80040001),
     Transport(0x80040002);
 
+    protected static final int FORMAT_TYPE = 0x8004;
     private final byte[] bytes;
 
     private EncapsulationModeAttributeEnum(int value) {
