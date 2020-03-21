@@ -6,7 +6,7 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes;
+package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
@@ -18,7 +18,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
  */
 public enum AuthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
 
-    PSK(0x80030001); //first do only PSK check the value
+    PSK(0xdeadbeef) //value is missing??
 
     private final byte[] bytes;
 

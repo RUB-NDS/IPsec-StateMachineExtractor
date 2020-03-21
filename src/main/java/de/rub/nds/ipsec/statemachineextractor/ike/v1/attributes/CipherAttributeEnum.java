@@ -26,7 +26,7 @@ public enum CipherAttributeEnum implements IKEv1Attribute, BasicAttribute {
     RC5_R16_B64_CBC(0x80010004, 0),
     TRIPPLEDES_CBC(0x80010005, 24),
     CAST_CBC(0x80010006, 0),
-    AES_CBC(0x80010007, 0);
+    AES_CBC(0x80010007, 50556);
 
     protected static final int FORMAT_TYPE = 0x8001;
     private final int keySize;
