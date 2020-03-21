@@ -8,25 +8,26 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class SALifeDurationAttribute implements IPsecAttribute, ISAKMPSerializable {
+public class SALifeDurationBasicAttribute implements IPsecAttribute, BasicAttribute {
 
-    static SALifeDurationAttribute generate(int duration) {
+    static SALifeDurationBasicAttribute generate(int duration) {
         check(duration);
-        return new SALifeDurationAttribute((FORMAT_TYPE << 16) + duration);
+        return new SALifeDurationBasicAttribute((FORMAT_TYPE << 16) + duration);
     }
 
     protected static final int FORMAT_TYPE = 0x8002;
     private final byte[] bytes;
 
-    private SALifeDurationAttribute(int value) {
+    private SALifeDurationBasicAttribute(int value) {
        this.bytes = DatatypeHelper.intTo4ByteArray(value);
        IPsecAttributeFactory.register(this, value);
     }
@@ -36,10 +37,11 @@ public class SALifeDurationAttribute implements IPsecAttribute, ISAKMPSerializab
         return bytes.clone();
     }
     
-    public static SALifeDurationAttribute get(int duration) {
+    public static SALifeDurationBasicAttribute get(int duration) {
         check(duration);
+        byte[] bytes = DatatypeHelper.intTo4ByteArray((FORMAT_TYPE << 16) + duration);
         try {
-            return (SALifeDurationAttribute) IPsecAttributeFactory.fromInt((FORMAT_TYPE << 16) + duration);
+            return (SALifeDurationBasicAttribute) IPsecAttributeFactory.fromStream(new ByteArrayInputStream(bytes));
         } catch (ISAKMPParsingException ex) {
             throw new RuntimeException("This should not be possible", ex);
         }

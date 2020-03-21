@@ -9,6 +9,11 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.read4ByteFromStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,36 +30,56 @@ public final class IKEv1AttributeFactory {
     // Reverse-lookup map
     private static final Map<Integer, IKEv1Attribute> LOOKUP = new HashMap<>();
 
-    public static IKEv1Attribute fromInt(int value) throws ISAKMPParsingException {
+    public static IKEv1Attribute fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        bais.mark(0);
+        int value;
+        try {
+            value = ByteBuffer.wrap(read4ByteFromStream(bais)).getInt();
+        } catch (IOException ex) {
+            throw new ISAKMPParsingException(ex);
+        }
         if (LOOKUP.containsKey(value)) {
             return LOOKUP.get(value);
         }
-        IKEv1Attribute att;
         int formatType = value >>> 16;
-        switch (formatType) {
-            // Intialize the attributes and fill the LOOKUP hashmap
-            case AuthAttributeEnum.FORMAT_TYPE:
-                att = AuthAttributeEnum.PSK;
-                return LOOKUP.get(value);
-            case CipherAttributeEnum.FORMAT_TYPE:
-                att = CipherAttributeEnum.AES_CBC;
-                return LOOKUP.get(value);
-            case DHGroupAttributeEnum.FORMAT_TYPE:
-                att = DHGroupAttributeEnum.GROUP1;
-                return LOOKUP.get(value);
-            case HashAttributeEnum.FORMAT_TYPE:
-                att = HashAttributeEnum.MD5;
-                return LOOKUP.get(value);
-            case KeyLengthAttributeEnum.FORMAT_TYPE:
-                att = KeyLengthAttributeEnum.L128;
-                return LOOKUP.get(value);
-            case LifeTypeAttributeEnum.FORMAT_TYPE:
-                att = LifeTypeAttributeEnum.SECONDS;
-                return LOOKUP.get(value);
-            case LifeDurationAttribute.FORMAT_TYPE:
-                return LifeDurationAttribute.generate(value & 0xFFFF);
+        if (!BigInteger.valueOf(formatType).testBit(15)) {
+            /* If the most significant bit, or Attribute Format (AF), is a
+             * zero (0), then the Data Attributes are of the Type/Length/Value
+             * (TLV) form.  If the AF bit is a one (1), then the Data Attributes
+             * are of the Type/Value form.
+             */
+            bais.reset();
+//            switch (formatType) {
+//                case SomeVariableLengthAttribute.FORMAT_TYPE:
+//                    return SomeVariableLengthAttribute.fromStream(bais);
+//            }
+        } else {
+            IKEv1Attribute dummy;
+            switch (formatType) {
+                // Intialize the attributes and fill the LOOKUP hashmap
+                case AuthAttributeEnum.FORMAT_TYPE:
+                    dummy = AuthAttributeEnum.PSK;
+                    return LOOKUP.get(value);
+                case CipherAttributeEnum.FORMAT_TYPE:
+                    dummy = CipherAttributeEnum.AES_CBC;
+                    return LOOKUP.get(value);
+                case DHGroupAttributeEnum.FORMAT_TYPE:
+                    dummy = DHGroupAttributeEnum.GROUP1;
+                    return LOOKUP.get(value);
+                case HashAttributeEnum.FORMAT_TYPE:
+                    dummy = HashAttributeEnum.MD5;
+                    return LOOKUP.get(value);
+                case KeyLengthAttributeEnum.FORMAT_TYPE:
+                    dummy = KeyLengthAttributeEnum.L128;
+                    return LOOKUP.get(value);
+                case LifeTypeAttributeEnum.FORMAT_TYPE:
+                    dummy = LifeTypeAttributeEnum.SECONDS;
+                    return LOOKUP.get(value);
+                case LifeDurationAttribute.FORMAT_TYPE:
+                    return LifeDurationAttribute.generate(value & 0xFFFF);
+            }
         }
-        throw new ISAKMPParsingException("Encountered unknown attribute.");
+        throw new ISAKMPParsingException("Encountered unknown IPsec attribute: " + String.format("0x%08x", value));
     }
 
     static void register(IKEv1Attribute attr, int value) {

@@ -8,14 +8,14 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum EncapsulationModeAttributeEnum implements IPsecAttribute, ISAKMPSerializable {
+public enum EncapsulationModeAttributeEnum implements IPsecAttribute, BasicAttribute {
 
     RESERVED(0x80040000),
     Tunnel(0x80040001),

@@ -9,7 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
@@ -18,7 +18,7 @@ import javax.crypto.Cipher;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum CipherAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
+public enum CipherAttributeEnum implements IKEv1Attribute, BasicAttribute {
 
     DES_CBC(0x80010001, 8),
     IDEA_CBC(0x80010002, 16),

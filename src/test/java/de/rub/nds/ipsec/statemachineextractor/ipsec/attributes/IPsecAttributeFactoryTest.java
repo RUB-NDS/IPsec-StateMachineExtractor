@@ -8,6 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -21,9 +24,20 @@ public class IPsecAttributeFactoryTest {
      * Test lazy loading.
      */
     @Test
-    public void testFromInt() throws Exception {
-        IPsecAttribute result = IPsecAttributeFactory.fromInt(0x80010001);
+    public void testFromStreamBasic() throws Exception {
+        byte[] bytes = DatatypeHelper.intTo4ByteArray(0x80010001);
+        IPsecAttribute result = IPsecAttributeFactory.fromStream(new ByteArrayInputStream(bytes));
         assertEquals("SECONDS", result.toString());
+    }
+    
+    @Test
+    public void testFromStreamVariableLength() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.write(DatatypeHelper.intTo4ByteArray(0x00020004), 0, 4);
+        baos.write(DatatypeHelper.intTo4ByteArray(0x00000E10), 0, 4);
+        byte[] bytes = baos.toByteArray();
+        IPsecAttribute result = IPsecAttributeFactory.fromStream(new ByteArrayInputStream(bytes));
+        assertEquals("0002000400000E10", DatatypeHelper.byteArrayToHexDump(result.getBytes()));
     }
 
 }

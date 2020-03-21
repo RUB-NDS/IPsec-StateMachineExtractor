@@ -17,7 +17,6 @@ import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.IPsecAttributeFac
 import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -118,18 +117,16 @@ public class TransformPayload extends ISAKMPPayload {
         byte[] buffer = read4ByteFromStream(bais);
         this.setTransformNumber(buffer[0]);
         this.setTransformId(selectTransformId(buffer[1]));
-        if ((length - TRANSFORM_PAYLOAD_HEADER_LEN) % 4 != 0) {
-            throw new ISAKMPParsingException("Parsing variable length attributes is not supported.");
-        }
-        for (int i = 0; i < (length - TRANSFORM_PAYLOAD_HEADER_LEN) / 4; i++) {
-            int value = ByteBuffer.wrap(read4ByteFromStream(bais)).getInt();
+        int processedLength = 0;
+        while (processedLength < (length - TRANSFORM_PAYLOAD_HEADER_LEN)) {
             ISAKMPAttribute attr;
             if (this.getTransformId() == ProtocolTransformIDEnum.ISAKMP_KEY_IKE) {
-                attr = IKEv1AttributeFactory.fromInt(value);
+                attr = IKEv1AttributeFactory.fromStream(bais);
             } else {
-                attr = IPsecAttributeFactory.fromInt(value);
+                attr = IPsecAttributeFactory.fromStream(bais);
             }
             this.addAttribute(attr);
+            processedLength += attr.getLength();
         }
     }
 

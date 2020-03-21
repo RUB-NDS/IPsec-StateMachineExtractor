@@ -10,14 +10,14 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum DHGroupAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
+public enum DHGroupAttributeEnum implements IKEv1Attribute, BasicAttribute {
 
     GROUP1(0x80040001, IKEDHGroupEnum.GROUP1_768),
     GROUP2(0x80040002, IKEDHGroupEnum.GROUP2_1024),

@@ -64,7 +64,7 @@ public final class DatatypeHelper {
         byte[] buffer = new byte[4];
         int read = bais.read(buffer);
         if (read != 4) {
-            throw new IOException("Reading from InputStream failed!");
+            throw new IOException("InputStream ended early!");
         }
         return buffer;
     }

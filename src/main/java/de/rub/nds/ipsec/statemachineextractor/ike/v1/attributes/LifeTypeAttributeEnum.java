@@ -9,14 +9,14 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum LifeTypeAttributeEnum implements IKEv1Attribute, ISAKMPSerializable {
+public enum LifeTypeAttributeEnum implements IKEv1Attribute, BasicAttribute {
 
     SECONDS(0x800b0001),
     KILOBYTES(0x800b0002);

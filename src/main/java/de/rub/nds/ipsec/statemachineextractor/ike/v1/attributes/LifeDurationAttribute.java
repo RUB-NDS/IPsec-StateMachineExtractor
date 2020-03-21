@@ -9,15 +9,16 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class LifeDurationAttribute implements IKEv1Attribute, ISAKMPSerializable {
+public class LifeDurationAttribute implements IKEv1Attribute, BasicAttribute {
 
     static LifeDurationAttribute generate(int duration) {
         check(duration);
@@ -28,29 +29,30 @@ public class LifeDurationAttribute implements IKEv1Attribute, ISAKMPSerializable
     private final byte[] bytes;
 
     private LifeDurationAttribute(int value) {
-       this.bytes = DatatypeHelper.intTo4ByteArray(value);
-       IKEv1AttributeFactory.register(this, value);
+        this.bytes = DatatypeHelper.intTo4ByteArray(value);
+        IKEv1AttributeFactory.register(this, value);
     }
 
     @Override
     public byte[] getBytes() {
         return bytes.clone();
     }
-    
+
     public static LifeDurationAttribute get(int duration) {
         check(duration);
+        byte[] bytes = DatatypeHelper.intTo4ByteArray((FORMAT_TYPE << 16) + duration);
         try {
-            return (LifeDurationAttribute) IKEv1AttributeFactory.fromInt((FORMAT_TYPE << 16) + duration);
+            return (LifeDurationAttribute) IKEv1AttributeFactory.fromStream(new ByteArrayInputStream(bytes));
         } catch (ISAKMPParsingException ex) {
             throw new RuntimeException("This should not be possible", ex);
         }
     }
-    
+
     private static void check(int duration) {
         if (duration > 0xFFFF) {
             throw new IllegalArgumentException("Duration too large.");
         }
-    }    
+    }
 
     @Override
     public void configureCiphersuite(IKEv1Ciphersuite ciphersuite) {

@@ -8,21 +8,15 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import java.io.ByteArrayOutputStream;
-
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public interface ISAKMPAttribute extends ISAKMPSerializable {
-
-    final int HEADER_LEN = 4;
-    
-    byte[] getBytes();
+public interface BasicAttribute extends ISAKMPAttribute {
 
     @Override
-    default public void writeBytes(ByteArrayOutputStream baos) {
-        baos.write(getBytes(), 0, getLength());
+    default public int getLength() {
+        return ISAKMPAttribute.HEADER_LEN;
     }
 
 }
