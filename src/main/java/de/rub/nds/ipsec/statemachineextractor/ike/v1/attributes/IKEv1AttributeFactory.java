@@ -79,7 +79,7 @@ public final class IKEv1AttributeFactory {
                     return LifeDurationAttribute.generate(value & 0xFFFF);
             }
         }
-        throw new ISAKMPParsingException("Encountered unknown IPsec attribute: " + String.format("0x%08x", value));
+        throw new ISAKMPParsingException("Encountered unknown IKEv1 attribute: " + String.format("0x%08x", value));
     }
 
     static void register(IKEv1Attribute attr, int value) {
