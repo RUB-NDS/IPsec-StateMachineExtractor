@@ -54,6 +54,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                     }
                     if (abstractInput.equals("NEW_QM_MSG_ID")) {
                         conn.getHandshake().setMostRecentMessageID(null);
+                        adjustQuickModeMessageID(conn.getHandshake(), new ISAKMPMessage());
                         return null;
                     }
                     if (abstractInput.startsWith("v")) {
