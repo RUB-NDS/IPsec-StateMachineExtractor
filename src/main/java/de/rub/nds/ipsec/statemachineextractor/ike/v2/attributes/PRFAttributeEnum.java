@@ -16,13 +16,13 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum AuthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
-
-    PSK(0xdeadbeef) //value is missing?? where is the psk value?
+public enum PRFAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
+    
+    SHA1(0x02000002);
 
     private final byte[] bytes;
 
-    private AuthAttributeEnum(int value) {
+    private PRFAttributeEnum(int value) {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
         IKEv2AttributeFactory.register(this, value);
     }
@@ -34,6 +34,7 @@ public enum AuthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
 
     @Override
     public void configureCiphersuite(IKEv2Ciphersuite ciphersuite) {
-        ciphersuite.setAuthMethod(this);
+        ciphersuite.setHash(this);
     }
+
 }

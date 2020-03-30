@@ -16,15 +16,21 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum AuthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
+public enum KeyLengthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
 
-    PSK(0xdeadbeef) //value is missing?? where is the psk value?
+    L128(0x800e0080, 16);
 
     private final byte[] bytes;
+    private final int keySize;
 
-    private AuthAttributeEnum(int value) {
+    private KeyLengthAttributeEnum(int value, int size) {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
+        this.keySize = size;
         IKEv2AttributeFactory.register(this, value);
+    }
+    
+    public int getKeySize() {
+        return this.keySize;
     }
 
     @Override
@@ -34,6 +40,7 @@ public enum AuthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
 
     @Override
     public void configureCiphersuite(IKEv2Ciphersuite ciphersuite) {
-        ciphersuite.setAuthMethod(this);
+        ciphersuite.setKeylength(this);
     }
+
 }
