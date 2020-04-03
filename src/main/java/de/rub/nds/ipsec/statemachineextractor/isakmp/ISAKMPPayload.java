@@ -79,7 +79,11 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
         byte[] genericPayloadHeader = read4ByteFromStream(bais);
         PayloadTypeEnum next = PayloadTypeEnum.get((byte)genericPayloadHeader[0]);
         if (next == null) {
-            throw new ISAKMPParsingException("Unknown payload type, probably decryption failed!");
+            if (genericPayloadHeader[1] != 0x00) {
+                throw new ISAKMPParsingException("Unknown payload type and reserved byte not zero, probably decryption failed!");
+            } else {
+                throw new ISAKMPParsingException("Unknown payload type: " + String.format("0x%02x", genericPayloadHeader[0]));
+            }
         }
         this.setNextPayload(next);
         return ((genericPayloadHeader[2] & 0xff) << 8) | (genericPayloadHeader[3] & 0xff);
