@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public final class IKEv2AttributeFactory {
     
-    private IKEv1AttributeFactory() {
+    private IKEv2AttributeFactory() {
         
     }
     
@@ -28,9 +28,6 @@ public final class IKEv2AttributeFactory {
     public static IKEv2Attribute fromInt(int value) throws ISAKMPParsingException {
         if (LOOKUP.containsKey(value)) {
             return LOOKUP.get(value);
-        }
-        if ((value >>> 16) == LifeDurationAttribute.FORMAT_TYPE) { // it's a LifeDurationAttribute
-            return LifeDurationAttribute.generate(value & 0xFFFF);
         }
         throw new ISAKMPParsingException("Encountered unknown attribute.");
     }

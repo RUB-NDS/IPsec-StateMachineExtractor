@@ -6,15 +6,13 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1;
+package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttribute;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.PRFAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.CipherAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.DHGroupAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.IntegrityAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
 
 /**
  *

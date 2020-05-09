@@ -16,7 +16,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum KeyLengthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable {
+public enum KeyLengthAttributeEnum implements IKEv2Attribute, ISAKMPSerializable { //sub-attribute of CipherAttribute!!!
 
     L128(0x800e0080, 16);
 

@@ -55,6 +55,7 @@ public class Main {
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
         IPsecInputAlphabet inputAlphabet = new IPsecInputAlphabet();
+        
         final IPsecConnectionContextHandler contextHandler = new IPsecConnectionContextHandler(host, port, timeout);
         final ContextExecutableInputSUL<ContextExecutableInput<SerializableMessage, IPsecConnection>, SerializableMessage, IPsecConnection> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
@@ -96,6 +97,7 @@ public class Main {
         }
     }
 
+    
     public static <I> void writeDotModel(MealyMachine<?, I, ?, ?> model, Alphabet<I> alphabet, String filename) throws IOException, InterruptedException {
         MealyMachine.MealyGraphView mealyGraphView = new MealyMachine.MealyGraphView(model, alphabet);
         File dotFile = new File(filename);
@@ -104,4 +106,5 @@ public class Main {
         }
         Runtime.getRuntime().exec("dot -Tpdf -O " + filename); // requires graphviz
     }
+   
 }
