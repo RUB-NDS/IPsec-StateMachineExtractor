@@ -8,6 +8,10 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
 
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,10 +27,8 @@ import java.util.List;
  */
 public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
 
-    protected static final int SA_HEADER_LEN = 4;
+    protected final static int SA_HEADER_LEN = 4; // final deleted da v2 headder anders
 
-    // private int domainOfInterpretation = 0x01; Not existent in IKev2
-    private final BitSet situation = new BitSet(3);
     private final List<ProposalPayload> proposals = new ArrayList<>();
 
     public SecurityAssociationPayloadv2() {
@@ -70,16 +72,15 @@ public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
         }
     }
 
-    public static SecurityAssociationPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-        SecurityAssociationPayload securityAssociationPayload = new SecurityAssociationPayload();
-        securityAssociationPayload.fillFromStream(bais);
-        return securityAssociationPayload;
+    public static SecurityAssociationPayloadv2 fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        SecurityAssociationPayloadv2 securityAssociationPayloadv2 = new SecurityAssociationPayloadv2();
+        securityAssociationPayloadv2.fillFromStream(bais);
+        return securityAssociationPayloadv2;
     }
 
     @Override
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
-        byte[] buffer = read4ByteFromStream(bais);
         this.addProposalPayload(ProposalPayload.fromStream(bais));
         if (length != this.getLength()) {
             throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");

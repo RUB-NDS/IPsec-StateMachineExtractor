@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class SecurityAssociationPayload extends ISAKMPPayload {
 
-    protected static final int SA_HEADER_LEN = 12;
+    protected final static int SA_HEADER_LEN = 12;
 
     private int domainOfInterpretation = 0x01; //IPSEC
     private final BitSet situation = new BitSet(3);
