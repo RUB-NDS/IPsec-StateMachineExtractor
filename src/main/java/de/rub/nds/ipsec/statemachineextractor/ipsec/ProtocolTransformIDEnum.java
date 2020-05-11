@@ -38,11 +38,18 @@ public enum ProtocolTransformIDEnum implements ByteValueEnum {
     ESP_DES_IV32((byte) 9),
     ESP_RC4((byte) 10),
     ESP_NULL((byte) 11),
-    ESP_AES((byte) 12);
+    ESP_AES((byte) 12),
+    /**
+     * Here beginns IKEv2!
+     */
+    IKEV2_PRF_HMAC_SHA1((byte) 2),
+    IKEV2_AUTH_HMAC_SHA1_96((byte) 2), //same like IKEV2_PRF_HMAC_SHA1?
+    IKEV2_DH_1024_MODP((byte) 2),
+    IKEV2_ENC_AES_CBC((byte) 12);
 
     private final byte value;
 
-private ProtocolTransformIDEnum(byte value) {
+    private ProtocolTransformIDEnum(byte value) {
         this.value = value;
     }
 
