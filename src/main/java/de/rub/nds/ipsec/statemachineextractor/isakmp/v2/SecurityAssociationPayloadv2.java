@@ -11,7 +11,6 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,19 +26,19 @@ import java.util.List;
  */
 public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
 
-    protected final static int SA_HEADER_LEN = 4; // final deleted da v2 headder anders
+    protected final static int SA_HEADER_LEN = 4;
 
-    private final List<ProposalPayload> proposals = new ArrayList<>();
+    private final List<ProposalPayloadv2> proposals = new ArrayList<>();
 
     public SecurityAssociationPayloadv2() {
         super(PayloadTypeEnum.SecurityAssociation);
     }
 
-    public void addProposalPayload(ProposalPayload payload) {
+    public void addProposalPayloadv2(ProposalPayloadv2 payload) {
         proposals.add(payload);
     }
 
-    public List<ProposalPayload> getProposalPayloads() {
+    public List<ProposalPayloadv2> getProposalPayloads() {
         return Collections.unmodifiableList(proposals);
     }
 
@@ -51,7 +50,7 @@ public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
     @Override
     public int getLength() {
         int length = SA_HEADER_LEN;
-        for (ProposalPayload payload : proposals) {
+        for (ProposalPayloadv2 payload : proposals) {
             length += payload.getLength();
         }
         return length;
@@ -61,7 +60,7 @@ public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
     public void writeBytes(ByteArrayOutputStream baos) {
         super.writeBytes(baos);
         for (int i = 0; i < proposals.size(); i++) {
-            ProposalPayload proposal = proposals.get(i);
+            ProposalPayloadv2 proposal = proposals.get(i);
             if (proposal.getProposalNumber() == -128) {
                 proposal.setProposalNumber((byte) i);
             }
@@ -81,7 +80,7 @@ public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
     @Override
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
-        this.addProposalPayload(ProposalPayload.fromStream(bais));
+        this.addProposalPayloadv2(ProposalPayloadv2.fromStream(bais));
         if (length != this.getLength()) {
             throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");
         }

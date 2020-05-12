@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public enum ProtocolIDEnum implements ByteValueEnum {
     RESERVED((byte) 0),
-    ISAKMP((byte) 1),
+    ISAKMP((byte) 1), //in IKEv2 it got renamed to IKE
     IPSEC_AH((byte) 2),
     IPSEC_ESP((byte) 3),
     IPCOMP((byte) 4);
