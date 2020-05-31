@@ -62,7 +62,7 @@ public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
         for (int i = 0; i < proposals.size(); i++) {
             ProposalPayloadv2 proposal = proposals.get(i);
             if (proposal.getProposalNumber() == -128) {
-                proposal.setProposalNumber((byte) i);
+                proposal.setProposalNumber((byte) i); //set 0 but should be 1
             }
             if (i + 1 < proposals.size()) {
                 proposal.setNextPayload(PayloadTypeEnum.Proposal);

@@ -33,10 +33,10 @@ public class TransformPayloadv2 extends ISAKMPPayload {
 
     protected static final int TRANSFORM_PAYLOAD_HEADER_LEN = 8;
 
-    private ProtocolTransformIDEnum transformId; // = ISAKMPTransformIDEnum.KEY_IKE.toProtocolTransformIDEnum();
+    private ProtocolTransformIDEnum transformId; //= ISAKMPTransformIDEnum.KEY_IKE.toProtocolTransformIDEnum();
     private final List<ISAKMPAttribute> attributes = new ArrayList<>();
     private TransformTypeEnum transformType;
-    private ProtocolIDEnum protocolID;
+    private ProtocolIDEnum protocolID; //?
 
     public TransformPayloadv2() {
         super(PayloadTypeEnum.Transform);

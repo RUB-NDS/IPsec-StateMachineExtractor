@@ -17,7 +17,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
  */
 public enum KeyLengthAttributeEnum implements BasicAttribute {
 
-    L128(0x800e0080, 16);
+    L128(0x000e0080, 16);
 
     protected static final int FORMAT_TYPE = 0x800e;
     private final byte[] bytes;

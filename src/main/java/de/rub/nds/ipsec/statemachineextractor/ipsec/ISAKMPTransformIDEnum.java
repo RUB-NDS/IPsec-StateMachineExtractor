@@ -21,7 +21,7 @@ public enum ISAKMPTransformIDEnum implements ByteValueEnum {
     KEY_IKE((byte) 1, ProtocolTransformIDEnum.ISAKMP_KEY_IKE),
     
     IKEV2_PRF_HMAC_SHA1((byte) 2, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1),
-    IKEV2_AUTH_HMAC_SHA1_96((byte) 2, ProtocolTransformIDEnum.IKEV2_AUTH_HMAC_SHA1_96), //same like IKEV2_PRF_HMAC_SHA1?
+    IKEV2_INTEG_HMAC_SHA1_96((byte) 2, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96), //same like IKEV2_PRF_HMAC_SHA1?
     IKEV2_DH_1024_MODP((byte) 2, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP),
     IKEV2_ENC_AES_CBC((byte) 12, ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC);
 
