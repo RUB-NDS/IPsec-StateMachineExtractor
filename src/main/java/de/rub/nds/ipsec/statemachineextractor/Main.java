@@ -8,6 +8,12 @@
  */
 package de.rub.nds.ipsec.statemachineextractor;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.SecurityAssociationPayloadFactoryv2;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.SecurityAssociationPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
+import java.io.ByteArrayOutputStream;
+
 import de.rub.nds.ipsec.statemachineextractor.learning.IPsecMessageMapper;
 import de.learnlib.algorithms.lstar.mealy.ExtensibleLStarMealyBuilder;
 import de.learnlib.api.query.DefaultQuery;
@@ -44,6 +50,17 @@ import net.automatalib.serialization.dot.GraphDOT;
  */
 public class Main {
 
+    public static void main(String[] args) {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        SecurityAssociationPayloadv2 test = SecurityAssociationPayloadFactoryv2.createP1SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP, KeyLengthAttributeEnum.L128);
+        test.writeBytes(baos);
+        //byte[] byteArray = baos.toByteArray();
+        //for (byte b : byteArray) {
+            //System.out.print(b + " ");
+        //}
+        System.out.println(baos);
+    }
+	/**
     static {
         CryptoHelper.prepare();
     }
@@ -106,5 +123,5 @@ public class Main {
         }
         Runtime.getRuntime().exec("dot -Tpdf -O " + filename); // requires graphviz
     }
-   
+   **/
 }
