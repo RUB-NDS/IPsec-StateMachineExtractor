@@ -31,7 +31,11 @@ public enum PayloadTypeEnum implements ByteValueEnum {
     Nonce((byte) 10),
     Notification((byte) 11),
     Delete((byte) 12),
-    VendorID((byte) 13);
+    VendorID((byte) 13),
+	/**
+	 * Here begins IKEv2
+	 */
+	SecurityAssociationv2((byte) 33);
 
     private final byte value;
 

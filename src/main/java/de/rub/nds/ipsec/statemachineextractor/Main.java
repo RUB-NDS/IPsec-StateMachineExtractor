@@ -10,9 +10,13 @@ package de.rub.nds.ipsec.statemachineextractor;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.SecurityAssociationPayloadFactoryv2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.SecurityAssociationPayloadv2;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
 import java.io.ByteArrayOutputStream;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.ISAKMPMessagev2;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
+
+
 
 import de.rub.nds.ipsec.statemachineextractor.learning.IPsecMessageMapper;
 import de.learnlib.algorithms.lstar.mealy.ExtensibleLStarMealyBuilder;
@@ -51,21 +55,36 @@ import net.automatalib.serialization.dot.GraphDOT;
 public class Main {
 
     public static void main(String[] args) {
+    	LoquaciousClientUdpTransportHandler udpTH = new LoquaciousClientUdpTransportHandler(10000, "1.1.1.1", 500);
+    	try {
+    		udpTH.initialize();
+    	}
+    	catch(IOException e) {
+    		System.out.println("abc");
+    	}
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        SecurityAssociationPayloadv2 test = SecurityAssociationPayloadFactoryv2.createP1SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP, KeyLengthAttributeEnum.L128);
-        test.writeBytes(baos);
-        //byte[] byteArray = baos.toByteArray();
-        //for (byte b : byteArray) {
-            //System.out.print(b + " ");
-        //}
-        System.out.println(baos);
+    	ISAKMPMessagev2 msg = new ISAKMPMessagev2();
+        SecurityAssociationPayloadv2 test = SecurityAssociationPayloadFactoryv2.P1_AES_128_CBC_SHA1;
+        msg.addPayload(test);
+        msg.setExchangeType(ExchangeTypeEnum.IKE_SA_INIT);
+        msg.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("864330ac30e6564d"));
+        msg.setInitiatorFlag(true);
+        msg.setVersionFlag(false);
+        msg.setResponseFlag(false);
+        msg.writeBytes(baos);
+        try {
+        	udpTH.sendData(baos.toByteArray());
+        }
+        catch(IOException e) {
+    		System.out.println("abc");
+        }
     }
 	/**
     static {
         CryptoHelper.prepare();
     }
 
-    private static final int timeout = 800;
+    private static final int timeout = 800;LoquaciousClientUdpTransportHandler
     private static final String host = "10.13.37.1"; //change to my docker IP 
     private static final int port = 500;
 

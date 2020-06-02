@@ -44,6 +44,7 @@ public class SecurityAssociationPayloadFactoryv2 {
         transformPayloadDH.setTransformId(transformIDDH);
         
         ProposalPayloadv2 proposalPayload = new ProposalPayloadv2();
+        //proposalPayload.setProposalNumber((byte) 1); also works with proposal number 0
         proposalPayload.addTransform(transformPayloadENC);
         proposalPayload.addTransform(transformPayloadPRF);
         proposalPayload.addTransform(transformPayloadINTEG);
@@ -53,4 +54,6 @@ public class SecurityAssociationPayloadFactoryv2 {
         securityAssociationPayload.addProposalPayloadv2(proposalPayload);
         return securityAssociationPayload;
     }
+    
+    public static final SecurityAssociationPayloadv2 P1_AES_128_CBC_SHA1      = createP1SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP, KeyLengthAttributeEnum.L128);
 }

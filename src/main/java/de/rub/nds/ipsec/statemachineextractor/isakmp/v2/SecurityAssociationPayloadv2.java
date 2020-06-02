@@ -31,7 +31,7 @@ public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
     private final List<ProposalPayloadv2> proposals = new ArrayList<>();
 
     public SecurityAssociationPayloadv2() {
-        super(PayloadTypeEnum.SecurityAssociation);
+        super(PayloadTypeEnum.SecurityAssociationv2);
     }
 
     public void addProposalPayloadv2(ProposalPayloadv2 payload) {
@@ -44,7 +44,7 @@ public class SecurityAssociationPayloadv2 extends ISAKMPPayload {
 
     @Override
     public String toString() {
-        return "SA";
+        return "SAv2";
     }
 
     @Override

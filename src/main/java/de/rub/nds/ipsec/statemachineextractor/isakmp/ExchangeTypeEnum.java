@@ -25,7 +25,11 @@ public enum ExchangeTypeEnum implements ByteValueEnum {
     Aggressive((byte) 4),
     Informational((byte) 5),
     QuickMode((byte) 32),
-    NewGroupMode((byte) 33);
+    NewGroupMode((byte) 33),
+    /**
+     * Here begins IKEv2
+     */
+    IKE_SA_INIT((byte) 34);
 
     private final byte value;
 
