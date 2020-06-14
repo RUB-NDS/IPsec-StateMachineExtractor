@@ -44,7 +44,7 @@ public class SecurityAssociationPayloadFactoryv2 {
         transformPayloadDH.setTransformId(transformIDDH);
         
         ProposalPayloadv2 proposalPayload = new ProposalPayloadv2();
-        //proposalPayload.setProposalNumber((byte) 1); also works with proposal number 0
+        proposalPayload.setProposalNumber((byte) 1); //also works with proposal number 0
         proposalPayload.addTransform(transformPayloadENC);
         proposalPayload.addTransform(transformPayloadPRF);
         proposalPayload.addTransform(transformPayloadINTEG);
