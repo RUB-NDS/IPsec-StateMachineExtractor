@@ -37,7 +37,8 @@ public enum PayloadTypeEnum implements ByteValueEnum {
 	 */
 	SecurityAssociationv2((byte) 33),
 	KeyExchangev2((byte) 34),
-	Noncev2((byte) 40);
+	Noncev2((byte) 40),
+	Notify((byte) 41);
 
     private final byte value;
 

@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.v2.KeyLengthAttributeEnumv2;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -71,12 +72,15 @@ public final class IPsecAttributeFactory {
                     return LOOKUP.get(value);
                 case SALifeDurationBasicAttribute.FORMAT_TYPE:
                     return SALifeDurationBasicAttribute.generate(value & 0xFFFF);
+                case KeyLengthAttributeEnumv2.FORMAT_TYPE:
+                    dummy = KeyLengthAttributeEnumv2.L128;
+                	return LOOKUP.get(value);
             }
         }
         throw new ISAKMPParsingException("Encountered unknown IPsec attribute: " + String.format("0x%08x", value));
     }
 
-    static void register(IPsecAttribute attr, int value) {
+    public static void register(IPsecAttribute attr, int value) {
         LOOKUP.put(value, attr);
     }
 }

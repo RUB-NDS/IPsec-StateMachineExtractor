@@ -10,35 +10,78 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SimpleBinaryPayload;
+import java.io.IOException;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEnum;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class KeyExchangePayloadv2 extends SimpleBinaryPayload {
+public class KeyExchangePayloadv2 extends ISAKMPPayload {
 
-    private final ProtocolTransformIDEnum dhGroup = ProtocolTransformIDEnum.IKEV2_DH_1024_MODP;
-
-    public KeyExchangePayloadv2() {
+    private TransformDHEnum dhGroup;
+    protected static final int HEADER_LEN = 8;
+    private byte[] keyExchangeData;
+    private byte[] body;
+    //private byte[] reserverd = DatatypeHelper.hexDumpToByteArray("0000");
+    
+    public KeyExchangePayloadv2(TransformDHEnum dhGroup) {
         super(PayloadTypeEnum.KeyExchangev2);
+        this.dhGroup = dhGroup;
+    }
+    
+    public void setDhGroup(TransformDHEnum dhGroup) {
+    	this.dhGroup = dhGroup;
+    }
+    
+    @Override
+    public int getLength() {
+        int length = HEADER_LEN;
+        length += keyExchangeData.length;
+        return length;
+    }
+    
+    public TransformDHEnum getDhGroup() {
+    	return dhGroup;
     }
 
     public byte[] getKeyExchangeData() {
-        return getBinaryData();
+        return keyExchangeData;
     }
 
     public void setKeyExchangeData(byte[] keyExchangeData) {
-        ByteArrayOutputStream keyExchangeDatav2 = new ByteArrayOutputStream();
-        keyExchangeDatav2.write(0x00);
-        keyExchangeDatav2.write(dhGroup.getValue());
-        keyExchangeDatav2.write(0x00);
-        keyExchangeDatav2.write(0x00);
-        keyExchangeDatav2.write(keyExchangeData, 0, keyExchangeData.length);
-        setBinaryData(keyExchangeDatav2.toByteArray());
+        this.keyExchangeData = keyExchangeData;
+    }
+    
+    public byte[] getBody() {
+    	return body;
+    }
+    
+    public void configureBody() throws ISAKMPParsingException {
+    	if ( dhGroup == null || keyExchangeData == null) {
+    		throw new ISAKMPParsingException("No dhGroup or KeyExchange Data set!");
+    	}
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	baos.write(0x00);
+    	baos.write(this.dhGroup.getValue());
+    	baos.write(0x00);
+    	baos.write(0x00);
+    	try {
+        	baos.write(this.getKeyExchangeData());
+        } catch (IOException ex) {
+            throw new ISAKMPParsingException(ex);
+        }
+    	this.body = baos.toByteArray();
+    }
+    
+    @Override
+    public void writeBytes(ByteArrayOutputStream baos) {
+        super.writeBytes(baos);
+        baos.write(this.getBody(), 0, this.body.length);
     }
 
     @Override
@@ -47,9 +90,32 @@ public class KeyExchangePayloadv2 extends SimpleBinaryPayload {
     }
     
     public static KeyExchangePayloadv2 fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-        KeyExchangePayloadv2 keyExchangePayload = new KeyExchangePayloadv2();
-        SimpleBinaryPayload.fromStream(bais, keyExchangePayload);
+        KeyExchangePayloadv2 keyExchangePayload = new KeyExchangePayloadv2(null);
+        keyExchangePayload.fillFromStream(bais);
         return keyExchangePayload;
     }
-
+    
+    @Override
+    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        int length = this.fillGenericPayloadHeaderFromStream(bais);
+        byte[] buffer = read4ByteFromStream(bais);
+        this.setDhGroup(TransformDHEnum.get(buffer[1]));
+        byte[] buffer1 = new byte[length - HEADER_LEN];
+        int readBytes;
+        try {
+            readBytes = bais.read(buffer1);
+        } catch (IOException ex) {
+            throw new ISAKMPParsingException(ex);
+        }
+        if (readBytes < length - HEADER_LEN) {
+            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - HEADER_LEN) + " bytes)!");
+        }
+        this.setKeyExchangeData(buffer1);
+        this.configureBody();
+    }
+    
+    @Override
+    protected void setBody(byte[] body) throws ISAKMPParsingException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

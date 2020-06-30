@@ -6,10 +6,11 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
+package de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms;
 
 import de.rub.nds.ipsec.statemachineextractor.ByteValueEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,22 +18,17 @@ import java.util.Map;
  *
  * @author Benjamin Koltermann <benjamin.koltermann at ruhr-uni-bochum.de>
  */
-public enum TransformIDEnum implements ByteValueEnum {
-    ENCR_AES_CBC((byte) 12),
-    PRF_HMAC_SHA1((byte) 2),
-    AUTH_HMAC_SHA1_96((byte) 2),
-    DH_1024_MODP((byte) 2, IKEDHGroupEnum.GROUP2_1024);
+public enum TransformDHEnum implements ByteValueEnum {
+    GROUP2((byte) 2, IKEDHGroupEnum.GROUP2_1024, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP);
 
     private final byte value;
-    private IKEDHGroupEnum group = null;
-
-    private TransformIDEnum(byte value) {
-        this.value = value;
-    }
+    private final IKEDHGroupEnum group;
+    private final ProtocolTransformIDEnum protocolTransformIDEnum;
     
-    private TransformIDEnum(byte value, IKEDHGroupEnum group) {
+    private TransformDHEnum(byte value, IKEDHGroupEnum group, ProtocolTransformIDEnum protocolTransformIDEnum) {
     	this.value = value;
     	this.group = group;
+    	this.protocolTransformIDEnum = protocolTransformIDEnum;
     }
     
     public IKEDHGroupEnum getDHGroupParameters() {
@@ -41,6 +37,10 @@ public enum TransformIDEnum implements ByteValueEnum {
         }
         return null;
     }
+    
+    public ProtocolTransformIDEnum toProtocolTransformIDEnum() {
+        return protocolTransformIDEnum;
+    }
 
     @Override
     public byte getValue() {
@@ -48,15 +48,15 @@ public enum TransformIDEnum implements ByteValueEnum {
     }
 
     // Reverse-lookup map
-    private static final Map<Byte, TransformIDEnum> lookup = new HashMap<Byte, TransformIDEnum>();
+    private static final Map<Byte, TransformDHEnum> lookup = new HashMap<Byte, TransformDHEnum>();
 
     static {
-        for (TransformIDEnum type : TransformIDEnum.values()) {
+        for (TransformDHEnum type : TransformDHEnum.values()) {
             lookup.put(type.getValue(), type);
         }
     }
 
-    public static TransformIDEnum get(byte value) {
+    public static TransformDHEnum get(byte value) {
         return lookup.get(value);
     }
 }

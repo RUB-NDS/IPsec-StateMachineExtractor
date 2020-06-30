@@ -18,12 +18,7 @@ import java.util.Map;
  */
 public enum ISAKMPTransformIDEnum implements ByteValueEnum {
     RESERVED((byte) 0, ProtocolTransformIDEnum.ISAKMP_RESERVED),
-    KEY_IKE((byte) 1, ProtocolTransformIDEnum.ISAKMP_KEY_IKE),
-    
-    IKEV2_PRF_HMAC_SHA1((byte) 2, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1),
-    IKEV2_INTEG_HMAC_SHA1_96((byte) 2, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96), //same like IKEV2_PRF_HMAC_SHA1?
-    IKEV2_DH_1024_MODP((byte) 2, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP),
-    IKEV2_ENC_AES_CBC((byte) 12, ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC);
+    KEY_IKE((byte) 1, ProtocolTransformIDEnum.ISAKMP_KEY_IKE);
 
     private final byte value;
     private final ProtocolTransformIDEnum protocolTransformIDEnum;
@@ -32,7 +27,7 @@ public enum ISAKMPTransformIDEnum implements ByteValueEnum {
         this.value = value;
         this.protocolTransformIDEnum = protocolTransformIDEnum;
     }
-
+    
     @Override
     public byte getValue() {
         return value;
@@ -42,7 +37,7 @@ public enum ISAKMPTransformIDEnum implements ByteValueEnum {
         return protocolTransformIDEnum;
     }
 
-    // Reverse-lookup map
+    // Reverse-lookup map for IKEv1
     private static final Map<Byte, ISAKMPTransformIDEnum> lookup = new HashMap<Byte, ISAKMPTransformIDEnum>();
 
     static {

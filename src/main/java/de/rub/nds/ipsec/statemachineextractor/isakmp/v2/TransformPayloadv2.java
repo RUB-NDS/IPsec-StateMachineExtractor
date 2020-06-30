@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
 
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.*;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
@@ -15,7 +16,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPAttribute;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ISAKMPTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1AttributeFactory;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.AHTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.IPsecAttributeFactory;
@@ -91,18 +91,53 @@ public class TransformPayloadv2 extends ISAKMPPayload {
         return Collections.unmodifiableList(attributes);
     }
 
-    private ProtocolTransformIDEnum selectTransformId(byte value) {
+    private ProtocolTransformIDEnum DHselectTransformId(byte value) {
         if (protocolID == null) {
             // no further hint, just guess
             return ProtocolTransformIDEnum.getFirstMatch(value);
         }
         switch (protocolID) {
             case ISAKMP:
-                return ISAKMPTransformIDEnum.get(value).toProtocolTransformIDEnum();
-            case IPSEC_ESP:
-                return ESPTransformIDEnum.get(value).toProtocolTransformIDEnum();
-            case IPSEC_AH:
-                return AHTransformIDEnum.get(value).toProtocolTransformIDEnum();
+                return TransformDHEnum.get(value).toProtocolTransformIDEnum();
+            default:
+                return ProtocolTransformIDEnum.getFirstMatch(value);
+        }
+    }
+    
+    private ProtocolTransformIDEnum ENCRselectTransformId(byte value) {
+        if (protocolID == null) {
+            // no further hint, just guess
+            return ProtocolTransformIDEnum.getFirstMatch(value);
+        }
+        switch (protocolID) {
+            case ISAKMP:
+                return TransformENCREnum.get(value).toProtocolTransformIDEnum();
+            default:
+                return ProtocolTransformIDEnum.getFirstMatch(value);
+        }
+    }
+    
+    private ProtocolTransformIDEnum PRFselectTransformId(byte value) {
+        if (protocolID == null) {
+            // no further hint, just guess
+            return ProtocolTransformIDEnum.getFirstMatch(value);
+        }
+        switch (protocolID) {
+            case ISAKMP:
+                return TransformPRFEnum.get(value).toProtocolTransformIDEnum();
+            default:
+                return ProtocolTransformIDEnum.getFirstMatch(value);
+        }
+    }
+    
+    private ProtocolTransformIDEnum INTEGselectTransformId(byte value) {
+        if (protocolID == null) {
+            // no further hint, just guess
+            return ProtocolTransformIDEnum.getFirstMatch(value);
+        }
+        switch (protocolID) {
+            case ISAKMP:
+                return TransformINTEGEnum.get(value).toProtocolTransformIDEnum();
             default:
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
@@ -119,15 +154,28 @@ public class TransformPayloadv2 extends ISAKMPPayload {
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
         byte[] buffer = read4ByteFromStream(bais);
-        this.setTransformId(selectTransformId(buffer[1]));
+        this.setTransformType(TransformTypeEnum.get(buffer[0]));
+        switch (transformType) {
+        	case ENCR:
+                this.setTransformId(ENCRselectTransformId(buffer[3]));
+                break;
+        	case PRF:
+                this.setTransformId(PRFselectTransformId(buffer[3]));
+                break;
+        	case INTEG:
+                this.setTransformId(INTEGselectTransformId(buffer[3]));
+                break;
+        	case DH:
+                this.setTransformId(DHselectTransformId(buffer[3]));
+                break;
+            default:
+            	 this.setTransformId(ProtocolTransformIDEnum.getFirstMatch(buffer[2]));
+            	 break;
+        }
         int processedLength = 0;
         while (processedLength < (length - TRANSFORM_PAYLOAD_HEADER_LEN)) {
             ISAKMPAttribute attr;
-            if (this.getTransformId() == ProtocolTransformIDEnum.ISAKMP_KEY_IKE) {
-                attr = IKEv1AttributeFactory.fromStream(bais);
-            } else {
-                attr = IPsecAttributeFactory.fromStream(bais);
-            }
+            attr = IPsecAttributeFactory.fromStream(bais);
             this.addAttribute(attr);
             processedLength += attr.getLength();
         }

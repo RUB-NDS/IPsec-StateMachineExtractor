@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import de.rub.nds.ipsec.statemachineextractor.ByteValueEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +49,7 @@ public enum ProtocolTransformIDEnum implements ByteValueEnum {
     IKEV2_ENC_AES_CBC((byte) 12);
 
     private final byte value;
+    private IKEDHGroupEnum group = null;
 
     private ProtocolTransformIDEnum(byte value) {
         this.value = value;

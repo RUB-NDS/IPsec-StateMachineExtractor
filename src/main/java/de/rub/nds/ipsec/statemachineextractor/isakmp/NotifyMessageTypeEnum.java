@@ -48,6 +48,7 @@ public enum NotifyMessageTypeEnum {
     UnsupportedExchangeType(29),
     UnequalPayloadLengths(30),
     Connected(16384),
+    MultipleAuthSupport(16404),
     ResponderLifetime(24576),
     ReplayStatus(24577),
     InitialContact(24578);

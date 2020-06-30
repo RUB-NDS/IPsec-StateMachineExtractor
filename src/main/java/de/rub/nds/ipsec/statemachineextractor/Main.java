@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.SecurityAssociationPayloadFactoryv2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.SecurityAssociationPayloadv2;
 import java.io.ByteArrayOutputStream;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.ISAKMPMessagev2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.KeyExchangePayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
@@ -18,7 +19,16 @@ import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTran
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.NoncePayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEnum;
 import java.util.Collections;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2HandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2HandshakeLongtermSecrets;
+import java.security.GeneralSecurityException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Handshake;
+import java.net.InetAddress;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 
 
 
@@ -58,43 +68,18 @@ import net.automatalib.serialization.dot.GraphDOT;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public class Main {
-
+    
     public static void main(String[] args) {
-    	LoquaciousClientUdpTransportHandler udpTH = new LoquaciousClientUdpTransportHandler(10000, "10.13.37.1", 500);
     	try {
-    		udpTH.initialize();
+        	IKEv2Handshake shake = new IKEv2Handshake(10000, InetAddress.getByName("78.46.206.103"), 500);
+        	shake.reset();
+        	ISAKMPMessagev2 answer = shake.Phase1();
     	}
-    	catch(IOException e) {
-    		System.out.println("abc");
+    	catch(IOException | GeneralSecurityException | ISAKMPParsingException | IKEHandshakeException e) {
+        	throw new RuntimeException(e);
     	}
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	ISAKMPMessagev2 msg = new ISAKMPMessagev2();
-        SecurityAssociationPayloadv2 test = SecurityAssociationPayloadFactoryv2.P1_AES_128_CBC_SHA1;
-        KeyExchangePayloadv2 test1 = new KeyExchangePayloadv2();
-        NoncePayloadv2 test2 = new NoncePayloadv2();
-        byte[] def = DatatypeHelper.hexDumpToByteArray("4242424242424242424242424242424242424242424242424242424242424242");
-        String str = "41";
-        int n = 127;
-        byte[] abc = DatatypeHelper.hexDumpToByteArray(str + String.join("", Collections.nCopies(n, str)));
-        test1.setKeyExchangeData(abc);
-        test2.setNonceData(def);
-        msg.addPayload(test);
-        msg.addPayload(test1);
-        msg.addPayload(test2);
-        msg.setExchangeType(ExchangeTypeEnum.IKE_SA_INIT);
-        //msg.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("864330ac30e6564d"));
-        msg.setInitiatorFlag(true);
-        msg.setVersionFlag(false);
-        msg.setResponseFlag(false);
-        msg.writeBytes(baos);
-        
-        try {
-        	udpTH.sendData(baos.toByteArray());
-        }
-        catch(IOException e) {
-    		System.out.println("abc");
-        }
     }
+    
 	/**
     static {
         CryptoHelper.prepare();
