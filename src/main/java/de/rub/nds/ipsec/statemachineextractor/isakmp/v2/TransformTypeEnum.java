@@ -20,7 +20,8 @@ public enum TransformTypeEnum implements ByteValueEnum {
     ENCR((byte) 1),
     PRF((byte) 2),
     INTEG((byte) 3),
-    DH((byte) 4);
+    DH((byte) 4),
+	ESN((byte) 5);
 
     private final byte value;
 
