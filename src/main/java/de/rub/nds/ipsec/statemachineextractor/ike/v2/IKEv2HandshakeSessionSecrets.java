@@ -17,6 +17,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,9 +38,10 @@ public class IKEv2HandshakeSessionSecrets {
     private final Map<String, byte[]> IVs = new HashMap<>();
     private final Map<String, SecurityAssociationSecrets> SAs = new HashMap<>();
     private byte[] SKEYSEED, SK_d, SK_ai, SK_ar, SK_ei, SK_er, SK_pi, SK_pr, pad;
-    private byte[] identificationPayloadBody;
+    private byte[] IDi, IDr;
     private byte[] peerIdentificationPayloadBody;
     private byte[] mostRecentMessageID;
+    private byte[] octets, message;
     private SecurityAssociationSecrets ISAKMPSA;
 
     private final IKEv2Ciphersuite ciphersuite;
@@ -150,6 +152,7 @@ public class IKEv2HandshakeSessionSecrets {
         hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
         prf.init(hmacKey);
         SKEYSEED = prf.doFinal(this.ISAKMPSA.getDHSecret());
+        
         SecretKeySpec skeyd = new SecretKeySpec(SKEYSEED, HmacIdentifier);
         prf.init(skeyd);
         
@@ -236,6 +239,63 @@ public class IKEv2HandshakeSessionSecrets {
         	SK_pr = SK_pr_pre;
         }
     }
+    
+    public byte[] getMessage() {
+    	return message.clone();
+    }
+    
+    public void setMessage(byte[] message) {
+    	this.message = message;
+    }
+    
+    public byte[] getOctets() {
+    	return octets.clone();
+    }
+    
+    public void computeOctets() throws GeneralSecurityException {
+    	final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
+        Mac prf = Mac.getInstance(HmacIdentifier);
+        SecretKeySpec hmacKey;
+        hmacKey = new SecretKeySpec(this.SK_pi, HmacIdentifier);
+        prf.init(hmacKey);
+        byte[] MACedIDForI = prf.doFinal(this.IDi);
+    	byte[] RealMessage1 = getMessage();
+    	byte[] NonceRData = this.ISAKMPSA.getResponderNonce();
+    	octets = new byte[MACedIDForI.length + RealMessage1.length + NonceRData.length];
+    	System.arraycopy(RealMessage1, 0, octets, 0, RealMessage1.length);
+    	System.arraycopy(NonceRData, 0, octets, RealMessage1.length, NonceRData.length);
+    	System.arraycopy(MACedIDForI, 0, octets, RealMessage1.length+NonceRData.length, MACedIDForI.length);
+    }
+    
+    public byte[] getIDi() {
+    	return IDi.clone();
+    }
+    
+    public void setIDi(byte[] IDi) {
+    	this.IDi = IDi;
+    }
+    
+    public byte[] getIDr() {
+    	return IDr.clone();
+    }
+    
+    public void setIDr(byte[] IDr) {
+    	this.IDr = IDr;
+    }
+    
+    public byte[] computeAUTH() throws GeneralSecurityException {
+    	//only PSK
+    	final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
+        Mac prf = Mac.getInstance(HmacIdentifier);
+        SecretKeySpec hmacKey;
+        hmacKey = new SecretKeySpec(ltsecrets.getPreSharedKey(), HmacIdentifier);
+        prf.init(hmacKey);
+        byte[] innerprf = prf.doFinal("Key Pad for IKEv2".getBytes());
+        SecretKeySpec auth = new SecretKeySpec(innerprf, HmacIdentifier);
+        prf.init(auth);
+        return prf.doFinal(this.octets);
+    }
+
 
     /**
     public byte[] getPrf_I() throws GeneralSecurityException {
@@ -321,21 +381,11 @@ public class IKEv2HandshakeSessionSecrets {
     public byte[] getIV(byte[] msgID) throws GeneralSecurityException {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
         if (!this.IVs.containsKey(msgIDStr)) {
-            int blockSize = 16; //hardcoded :D
-            try {
-                MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getPrf().toProtocolTransformIDEnum()));
-                if (msgIDStr.equals("00000000")) {
-                    digest.update(this.ISAKMPSA.getKeyExchangeData());
-                    digest.update(this.ISAKMPSA.getPeerKeyExchangeData());
-                } else {
-                    digest.update(this.getIV(new byte[]{0x00, 0x00, 0x00, 0x00}));
-                    digest.update(msgID);
-                }
-                byte[] hash = digest.digest();
-                this.IVs.put(msgIDStr, Arrays.copyOf(hash, blockSize));
-            } catch (NullPointerException ex) {
-                return new byte[blockSize];
-            }
+            int blockSize = 16; //hardcoded need change to blocksize attriubute
+            SecureRandom random = new SecureRandom();
+            byte[] IV = new byte[blockSize];
+            random.nextBytes(IV);
+            setIV(msgID, IV);
         }
         return this.IVs.get(msgIDStr);
     }
@@ -366,14 +416,6 @@ public class IKEv2HandshakeSessionSecrets {
          * simply disable storing the new IV.
          */
         //this.IVs.put("RPKE", iv);
-    }
-
-    public byte[] getIdentificationPayloadBody() {
-        return identificationPayloadBody;
-    }
-
-    public void setIdentificationPayloadBody(byte[] identificationPayloadBody) {
-        this.identificationPayloadBody = identificationPayloadBody;
     }
 
     public byte[] getPeerIdentificationPayloadBody() {

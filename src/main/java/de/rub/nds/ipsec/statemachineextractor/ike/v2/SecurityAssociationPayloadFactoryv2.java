@@ -55,5 +55,33 @@ public class SecurityAssociationPayloadFactoryv2 {
         return securityAssociationPayload;
     }
     
+    public static SecurityAssociationPayloadv2 createP2SA(ProtocolTransformIDEnum transformIDENC, ProtocolTransformIDEnum transformIDINTEG, ProtocolTransformIDEnum transformIDESN, KeyLengthAttributeEnum keylength) {
+    	TransformPayloadv2 transformPayloadENC = new TransformPayloadv2();
+        transformPayloadENC.setTransformType(TransformTypeEnum.ENCR);
+        transformPayloadENC.setTransformId(transformIDENC);
+        transformPayloadENC.addAttribute(keylength);
+        
+        TransformPayloadv2 transformPayloadINTEG = new TransformPayloadv2();
+        transformPayloadINTEG.setTransformType(TransformTypeEnum.INTEG);
+        transformPayloadINTEG.setTransformId(transformIDINTEG);
+        
+        TransformPayloadv2 transformPayloadESN = new TransformPayloadv2();
+        transformPayloadESN.setTransformType(TransformTypeEnum.ESN);
+        transformPayloadESN.setTransformId(transformIDESN);
+    	
+    	ProposalPayloadv2 proposalPayload = new ProposalPayloadv2();
+        proposalPayload.setProposalNumber((byte) 1);
+        proposalPayload.setProtocolId(ProtocolIDEnum.IPSEC_ESP);
+        proposalPayload.setSPIRandom();
+        proposalPayload.addTransform(transformPayloadENC);
+        proposalPayload.addTransform(transformPayloadINTEG);
+        proposalPayload.addTransform(transformPayloadESN);
+    	
+        SecurityAssociationPayloadv2 securityAssociationPayload = new SecurityAssociationPayloadv2();
+        securityAssociationPayload.addProposalPayloadv2(proposalPayload);
+        return securityAssociationPayload;
+    }
+    
     public static final SecurityAssociationPayloadv2 P1_AES_128_CBC_SHA1      = createP1SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP, KeyLengthAttributeEnum.L128);
+    public static final SecurityAssociationPayloadv2 P2_AES_128_CBC_SHA1_ESN  = createP2SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEv2_ESN_NO_X_SN, KeyLengthAttributeEnum.L128);
 }

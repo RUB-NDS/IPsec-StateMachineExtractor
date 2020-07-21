@@ -74,6 +74,8 @@ public class Main {
         	IKEv2Handshake shake = new IKEv2Handshake(10000, InetAddress.getByName("78.46.206.103"), 500);
         	shake.reset();
         	ISAKMPMessagev2 answer = shake.Phase1();
+        	ISAKMPMessagev2 p2 = shake.Phase2();
+        	shake.exchangeMessage(p2);
     	}
     	catch(IOException | GeneralSecurityException | ISAKMPParsingException | IKEHandshakeException e) {
         	throw new RuntimeException(e);

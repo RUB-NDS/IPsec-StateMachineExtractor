@@ -11,6 +11,8 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformPRFEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformENCREnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformINTEGEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
 
 /**
@@ -19,26 +21,26 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttribu
  */
 public class IKEv2Ciphersuite {
 
-    private ProtocolTransformIDEnum authMethod = ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96;
-    private ProtocolTransformIDEnum cipher = ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC;
+    private TransformINTEGEnum authMethod = TransformINTEGEnum.SHA1;
+    private TransformENCREnum cipher = TransformENCREnum.AES_CBC;
     private TransformDHEnum dhGroup = TransformDHEnum.GROUP2;
     private TransformPRFEnum prf = TransformPRFEnum.SHA1;
     private KeyLengthAttributeEnum keylength = KeyLengthAttributeEnum.L128;
     private int nonceLen = 32;
 
-    public ProtocolTransformIDEnum getAuthMethod() {
-        return authMethod;
-    }
-
-    public void setAuthMethod(ProtocolTransformIDEnum authMethod) {
+    public void setAuthMethod(TransformINTEGEnum authMethod) {
         this.authMethod = authMethod;
     }
+    
+    public TransformINTEGEnum getAuthMethod() {
+    	return authMethod;
+    }
 
-    public ProtocolTransformIDEnum getCipher() {
+    public TransformENCREnum getCipher() {
         return cipher;
     }
 
-    public void setCipher(ProtocolTransformIDEnum cipher) {
+    public void setCipher(TransformENCREnum cipher) {
         this.cipher = cipher;
     }
 

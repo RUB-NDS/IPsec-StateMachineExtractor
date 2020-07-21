@@ -6,7 +6,7 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
+package de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms;
 
 import de.rub.nds.ipsec.statemachineextractor.ByteValueEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
@@ -30,6 +30,18 @@ public enum TransformENCREnum implements ByteValueEnum {
     
     public ProtocolTransformIDEnum toProtocolTransformIDEnum() {
         return protocolTransformIDEnum;
+    }
+    
+    public String cipherJCEName() {
+        switch (this) {
+            case AES_CBC:
+                return "AES";
+        }
+        throw new UnsupportedOperationException("Impossible unless you extend the enum!");
+    }
+    
+    public String modeOfOperationJCEName() {
+        return "CBC"; // it's as simple as that ¯\_(ツ)_/¯
     }
 
     @Override

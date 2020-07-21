@@ -18,7 +18,7 @@ import java.util.Map;
  * @author Benjamin Koltermann <benjamin.koltermann at ruhr-uni-bochum.de>
  */
 public enum TransformINTEGEnum implements ByteValueEnum {
-    HMAC_SHA1_96((byte) 2, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96);
+    SHA1((byte) 2, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96); //SHA1_96
 
     private final byte value;
     private final ProtocolTransformIDEnum protocolTransformIDEnum;

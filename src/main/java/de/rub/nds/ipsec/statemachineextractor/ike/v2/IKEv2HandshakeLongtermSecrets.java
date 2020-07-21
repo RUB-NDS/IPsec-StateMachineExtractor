@@ -23,7 +23,7 @@ import java.util.Base64;
  */
 public class IKEv2HandshakeLongtermSecrets {
 
-    private byte[] preSharedKey = "AAAA".getBytes();
+    private byte[] preSharedKey = "ikev2".getBytes();
 
     public byte[] getPreSharedKey() {
         return preSharedKey;

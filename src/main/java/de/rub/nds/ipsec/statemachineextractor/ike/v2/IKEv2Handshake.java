@@ -13,10 +13,16 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.DeletePayload;
-//import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.IdentificationPayloadInitiator;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.IdentificationPayloadResponder;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.AuthenticationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.AUTHMethodEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TrafficSelectorPayloadResponder;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TrafficSelectorPayloadInitiator;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.EncryptedISAKMPMessagev2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 //mport de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
-//import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.ISAKMPMessagev2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.NotificationPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
@@ -344,6 +350,32 @@ public final class IKEv2Handshake {
         msg.setResponseFlag(false);
     	return exchangeMessage(msg);
     }
+    
+    public ISAKMPMessagev2 Phase2() throws IOException, GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
+    	byte[] msgID = DatatypeHelper.hexDumpToByteArray("00000001"); //implement as messages divided by 2
+    	secrets.setMessage(messages.get(0).getMessage().getBytes());
+    	ISAKMPMessagev2 msg = new ISAKMPMessagev2();
+    	ISAKMPPayload IDinit = prepareIdentificationInitiator();
+    	secrets.computeOctets();
+    	ISAKMPPayload AUTH = prepareAuthenticationPayload();
+    	ISAKMPPayload SA2 = preparePhase2SecurityAssociation();
+    	ISAKMPPayload TSi = prepareTrafficSelectorPayloadInitiator();
+    	ISAKMPPayload TSr = prepareTrafficSelectorPayloadResponder();
+    	msg.addPayload(IDinit);
+    	msg.addPayload(AUTH);
+    	msg.addPayload(SA2);
+    	msg.addPayload(TSi);
+    	msg.addPayload(TSr);
+    	msg.setMessageId(msgID);
+    	msg.setExchangeType(ExchangeTypeEnum.IKE_AUTH);
+        msg.setInitiatorFlag(true);
+        msg.setVersionFlag(false);
+        msg.setResponseFlag(false);
+        SecretKeySpec ENCRkey = new SecretKeySpec(secrets.getSKei(), ciphersuite.getCipher().cipherJCEName());
+        byte[] iv = secrets.getIV(msgID);
+        EncryptedISAKMPMessagev2 ENCmsg = EncryptedISAKMPMessagev2.fromPlainMessage(msg, ENCRkey, ciphersuite.getCipher(), iv, secrets.getSKai(), ciphersuite.getAuthMethod());   
+    	return ENCmsg;
+    }
 /**
     public void adjustCiphersuite(SecurityAssociationPayload payload) throws GeneralSecurityException, IKEHandshakeException {
         if (payload.getProposalPayloads().size() != 1) {
@@ -375,6 +407,10 @@ public final class IKEv2Handshake {
     
     public ISAKMPPayload preparePhase1SecurityAssociation() {
     	return SecurityAssociationPayloadFactoryv2.P1_AES_128_CBC_SHA1;
+    }
+    
+    public ISAKMPPayload preparePhase2SecurityAssociation() {
+    	return SecurityAssociationPayloadFactoryv2.P2_AES_128_CBC_SHA1_ESN;
     }
     
     public byte[] getMostRecentMessageID() {
@@ -489,4 +525,31 @@ public final class IKEv2Handshake {
         msg.addPayload(0, hashPayload);
     }
     **/
+    
+    public IdentificationPayloadInitiator prepareIdentificationInitiator() throws IOException {
+    	InetAddress addr = udpTH.getLocalAddress();
+    	IdentificationPayloadInitiator result = new IdentificationPayloadInitiator();
+    	result.setIdType(IDTypeEnum.IPV4_ADDR);
+    	result.setIdentificationData(addr.getAddress());
+    	result.setIDi();
+    	secrets.setIDi(result.getIDi());
+    	return result;
+    }
+    
+    public AuthenticationPayload prepareAuthenticationPayload() throws GeneralSecurityException {
+    	AuthenticationPayload result = new AuthenticationPayload();
+    	result.setAuthMethod(AUTHMethodEnum.PSK);
+    	result.setAuthenticationData(secrets.computeAUTH());
+    	return result;
+    }
+    
+    public TrafficSelectorPayloadInitiator prepareTrafficSelectorPayloadInitiator() {
+    	TrafficSelectorPayloadInitiator result = new TrafficSelectorPayloadInitiator();
+    	return result;
+    }
+    
+    public TrafficSelectorPayloadResponder prepareTrafficSelectorPayloadResponder() {
+    	TrafficSelectorPayloadResponder result = new TrafficSelectorPayloadResponder();
+    	return result;
+    }
 }
