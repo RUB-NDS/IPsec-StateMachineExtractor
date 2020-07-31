@@ -47,6 +47,7 @@ public enum NotifyMessageTypeEnum {
     CertificateUnavailable(28),
     UnsupportedExchangeType(29),
     UnequalPayloadLengths(30),
+    FailedCPpRequired(37),
     Connected(16384),
     MultipleAuthSupport(16404),
     ResponderLifetime(24576),

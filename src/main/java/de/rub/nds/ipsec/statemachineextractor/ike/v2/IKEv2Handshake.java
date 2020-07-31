@@ -19,7 +19,7 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.AuthenticationPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.AUTHMethodEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TrafficSelectorPayloadResponder;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TrafficSelectorPayloadInitiator;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.EncryptedISAKMPMessagev2;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessagev2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 //mport de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
@@ -123,6 +123,7 @@ public final class IKEv2Handshake {
         }
         switch (ExchangeTypeEnum.get(bytes[18])) {
             case IKE_SA_INIT:
+            case IKE_AUTH:
                 break;
             default:
                 throw new UnsupportedOperationException("Not supported yet.");
@@ -142,21 +143,26 @@ public final class IKEv2Handshake {
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         bais.skip(ISAKMPMessagev2.ISAKMP_HEADER_LEN);
         PayloadTypeEnum nextPayload = PayloadTypeEnum.get(bytes[16]);
-        processPlainMessage(message, nextPayload, bais);
+        if (nextPayload == PayloadTypeEnum.EncryptedAndAuthenticated) {
+        	processEncryptedMessage(message, nextPayload, bais);
+        } else {
+            processPlainMessage(message, nextPayload, bais);
+        }
         //if (messageLength != message.getLength()) {
           //  throw new ISAKMPParsingException("Message lengths differ - Computed: " + message.getLength() + " vs. Received: " + messageLength + "!");
         //}
         return message;
     }
 
-/**
-    private ISAKMPMessagev2 processEncryptedMessage(ISAKMPMessage encMessage, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
-        SecretKeySpec key = new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName());
+    private ISAKMPMessagev2 processEncryptedMessage(ISAKMPMessagev2 encMessage, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
+    	SecretKeySpec ENCRkey = new SecretKeySpec(secrets.getSKer(), ciphersuite.getCipher().cipherJCEName());
         byte[] iv = secrets.getIV(encMessage.getMessageId());
-        EncryptedISAKMPMessage decMessage = EncryptedISAKMPMessage.fromPlainMessage(encMessage, key, ciphersuite.getCipher(), iv);
+        byte[] INTEGkey = secrets.getSKar();
+        EncryptedISAKMPMessagev2 decMessage = EncryptedISAKMPMessagev2.fromPlainMessage(encMessage, ENCRkey, ciphersuite.getCipher(), iv, INTEGkey, ciphersuite.getAuthMethod());
         decMessage.setCiphertext(bais);
         decMessage.setNextPayload(nextPayload);
         decMessage.decrypt();
+        /**
         PayloadTypeEnum payloadType = nextPayload;
         for (ISAKMPPayload payload : decMessage.getPayloads()) {
             switch (payloadType) {
@@ -164,7 +170,7 @@ public final class IKEv2Handshake {
                     SecurityAssociationPayload sa = (SecurityAssociationPayload) payload;
                     if (sa.getProposalPayloads().size() != 1) {
                         throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
-                    }
+                    }processEncyptedMessage
                     ProposalPayload pp = sa.getProposalPayloads().get(0);
                     SecurityAssociationSecrets sas = this.getMostRecentSecurityAssociation();
                     sas.setOutboundSpi(pp.getSPI());
@@ -212,8 +218,9 @@ public final class IKEv2Handshake {
             payloadType = payload.getNextPayload();
         }
         return decMessage;
+        **/
+    	return null;
     }
-**/
 
     private void processPlainMessage(ISAKMPMessagev2 message, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws ISAKMPParsingException, GeneralSecurityException, IllegalStateException, UnsupportedOperationException, IKEHandshakeException, IOException {
         ISAKMPPayload payload;
@@ -374,7 +381,7 @@ public final class IKEv2Handshake {
         SecretKeySpec ENCRkey = new SecretKeySpec(secrets.getSKei(), ciphersuite.getCipher().cipherJCEName());
         byte[] iv = secrets.getIV(msgID);
         EncryptedISAKMPMessagev2 ENCmsg = EncryptedISAKMPMessagev2.fromPlainMessage(msg, ENCRkey, ciphersuite.getCipher(), iv, secrets.getSKai(), ciphersuite.getAuthMethod());   
-    	return ENCmsg;
+    	return exchangeMessage(ENCmsg);
     }
 /**
     public void adjustCiphersuite(SecurityAssociationPayload payload) throws GeneralSecurityException, IKEHandshakeException {

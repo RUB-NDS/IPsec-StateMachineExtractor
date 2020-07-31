@@ -6,11 +6,12 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
+package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformENCREnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformINTEGEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPData;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
@@ -25,6 +26,10 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.ISAKMPMessagev2;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.EncryptedPayload;
+
+
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
@@ -33,7 +38,7 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
 
     private final SecretKey ENCRsecretKey;
     private byte[] INTEGsecretKey;
-    private final IvParameterSpec IV;
+    private IvParameterSpec IV;
     private Cipher cipherEnc, cipherDec;
     protected boolean isInSync = false;
     protected byte[] ciphertext;
@@ -41,6 +46,7 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
     private PayloadTypeEnum nextPayload = PayloadTypeEnum.EncryptedAndAuthenticated;
     private final TransformENCREnum mode;
     private final TransformINTEGEnum auth;
+    private byte[] header = new byte[4];
     private EncryptedPayload ENCRPayload = new EncryptedPayload();
 
     public EncryptedISAKMPMessagev2(SecretKey ENCRsecretKey, TransformENCREnum mode, byte[] IV, byte[] INTEGsecretKey, TransformINTEGEnum auth) throws GeneralSecurityException {
@@ -72,7 +78,7 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
             cipherEnc = Cipher.getInstance(cipherEnc.getAlgorithm()); // we need a new object to circumvent a bug in openJDK-8
             cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(nullKeyArr, mode.cipherJCEName()), IV);
             **/
-        	System.out.println("TEST");
+        	System.out.println("Invalid Key");
         }
         this.plaintext = baos.toByteArray();
         //padding check
@@ -87,7 +93,7 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
         	ENCRPayload.setEncryptedPayloads(this.ciphertext);
         } else {
             this.ciphertext = cipherEnc.doFinal(this.plaintext);
-        	ENCRPayload.setEncryptedPayloads(this.ciphertext);
+        	this.ENCRPayload.setEncryptedPayloads(this.ciphertext);
         }
         this.isInSync = true;
     }
@@ -97,10 +103,20 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
         if (this.ciphertext.length == 0) {
             throw new IllegalStateException("No ciphertext set!");
         }
-        /**
         cipherDec.init(Cipher.DECRYPT_MODE, ENCRsecretKey, IV);
-        this.plaintext = cipherDec.doFinal(this.ciphertext);
-        ByteArrayInputStream bais = new ByteArrayInputStream(this.plaintext);
+        byte[] plaintextwithpadding = cipherDec.doFinal(this.ciphertext);
+        byte[] plain = new byte[plaintextwithpadding.length - plaintextwithpadding[plaintextwithpadding.length - 1] - 1];
+        System.arraycopy(plaintextwithpadding, 0, plain, 0, plain.length);
+        this.plaintext = plain;
+        System.out.println("Ciphertext: " + DatatypeHelper.byteArrayToHexDump(this.ciphertext));
+        System.out.println("Plaintext:  " +  DatatypeHelper.byteArrayToHexDump(this.plaintext));
+        byte[] plaintextwithheader = new byte[plaintext.length + 4 + this.ENCRPayload.getIV().length + this.ENCRPayload.getINTEGChecksumData().length + this.ciphertext.length];
+        System.arraycopy(header, 0, plaintextwithheader, 0, header.length);
+        System.arraycopy(this.ENCRPayload.getIV(), 0, plaintextwithheader, header.length, this.ENCRPayload.getIV().length);
+        System.arraycopy(this.ciphertext, 0, plaintextwithheader, header.length +  this.ENCRPayload.getIV().length, this.ciphertext.length);
+        System.arraycopy(this.ENCRPayload.getINTEGChecksumData(), 0, plaintextwithheader, header.length +  this.ENCRPayload.getIV().length + this.ciphertext.length, this.ENCRPayload.getINTEGChecksumData().length);
+        System.arraycopy(plaintext, 0, plaintextwithheader, header.length +  this.ENCRPayload.getIV().length + this.ciphertext.length + this.ENCRPayload.getINTEGChecksumData().length, plaintext.length);
+        ByteArrayInputStream bais = new ByteArrayInputStream(plaintextwithheader);
         this.payloads.clear();
         PayloadTypeEnum nextPayload = this.getNextPayload();
         while (nextPayload != PayloadTypeEnum.NONE) {
@@ -115,10 +131,9 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
             nextPayload = payload.getNextPayload();
             this.addPayload(payload);
         }
-        this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipherDec.getBlockSize(), this.ciphertext.length);
-        this.plaintext = Arrays.copyOf(this.plaintext, super.getLength() - ISAKMP_HEADER_LEN); // remove padding
+        //this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipherDec.getBlockSize(), this.ciphertext.length);
+        //this.plaintext = Arrays.copyOf(this.plaintext, super.getLength() - ISAKMP_HEADER_LEN); // remove padding
         this.isInSync = true;
-        **/
     }
 
     @Override
@@ -157,8 +172,17 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
     }
 
     public void setCiphertext(ByteArrayInputStream bais) {
-        this.ciphertext = new byte[bais.available()];
+        this.ciphertext = new byte[bais.available() - 4 - this.ENCRPayload.getIV().length - 12];
+        bais.read(this.header, 0, this.header.length);
+        byte[] buffer = new byte[this.ENCRPayload.getIV().length];
+        bais.read(buffer, 0, buffer.length);
+        this.ENCRPayload.setIV(buffer);
+        this.IV = new IvParameterSpec(this.ENCRPayload.getIV());
         bais.read(this.ciphertext, 0, this.ciphertext.length);
+        byte[] buffer1 = new byte[12];
+        bais.read(buffer1, 0, buffer1.length);
+        this.ENCRPayload.setINTEGChecksumData(buffer1);
+    	this.ENCRPayload.setEncryptedPayloads(this.ciphertext);
         this.isInSync = false;
     }
 

@@ -39,17 +39,6 @@ public class ISAKMPMessagev2 implements SerializableMessage, ISAKMPSerializable 
     private final BitSet flags = new BitSet(6);
     private byte[] messageId = new byte[]{0x00, 0x00, 0x00, 0x00};
     protected final List<ISAKMPPayload> payloads = new ArrayList<>();
-    
-    /**
-     * For encrypted Payload only
-     
-    private final SecretKey secretKey;
-    private final IvParameterSpec IV;
-    private Cipher cipherEnc, cipherDec;
-    protected boolean isInSync = false;
-    protected byte[] plaintext;
-    private final TransformENCREnum mode;
-	*/
 
     public ISAKMPMessagev2() {
         flags.set(0, false);
@@ -176,7 +165,9 @@ public class ISAKMPMessagev2 implements SerializableMessage, ISAKMPSerializable 
             payloads.get(payloads.size() - 1).setNextPayload(payload.getType());
         }
         if (payload.getType() == PayloadTypeEnum.EncryptedAndAuthenticated) {
-        	payload.setNextPayload(payloads.get(0).getType());
+        	 if (!payloads.isEmpty()) {
+             	payload.setNextPayload(payloads.get(0).getType());
+        	 }
     		payloads.add(0, payload);
         } else {
         	payload.setNextPayload(PayloadTypeEnum.NONE);

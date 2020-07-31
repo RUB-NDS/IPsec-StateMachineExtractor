@@ -51,9 +51,10 @@ public class IdentificationPayloadResponder extends ISAKMPPayload {
     }
     
     public void setIDr() {
+    	IDr = new byte[reserved.length + identificationData.length + 1];
     	IDr[0] = idType.getValue();
     	System.arraycopy(reserved, 0, IDr, 1, reserved.length);
-    	System.arraycopy(identificationData, 0, IDr, 5, identificationData.length);
+    	System.arraycopy(identificationData, 0, IDr, 4, identificationData.length);
     }
     
     public byte[] getIDr() {

@@ -9,6 +9,11 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.EncryptedPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.IdentificationPayloadInitiator;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.IdentificationPayloadResponder;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.AuthenticationPayload;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.NotificationPayloadv2;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -119,6 +124,16 @@ public abstract class ISAKMPPayload implements ISAKMPSerializable {
                 return TransformPayload.class;
             case VendorID:
                 return VendorIDPayload.class;
+            case IdentificationInitiator:
+            	return IdentificationPayloadInitiator.class;
+            case IdentificationResponder:
+            	return IdentificationPayloadResponder.class;
+            case Authentication:
+            	return AuthenticationPayload.class;
+            case Notify:
+            	return NotificationPayloadv2.class;
+            case EncryptedAndAuthenticated:
+            	return EncryptedPayload.class;
             default:
                 throw new UnsupportedOperationException("Not supported yet.");
         }
