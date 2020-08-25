@@ -9,7 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import com.savarese.rocksaw.net.RawSocket;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import static de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage.IPv4_HEADER_LENGTH;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;

@@ -44,7 +44,7 @@ public class IKEv1HandshakeTest {
     public void testPrepareKeyExchangePayload() throws Exception {
         IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
         ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
-        assertTrue(result.getLength() <= instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4);
+        assertTrue(result.getLength() <= instance.ciphersuite.getDhGroup().getPublicKeySizeInBytes() + 4);
     }
 
     /**
@@ -56,7 +56,7 @@ public class IKEv1HandshakeTest {
         instance.ciphersuite.setDhGroup(DHGroupAttributeEnum.GROUP19);
         instance.secrets.generateDefaults();
         ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
-        assertEquals(instance.ciphersuite.getDhGroup().getDHGroupParameters().getPublicKeySizeInBytes() + 4, result.getLength());
+        assertEquals(instance.ciphersuite.getDhGroup().getPublicKeySizeInBytes() + 4, result.getLength());
     }
 
     /**
@@ -110,8 +110,8 @@ public class IKEv1HandshakeTest {
         handshake.adjustCiphersuite(sa);
         msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
         msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPrivate().getEncoded()));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPublic().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
@@ -164,8 +164,8 @@ public class IKEv1HandshakeTest {
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
         msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPrivate().getEncoded()));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getISAKMPSA().getDhKeyPair().getPublic().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();

@@ -6,15 +6,16 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
+package de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.DHGroupTransformEnum;
 
 /**
  *
@@ -22,18 +23,18 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEn
  */
 public class KeyExchangePayloadv2 extends ISAKMPPayload {
 
-    private TransformDHEnum dhGroup;
+    private DHGroupTransformEnum dhGroup;
     protected static final int HEADER_LEN = 8;
     private byte[] keyExchangeData;
     private byte[] body;
     //private byte[] reserverd = DatatypeHelper.hexDumpToByteArray("0000");
 
-    public KeyExchangePayloadv2(TransformDHEnum dhGroup) {
+    public KeyExchangePayloadv2(IKEDHGroupEnum dhGroup) {
         super(PayloadTypeEnum.KeyExchangev2);
-        this.dhGroup = dhGroup;
+        this.dhGroup = DHGroupTransformEnum.valueOf(dhGroup.name());
     }
 
-    public void setDhGroup(TransformDHEnum dhGroup) {
+    public void setDhGroup(DHGroupTransformEnum dhGroup) {
         this.dhGroup = dhGroup;
     }
 
@@ -44,7 +45,7 @@ public class KeyExchangePayloadv2 extends ISAKMPPayload {
         return length;
     }
 
-    public TransformDHEnum getDhGroup() {
+    public DHGroupTransformEnum getDhGroup() {
         return dhGroup;
     }
 
@@ -98,7 +99,7 @@ public class KeyExchangePayloadv2 extends ISAKMPPayload {
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
         byte[] buffer = read4ByteFromStream(bais);
-        this.setDhGroup(TransformDHEnum.get(buffer[1]));
+        this.setDhGroup(DHGroupTransformEnum.get(buffer[1]));
         byte[] buffer1 = new byte[length - HEADER_LEN];
         int readBytes;
         try {

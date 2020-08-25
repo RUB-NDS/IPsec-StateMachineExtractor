@@ -6,9 +6,12 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
+package de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.*;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.PseudoRandomFunctionTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.DHGroupTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.IntegrityAlgorithmTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.EncryptionAlgorithmTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
@@ -95,7 +98,7 @@ public class TransformPayloadv2 extends ISAKMPPayload {
         }
         switch (protocolID) {
             case ISAKMP:
-                return TransformDHEnum.get(value).toProtocolTransformIDEnum();
+                return DHGroupTransformEnum.get(value).toProtocolTransformIDEnum();
             default:
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
@@ -108,7 +111,7 @@ public class TransformPayloadv2 extends ISAKMPPayload {
         }
         switch (protocolID) {
             case ISAKMP:
-                return TransformENCREnum.get(value).toProtocolTransformIDEnum();
+                return EncryptionAlgorithmTransformEnum.get(value).toProtocolTransformIDEnum();
             default:
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
@@ -121,7 +124,7 @@ public class TransformPayloadv2 extends ISAKMPPayload {
         }
         switch (protocolID) {
             case ISAKMP:
-                return TransformPRFEnum.get(value).toProtocolTransformIDEnum();
+                return PseudoRandomFunctionTransformEnum.get(value).toProtocolTransformIDEnum();
             default:
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
@@ -134,7 +137,7 @@ public class TransformPayloadv2 extends ISAKMPPayload {
         }
         switch (protocolID) {
             case ISAKMP:
-                return TransformINTEGEnum.get(value).toProtocolTransformIDEnum();
+                return IntegrityAlgorithmTransformEnum.get(value).toProtocolTransformIDEnum();
             default:
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }

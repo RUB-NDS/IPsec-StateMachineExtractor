@@ -8,8 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformENCREnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformINTEGEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.EncryptionAlgorithmTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.IntegrityAlgorithmTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPData;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
@@ -26,8 +26,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.ISAKMPMessagev2;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.EncryptedPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.ISAKMPMessagev2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.EncryptedPayload;
 
 
 /**
@@ -44,12 +44,12 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
     protected byte[] ciphertext;
     protected byte[] plaintext;
     private PayloadTypeEnum nextPayload = PayloadTypeEnum.EncryptedAndAuthenticated;
-    private final TransformENCREnum mode;
-    private final TransformINTEGEnum auth;
+    private final EncryptionAlgorithmTransformEnum mode;
+    private final IntegrityAlgorithmTransformEnum auth;
     private byte[] header = new byte[4];
     private EncryptedPayload ENCRPayload = new EncryptedPayload();
 
-    public EncryptedISAKMPMessagev2(SecretKey ENCRsecretKey, TransformENCREnum mode, byte[] IV, byte[] INTEGsecretKey, TransformINTEGEnum auth) throws GeneralSecurityException {
+    public EncryptedISAKMPMessagev2(SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         this.ENCRsecretKey = ENCRsecretKey;
         this.INTEGsecretKey = INTEGsecretKey;
         this.mode = mode;
@@ -233,7 +233,7 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
         this.isInSync = true;
     }
 
-    public static EncryptedISAKMPMessagev2 fromPlainMessage(ISAKMPMessagev2 msg, SecretKey ENCRsecretKey, TransformENCREnum mode, byte[] IV, byte[] INTEGsecretKey, TransformINTEGEnum auth) throws GeneralSecurityException {
+    public static EncryptedISAKMPMessagev2 fromPlainMessage(ISAKMPMessagev2 msg, SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         EncryptedISAKMPMessagev2 enc = new EncryptedISAKMPMessagev2(ENCRsecretKey, mode, IV, INTEGsecretKey, auth);
         enc.setInitiatorCookie(msg.getInitiatorCookie());
         enc.setResponderCookie(msg.getResponderCookie());

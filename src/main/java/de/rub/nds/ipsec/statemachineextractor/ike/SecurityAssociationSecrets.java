@@ -6,9 +6,9 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v2;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
@@ -24,7 +24,7 @@ import javax.crypto.spec.DHParameterSpec;
  */
 public class SecurityAssociationSecrets implements Cloneable {
 
-    private final TransformDHEnum DHGroup;
+    private final IKEDHGroupEnum DHGroup;
     private KeyPair dhKeyPair;
     private PublicKey peerPublicKey;
     private boolean isInitiatorNonceChosen = false;
@@ -39,7 +39,7 @@ public class SecurityAssociationSecrets implements Cloneable {
     private byte[] inboundKeyMaterial, outboundKeyMaterial;
     private ProtocolIDEnum protocol = ProtocolIDEnum.ISAKMP;
 
-    public SecurityAssociationSecrets(TransformDHEnum DHGroup) {
+    public SecurityAssociationSecrets(IKEDHGroupEnum DHGroup) {
         this.DHGroup = DHGroup;
     }
 
@@ -48,7 +48,7 @@ public class SecurityAssociationSecrets implements Cloneable {
         return (SecurityAssociationSecrets) super.clone();
     }
 
-    public TransformDHEnum getDHGroup() {
+    public IKEDHGroupEnum getDHGroup() {
         return DHGroup;
     }
 
@@ -62,12 +62,12 @@ public class SecurityAssociationSecrets implements Cloneable {
 
     public KeyPair generateDhKeyPair() throws GeneralSecurityException {
         String algoName;
-        if (this.DHGroup.getDHGroupParameters().isEC()) {
+        if (this.DHGroup.isEC()) {
             algoName = "EC";
         } else {
             algoName = "DiffieHellman";
         }
-        this.dhKeyPair = CryptoHelper.generateKeyPair(algoName, this.DHGroup.getDHGroupParameters().getAlgorithmParameterSpec());
+        this.dhKeyPair = CryptoHelper.generateKeyPair(algoName, this.DHGroup.getAlgorithmParameterSpec());
         return dhKeyPair;
     }
 
@@ -79,11 +79,11 @@ public class SecurityAssociationSecrets implements Cloneable {
         if (this.peerKeyExchangeData == null) {
             throw new IllegalStateException("No key exchange data for peer; use setPeerKeyExchangeData() first!");
         }
-        if (this.DHGroup.getDHGroupParameters().isEC()) {
-            ECParameterSpec algoSpec = (ECParameterSpec) this.DHGroup.getDHGroupParameters().getAlgorithmParameterSpec();
+        if (this.DHGroup.isEC()) {
+            ECParameterSpec algoSpec = (ECParameterSpec) this.DHGroup.getAlgorithmParameterSpec();
             peerPublicKey = CryptoHelper.createECPublicKeyFromBytes(algoSpec, this.peerKeyExchangeData);
         } else {
-            DHParameterSpec algoSpec = (DHParameterSpec) this.DHGroup.getDHGroupParameters().getAlgorithmParameterSpec();
+            DHParameterSpec algoSpec = (DHParameterSpec) this.DHGroup.getAlgorithmParameterSpec();
             peerPublicKey = CryptoHelper.createModPPublicKeyFromBytes(algoSpec, this.peerKeyExchangeData);
         }
         return this.peerPublicKey;
@@ -107,7 +107,7 @@ public class SecurityAssociationSecrets implements Cloneable {
             throw new IllegalStateException("No public key for peer; use setPeerPublicKey() or setPeerKeyExchangeData() first!", ex);
         }
         String dhAlgoName;
-        if (this.DHGroup.getDHGroupParameters().isEC()) {
+        if (this.DHGroup.isEC()) {
             dhAlgoName = "ECDH";
         } else {
             dhAlgoName = "DiffieHellman";
@@ -117,7 +117,7 @@ public class SecurityAssociationSecrets implements Cloneable {
         keyAgreement.doPhase(peerPublicKey, true);
 
         this.dhSecret = keyAgreement.generateSecret();
-        while (this.dhSecret.length < this.DHGroup.getDHGroupParameters().getPublicKeySizeInBytes()) {
+        while (this.dhSecret.length < this.DHGroup.getPublicKeySizeInBytes()) {
             this.dhSecret = CryptoHelper.byteArrayPrepend(this.dhSecret, (byte) 0x00);
         }
         return this.dhSecret;
@@ -209,7 +209,7 @@ public class SecurityAssociationSecrets implements Cloneable {
         return inboundKeyMaterial.clone();
     }
 
-    protected void setInboundKeyMaterial(byte[] inboundKeyMaterial) {
+    public void setInboundKeyMaterial(byte[] inboundKeyMaterial) {
         this.inboundKeyMaterial = inboundKeyMaterial.clone();
     }
 
@@ -217,7 +217,7 @@ public class SecurityAssociationSecrets implements Cloneable {
         return outboundKeyMaterial.clone();
     }
 
-    protected void setOutboundKeyMaterial(byte[] outboundKeyMaterial) {
+    public void setOutboundKeyMaterial(byte[] outboundKeyMaterial) {
         this.outboundKeyMaterial = outboundKeyMaterial.clone();
     }
 }

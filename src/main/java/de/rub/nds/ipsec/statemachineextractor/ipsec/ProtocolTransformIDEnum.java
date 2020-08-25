@@ -43,14 +43,13 @@ public enum ProtocolTransformIDEnum implements ByteValueEnum {
     /**
      * Here beginns IKEv2
      */
-    IKEv2_ESN_NO_X_SN((byte) 0),
+    IKEV2_ESN_NO_X_SN((byte) 0),
     IKEV2_PRF_HMAC_SHA1((byte) 2),
     IKEV2_INTEG_HMAC_SHA1_96((byte) 2),
     IKEV2_DH_1024_MODP((byte) 2),
     IKEV2_ENC_AES_CBC((byte) 12);
 
     private final byte value;
-    private IKEDHGroupEnum group = null;
 
     private ProtocolTransformIDEnum(byte value) {
         this.value = value;

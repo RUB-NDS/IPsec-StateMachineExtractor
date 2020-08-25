@@ -8,13 +8,13 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.ISAKMPMessagev2;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeLongtermSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.ISAKMPMessagev2;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -22,78 +22,17 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv2HandshakeSessionSecrets {
+public class IKEv2HandshakeSessionSecrets extends IKEHandshakeSessionSecrets {
 
-    protected static final int KEY_MATERIAL_AMOUNT = 512;
-
-    private boolean isInitiatorCookieChosen = false;
-    private byte[] initiatorCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    private final Map<String, byte[]> IVs = new HashMap<>();
-    private final Map<String, SecurityAssociationSecrets> SAs = new HashMap<>();
     private byte[] SKEYSEED, SK_d, SK_ai, SK_ar, SK_ei, SK_er, SK_pi, SK_pr, pad;
     private byte[] IDi, IDr;
-    private byte[] peerIdentificationPayloadBody;
-    private byte[] mostRecentMessageID;
     private byte[] octets, message;
-    private SecurityAssociationSecrets ISAKMPSA;
-
     private final IKEv2Ciphersuite ciphersuite;
-    private final IKEv2HandshakeLongtermSecrets ltsecrets;
 
-    public IKEv2HandshakeSessionSecrets(IKEv2Ciphersuite ciphersuite, IKEv2HandshakeLongtermSecrets ltsecrets) {
+    public IKEv2HandshakeSessionSecrets(IKEv2Ciphersuite ciphersuite, IKEHandshakeLongtermSecrets ltsecrets) {
+        super(ciphersuite, ltsecrets);
         this.ciphersuite = ciphersuite;
-        this.ltsecrets = ltsecrets;
-        updateISAKMPSA();
-    }
-
-    public final void updateISAKMPSA() {
-        if (this.ISAKMPSA == null || this.ciphersuite.getDhGroup() != this.ISAKMPSA.getDHGroup()) {
-            this.ISAKMPSA = new SecurityAssociationSecrets(this.ciphersuite.getDhGroup());
-            this.SAs.put("00000000", this.ISAKMPSA);
-        }
-    }
-
-    public SecurityAssociationSecrets getISAKMPSA() {
-        return ISAKMPSA;
-    }
-
-    public void generateDefaults() throws GeneralSecurityException {
-        updateISAKMPSA();
-        this.ISAKMPSA.generateDhKeyPair();
-        //this.ISAKMPSA.setPeerKeyExchangeData(CryptoHelper.publicKey2Bytes(this.ISAKMPSA.getDhKeyPair().getPublic()));
-        //this.ISAKMPSA.computePeerPublicKey();
-        //this.ISAKMPSA.generateDhKeyPair();
-        //this.ISAKMPSA.computeDHSecret();
-        //computeSecretKeys();
-    }
-
-    public byte[] getInitiatorCookie() {
-        if (!isInitiatorCookieChosen) {
-            return null;
-        }
-        return initiatorCookie;
-    }
-
-    public void setInitiatorCookie(byte[] initiatorCookie) {
-        this.initiatorCookie = initiatorCookie;
-        isInitiatorCookieChosen = true;
-    }
-
-    public byte[] getResponderCookie() {
-        return responderCookie;
-    }
-
-    public void setResponderCookie(byte[] responderCookie) {
-        this.responderCookie = responderCookie;
-    }
-
-    public byte[] getMostRecentMessageID() {
-        return mostRecentMessageID;
-    }
-
-    public void setMostRecentMessageID(byte[] mostRecentMessageID) {
-        this.mostRecentMessageID = mostRecentMessageID;
+        updateHandshakeSA();
     }
 
     public byte[] getSKai() {
@@ -128,15 +67,16 @@ public class IKEv2HandshakeSessionSecrets {
         return SKEYSEED;
     }
 
+    @Override
     public void computeSecretKeys() throws GeneralSecurityException {
         final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
         Mac prf = Mac.getInstance(HmacIdentifier);
         SecretKeySpec hmacKey;
-        byte[] initiatorNonce = this.ISAKMPSA.getInitiatorNonce();
+        byte[] initiatorNonce = this.HandshakeSA.getInitiatorNonce();
         if (initiatorNonce == null) {
             initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         }
-        byte[] responderNonce = this.ISAKMPSA.getResponderNonce();
+        byte[] responderNonce = this.HandshakeSA.getResponderNonce();
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
@@ -145,7 +85,7 @@ public class IKEv2HandshakeSessionSecrets {
         System.arraycopy(responderCookie, 0, concatCookies, ISAKMPMessagev2.COOKIE_LEN, ISAKMPMessagev2.COOKIE_LEN);
         hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
         prf.init(hmacKey);
-        SKEYSEED = prf.doFinal(this.ISAKMPSA.getDHSecret());
+        SKEYSEED = prf.doFinal(this.HandshakeSA.getDHSecret());
 
         SecretKeySpec skeyd = new SecretKeySpec(SKEYSEED, HmacIdentifier);
         prf.init(skeyd);
@@ -254,7 +194,7 @@ public class IKEv2HandshakeSessionSecrets {
         prf.init(hmacKey);
         byte[] MACedIDForI = prf.doFinal(this.IDi);
         byte[] RealMessage1 = getMessage();
-        byte[] NonceRData = this.ISAKMPSA.getResponderNonce();
+        byte[] NonceRData = this.HandshakeSA.getResponderNonce();
         octets = new byte[MACedIDForI.length + RealMessage1.length + NonceRData.length];
         System.arraycopy(RealMessage1, 0, octets, 0, RealMessage1.length);
         System.arraycopy(NonceRData, 0, octets, RealMessage1.length, NonceRData.length);
@@ -290,87 +230,7 @@ public class IKEv2HandshakeSessionSecrets {
         return prf.doFinal(this.octets);
     }
 
-
-    /*
-    public byte[] getPrf_I() throws GeneralSecurityException {
-        final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
-        this.computeSecretKeys();
-        Mac prf = Mac.getInstance(HmacIdentifier);
-        prf.init(new SecretKeySpec(this.getSKEYID(), HmacIdentifier));
-        prf.update(this.ISAKMPSA.getKeyExchangeData());
-        prf.update(this.ISAKMPSA.getPeerKeyExchangeData());
-        prf.update(this.initiatorCookie);
-        prf.update(this.responderCookie);
-        prf.update(this.ISAKMPSA.getSAOfferBody());
-        return prf.doFinal(this.getIdentificationPayloadBody());
-    }
-
-    public byte[] getPrf_R() throws GeneralSecurityException {
-        final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
-        this.computeSecretKeys();
-        Mac prf = Mac.getInstance(HmacIdentifier);
-        prf.init(new SecretKeySpec(this.getSKEYID(), HmacIdentifier));
-        prf.update(this.ISAKMPSA.getPeerKeyExchangeData());
-        prf.update(this.ISAKMPSA.getKeyExchangeData());
-        prf.update(this.getResponderCookie());
-        prf.update(this.getInitiatorCookie());
-        prf.update(this.ISAKMPSA.getSAOfferBody());
-        return prf.doFinal(this.getPeerIdentificationPayloadBody());
-    }
-
-    public byte[] getPrf1(ISAKMPMessagev2 msg) throws GeneralSecurityException {
-        return getQuickModeHASH(msg, 1);
-    }
-
-    public byte[] getPrf2(ISAKMPMessagev2 msg) throws GeneralSecurityException {
-        return getQuickModeHASH(msg, 2);
-    }
-
-    public byte[] getPrf3(ISAKMPMessagev2 msg) throws GeneralSecurityException {
-        return getQuickModeHASH(msg, 3);
-    }
-    public void computeKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException {
-        final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
-        this.computeSecretKeys();
-        Mac prfIn = Mac.getInstance(HmacIdentifier);
-        Mac prfOut = Mac.getInstance(HmacIdentifier);
-        prfIn.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
-        prfOut.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
-        ByteArrayOutputStream inboundKeyMaterialOutputStream = new ByteArrayOutputStream((int)(KEY_MATERIAL_AMOUNT * 1.3));
-        ByteArrayOutputStream outboundKeyMaterialOutputStream = new ByteArrayOutputStream((int)(KEY_MATERIAL_AMOUNT * 1.3));                
-        byte[] lastBlockIn = new byte[0], lastBlockOut = new byte[0];
-        while (inboundKeyMaterialOutputStream.size() < KEY_MATERIAL_AMOUNT || outboundKeyMaterialOutputStream.size() < KEY_MATERIAL_AMOUNT) {
-            prfIn.update(lastBlockIn);
-            prfOut.update(lastBlockOut);
-            if (sas.getDHSecret() != null) {
-                prfIn.update(sas.getDHSecret());
-                prfOut.update(sas.getDHSecret());
-            }
-            prfIn.update(sas.getProtocol().getValue());
-            prfOut.update(sas.getProtocol().getValue());
-            prfIn.update(sas.getInboundSpi());
-            prfOut.update(sas.getOutboundSpi());
-            prfIn.update(sas.getInitiatorNonce());
-            prfOut.update(sas.getInitiatorNonce());
-            prfIn.update(sas.getResponderNonce());
-            prfOut.update(sas.getResponderNonce());
-            lastBlockIn = prfIn.doFinal();
-            lastBlockOut = prfOut.doFinal();
-            inboundKeyMaterialOutputStream.write(lastBlockIn, 0, lastBlockIn.length);
-            outboundKeyMaterialOutputStream.write(lastBlockOut, 0, lastBlockOut.length);
-        }
-        sas.setInboundKeyMaterial(inboundKeyMaterialOutputStream.toByteArray());
-        sas.setOutboundKeyMaterial(outboundKeyMaterialOutputStream.toByteArray());
-    }
-     */
-    public SecurityAssociationSecrets getSA(byte[] msgID) {
-        String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
-        if (!SAs.containsKey(msgIDStr)) {
-            SAs.put(msgIDStr, new SecurityAssociationSecrets(ISAKMPSA.getDHGroup())); //TODO: Set group based on Security Association payload
-        }
-        return SAs.get(msgIDStr);
-    }
-
+    @Override
     public byte[] getIV(byte[] msgID) throws GeneralSecurityException {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
         if (!this.IVs.containsKey(msgIDStr)) {
@@ -383,48 +243,8 @@ public class IKEv2HandshakeSessionSecrets {
         return this.IVs.get(msgIDStr);
     }
 
-    public void setIV(byte[] msgID, byte[] iv) {
-        String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
-        this.IVs.put(msgIDStr, iv);
-    }
-
-    public byte[] getRPKEIV() throws GeneralSecurityException {
-        String key = "RPKE";
-        if (!this.IVs.containsKey(key)) {
-            byte[] iv = new byte[16];
-            this.IVs.put(key, iv);
-        }
-        return this.IVs.get(key);
-    }
-
-    public void setRPKEIV(byte[] iv) {
-        /*
-         * RFC2409 states the following: "The IV for encrypting the first
-         * payload following the nonce is set to 0 (zero). The IV for subsequent
-         * payloads encrypted with the ephemeral symmetric cipher key, Ke_i, is
-         * the last ciphertext block of the previous payload."
-         * 
-         * Huawei however ignores the second sentence and always uses the
-         * zero-IV. Since Huawei is the only known implementation of RevPKE, we
-         * simply disable storing the new IV.
-         */
-        //this.IVs.put("RPKE", iv);
-    }
-
-    public byte[] getPeerIdentificationPayloadBody() {
-        return peerIdentificationPayloadBody;
-    }
-
-    public void setPeerIdentificationPayloadBody(byte[] peerIdentificationPayloadBody) {
-        this.peerIdentificationPayloadBody = peerIdentificationPayloadBody;
-    }
-
-    private static String mapHashName(ProtocolTransformIDEnum hash) {
-        switch (hash) {
-            case IKEV2_INTEG_HMAC_SHA1_96:
-                return "SHA-1";
-            default:
-                return hash.toString();
-        }
+    @Override
+    public void computeKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

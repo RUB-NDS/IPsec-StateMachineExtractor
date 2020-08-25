@@ -9,14 +9,14 @@
 package de.rub.nds.ipsec.statemachineextractor.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.EncryptedPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.IdentificationPayloadInitiator;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.IdentificationPayloadResponder;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.AuthenticationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.NotificationPayloadv2;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.SecurityAssociationPayloadv2;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TrafficSelectorPayloadInitiator;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TrafficSelectorPayloadResponder;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.EncryptedPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.IdentificationPayloadInitiator;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.IdentificationPayloadResponder;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.AuthenticationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.NotificationPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.SecurityAssociationPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.TrafficSelectorPayloadInitiator;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.TrafficSelectorPayloadResponder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

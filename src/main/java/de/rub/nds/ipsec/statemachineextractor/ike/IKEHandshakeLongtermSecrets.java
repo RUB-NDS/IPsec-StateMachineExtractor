@@ -6,7 +6,7 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -21,7 +21,7 @@ import java.util.Base64;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1HandshakeLongtermSecrets {
+public class IKEHandshakeLongtermSecrets {
 
     private byte[] preSharedKey = "AAAA".getBytes();
     private PublicKey peerPublicKeyPKE, peerPublicKeyRPKE;
@@ -69,7 +69,7 @@ public class IKEv1HandshakeLongtermSecrets {
             + "uQwYyWMbaMJq9s/yCiFB5DD1TkzyOaGgXiiDUWYIIIbUzpt5CnUgXq8CkVvR8OJ7"
             + "e7iZoEiuSJAGC/mhywIDAQAB";
 
-    public IKEv1HandshakeLongtermSecrets() throws GeneralSecurityException {
+    public IKEHandshakeLongtermSecrets() throws GeneralSecurityException {
         byte[] decoded = Base64.getDecoder().decode(CSR1PrivPEM);
         KeySpec spec = new PKCS8EncodedKeySpec(decoded);
         KeyFactory kf = KeyFactory.getInstance("RSA");

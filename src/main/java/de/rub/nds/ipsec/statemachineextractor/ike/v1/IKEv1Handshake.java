@@ -8,6 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeLongtermSecrets;
 import de.rub.nds.ipsec.statemachineextractor.WireMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
@@ -60,7 +62,7 @@ public final class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
     IKEv1Ciphersuite ciphersuite;
-    IKEv1HandshakeLongtermSecrets ltsecrets;
+    IKEHandshakeLongtermSecrets ltsecrets;
     IKEv1HandshakeSessionSecrets secrets;
     List<WireMessage> messages = new ArrayList<>();
     final long timeout;
@@ -100,8 +102,8 @@ public final class IKEv1Handshake {
             messageToSend.setInitiatorCookie(secrets.getInitiatorCookie());
         }
         messageToSend.setResponderCookie(secrets.getResponderCookie());
-        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation && secrets.getISAKMPSA().getSAOfferBody() == null) {
-            secrets.getISAKMPSA().setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
+        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation && secrets.getHandshakeSA().getSAOfferBody() == null) {
+            secrets.getHandshakeSA().setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
         byte[] txData = messageToSend.getBytes();
         messages.add(new WireMessage(txData, messageToSend, true));
@@ -246,15 +248,15 @@ public final class IKEv1Handshake {
                         case RevPKE:
                             SecretKeySpec ke_r = new SecretKeySpec(secrets.getKe_r(), ciphersuite.getCipher().cipherJCEName());
                             SymmetricallyEncryptedISAKMPPayload symmPayload = SymmetricallyEncryptedISAKMPPayload.fromStream(KeyExchangePayload.class, bais, ciphersuite, ke_r, secrets.getRPKEIV());
-                            secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) symmPayload.getUnderlyingPayload()).getKeyExchangeData());
+                            secrets.getHandshakeSA().setPeerKeyExchangeData(((KeyExchangePayload) symmPayload.getUnderlyingPayload()).getKeyExchangeData());
                             payload = symmPayload;
                             break;
                         default:
                             payload = KeyExchangePayload.fromStream(bais);
-                            secrets.getISAKMPSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
+                            secrets.getHandshakeSA().setPeerKeyExchangeData(((KeyExchangePayload) payload).getKeyExchangeData());
                             break;
                     }
-                    secrets.getISAKMPSA().computeDHSecret();
+                    secrets.getHandshakeSA().computeDHSecret();
                     break;
                 case Identification:
                     bais.mark(0);
@@ -300,7 +302,7 @@ public final class IKEv1Handshake {
                             bais.mark(0);
                             try {
                                 PKCS1EncryptedISAKMPPayload encPayload = PKCS1EncryptedISAKMPPayload.fromStream(NoncePayload.class, bais, ltsecrets.getMyPrivateKey(), ltsecrets.getPeerPublicKeyRPKE());
-                                secrets.getISAKMPSA().setResponderNonce(((NoncePayload) encPayload.getUnderlyingPayload()).getNonceData());
+                                secrets.getHandshakeSA().setResponderNonce(((NoncePayload) encPayload.getUnderlyingPayload()).getNonceData());
                                 payload = encPayload;
                                 break; // only executed when there's no exception
                             } catch (ISAKMPParsingException ex) {
@@ -312,7 +314,7 @@ public final class IKEv1Handshake {
                             }
                         default:
                             payload = NoncePayload.fromStream(bais);
-                            secrets.getISAKMPSA().setResponderNonce(((NoncePayload) payload).getNonceData());
+                            secrets.getHandshakeSA().setResponderNonce(((NoncePayload) payload).getNonceData());
                             break;
                     }
                     secrets.computeSecretKeys();
@@ -334,7 +336,7 @@ public final class IKEv1Handshake {
     public void reset() throws IOException, GeneralSecurityException {
         messages.clear();
         ciphersuite = new IKEv1Ciphersuite();
-        ltsecrets = new IKEv1HandshakeLongtermSecrets();
+        ltsecrets = new IKEHandshakeLongtermSecrets();
         secrets = new IKEv1HandshakeSessionSecrets(ciphersuite, ltsecrets);
         if (this.udpTH != null) {
             dispose();
@@ -342,7 +344,7 @@ public final class IKEv1Handshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
         prepareIdentificationPayload(); // sets secrets.identificationPayloadBody
         secrets.setPeerIdentificationPayloadBody(secrets.getIdentificationPayloadBody()); // only a default
-        secrets.getISAKMPSA().setSAOfferBody(null);
+        secrets.getHandshakeSA().setSAOfferBody(null);
         secrets.generateDefaults();
     }
 
@@ -365,7 +367,7 @@ public final class IKEv1Handshake {
             IKEv1Attribute iattr = (IKEv1Attribute) attr;
             iattr.configureCiphersuite(ciphersuite);
         });
-        secrets.updateISAKMPSA();
+        secrets.updateHandshakeSA();
     }
 
     public void dispose() throws IOException {

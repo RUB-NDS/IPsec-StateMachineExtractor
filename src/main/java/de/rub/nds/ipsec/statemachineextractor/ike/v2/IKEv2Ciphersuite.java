@@ -8,54 +8,57 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformPRFEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformENCREnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformINTEGEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKECiphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.DHGroupTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.PseudoRandomFunctionTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.EncryptionAlgorithmTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.IntegrityAlgorithmTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
+import java.security.GeneralSecurityException;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv2Ciphersuite {
+public class IKEv2Ciphersuite extends IKECiphersuite {
 
-    private TransformINTEGEnum authMethod = TransformINTEGEnum.SHA1;
-    private TransformENCREnum cipher = TransformENCREnum.AES_CBC;
-    private TransformDHEnum dhGroup = TransformDHEnum.GROUP2;
-    private TransformPRFEnum prf = TransformPRFEnum.SHA1;
+    private IntegrityAlgorithmTransformEnum authMethod = IntegrityAlgorithmTransformEnum.SHA1;
+    private EncryptionAlgorithmTransformEnum cipher = EncryptionAlgorithmTransformEnum.AES_CBC;
+    private DHGroupTransformEnum dhGroup = DHGroupTransformEnum.GROUP2_1024;
+    private PseudoRandomFunctionTransformEnum prf = PseudoRandomFunctionTransformEnum.SHA1;
     private KeyLengthAttributeEnum keylength = KeyLengthAttributeEnum.L128;
-    private int nonceLen = 32;
 
-    public void setAuthMethod(TransformINTEGEnum authMethod) {
+    public void setAuthMethod(IntegrityAlgorithmTransformEnum authMethod) {
         this.authMethod = authMethod;
     }
 
-    public TransformINTEGEnum getAuthMethod() {
+    public IntegrityAlgorithmTransformEnum getAuthMethod() {
         return authMethod;
     }
 
-    public TransformENCREnum getCipher() {
+    public EncryptionAlgorithmTransformEnum getCipher() {
         return cipher;
     }
 
-    public void setCipher(TransformENCREnum cipher) {
+    public void setCipher(EncryptionAlgorithmTransformEnum cipher) {
         this.cipher = cipher;
     }
 
-    public TransformDHEnum getDhGroup() {
-        return dhGroup;
+    @Override
+    public IKEDHGroupEnum getDhGroup() {
+        return dhGroup.getDHGroupParameters();
     }
 
-    public void setDhGroup(TransformDHEnum dhGroup) {
+    public void setDhGroup(DHGroupTransformEnum dhGroup) {
         this.dhGroup = dhGroup;
     }
 
-    public TransformPRFEnum getPrf() {
+    public PseudoRandomFunctionTransformEnum getPrf() {
         return prf;
     }
 
-    public void setPrf(TransformPRFEnum prf) {
+    public void setPrf(PseudoRandomFunctionTransformEnum prf) {
         this.prf = prf;
     }
 
@@ -67,31 +70,13 @@ public class IKEv2Ciphersuite {
         this.keylength = keylength;
     }
 
+    @Override
     public int getKeySize() {
         return this.keylength.getKeySize();
     }
 
-    /*
-    public int getKeySize() {
-        if (this.cipher == null) {
-            throw new IllegalStateException("No cipher set!");
-        }
-        int keySize = this.cipher.getKeySize();
-        if (keySize != 0) {
-            return keySize;
-        }
-        if (this.keylength == null) {
-            throw new IllegalStateException("Cipher has variable key size and no KeyLengthAttribute set!");
-        }
-        return this.keylength.getKeySize();
-    }
-     */
-
-    public int getNonceLen() {
-        return nonceLen;
-    }
-
-    public void setNonceLen(int nonceLen) {
-        this.nonceLen = nonceLen;
+    @Override
+    public int getCipherBlocksize() throws GeneralSecurityException {
+        return this.cipher.getBlockSize();
     }
 }

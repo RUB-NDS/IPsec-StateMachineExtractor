@@ -15,12 +15,15 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttr
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKECiphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import java.security.GeneralSecurityException;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1Ciphersuite {
+public class IKEv1Ciphersuite extends IKECiphersuite {
 
     private AuthAttributeEnum authMethod = AuthAttributeEnum.PSK;
     private CipherAttributeEnum cipher = CipherAttributeEnum.DES_CBC;
@@ -29,7 +32,6 @@ public class IKEv1Ciphersuite {
     private HashAttributeEnum hash = HashAttributeEnum.MD5;
     private KeyLengthAttributeEnum keylength = KeyLengthAttributeEnum.L128;
     private LifeTypeAttributeEnum lifetype = LifeTypeAttributeEnum.SECONDS;
-    private int nonceLen = 16; // RFC2409: 8 - 256 bytes (inclusive); Huawei works with 16 bytes
 
     public AuthAttributeEnum getAuthMethod() {
         return authMethod;
@@ -47,8 +49,9 @@ public class IKEv1Ciphersuite {
         this.cipher = cipher;
     }
 
-    public DHGroupAttributeEnum getDhGroup() {
-        return dhGroup;
+    @Override
+    public IKEDHGroupEnum getDhGroup() {
+        return dhGroup.getDHGroupParameters();
     }
 
     public void setDhGroup(DHGroupAttributeEnum dhGroup) {
@@ -79,6 +82,7 @@ public class IKEv1Ciphersuite {
         this.keylength = keylength;
     }
 
+    @Override
     public int getKeySize() {
         if (this.cipher == null) {
             throw new IllegalStateException("No cipher set!");
@@ -101,11 +105,8 @@ public class IKEv1Ciphersuite {
         this.lifetype = lifetype;
     }
 
-    public int getNonceLen() {
-        return nonceLen;
-    }
-
-    public void setNonceLen(int nonceLen) {
-        this.nonceLen = nonceLen;
+    @Override
+    public int getCipherBlocksize() throws GeneralSecurityException {
+        return this.cipher.getBlockSize();
     }
 }

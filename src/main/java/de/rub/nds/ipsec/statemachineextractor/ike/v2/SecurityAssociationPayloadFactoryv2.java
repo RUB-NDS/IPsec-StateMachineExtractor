@@ -9,12 +9,12 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TransformTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.TransformTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.ProposalPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.ProposalPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.SecurityAssociationPayloadv2;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.TransformPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.SecurityAssociationPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.TransformPayloadv2;
 
 /**
  *
@@ -83,5 +83,5 @@ public class SecurityAssociationPayloadFactoryv2 {
     }
 
     public static final SecurityAssociationPayloadv2 P1_AES_128_CBC_SHA1 = createP1SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEV2_DH_1024_MODP, KeyLengthAttributeEnum.L128);
-    public static final SecurityAssociationPayloadv2 P2_AES_128_CBC_SHA1_ESN = createP2SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEv2_ESN_NO_X_SN, KeyLengthAttributeEnum.L128);
+    public static final SecurityAssociationPayloadv2 P2_AES_128_CBC_SHA1_ESN = createP2SA(ProtocolTransformIDEnum.IKEV2_ENC_AES_CBC, ProtocolTransformIDEnum.IKEV2_INTEG_HMAC_SHA1_96, ProtocolTransformIDEnum.IKEV2_ESN_NO_X_SN, KeyLengthAttributeEnum.L128);
 }
