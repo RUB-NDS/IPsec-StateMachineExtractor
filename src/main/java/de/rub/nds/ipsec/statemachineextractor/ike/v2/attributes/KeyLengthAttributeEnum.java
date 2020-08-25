@@ -27,7 +27,7 @@ public enum KeyLengthAttributeEnum implements BasicAttribute {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
         this.keySize = size;
     }
-    
+
     public int getKeySize() {
         return this.keySize;
     }

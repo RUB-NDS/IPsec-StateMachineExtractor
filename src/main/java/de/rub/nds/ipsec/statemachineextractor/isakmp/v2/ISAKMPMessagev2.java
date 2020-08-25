@@ -45,7 +45,7 @@ public class ISAKMPMessagev2 implements SerializableMessage, ISAKMPSerializable 
         flags.set(1, false);
         flags.set(2, false);
     }
-    
+
     public byte[] getInitiatorCookie() {
         if (initiatorCookie == null) {
             initiatorCookie = new byte[8];
@@ -165,12 +165,12 @@ public class ISAKMPMessagev2 implements SerializableMessage, ISAKMPSerializable 
             payloads.get(payloads.size() - 1).setNextPayload(payload.getType());
         }
         if (payload.getType() == PayloadTypeEnum.EncryptedAndAuthenticated) {
-        	 if (!payloads.isEmpty()) {
-             	payload.setNextPayload(payloads.get(0).getType());
-        	 }
-    		payloads.add(0, payload);
+            if (!payloads.isEmpty()) {
+                payload.setNextPayload(payloads.get(0).getType());
+            }
+            payloads.add(0, payload);
         } else {
-        	payload.setNextPayload(PayloadTypeEnum.NONE);
+            payload.setNextPayload(PayloadTypeEnum.NONE);
             payloads.add(payload);
         }
     }
@@ -222,11 +222,11 @@ public class ISAKMPMessagev2 implements SerializableMessage, ISAKMPSerializable 
     protected void writeBytesOfPayloads(ByteArrayOutputStream baos) {
         updateNextPayloadProperty();
         for (int i = 0; i < payloads.size(); i++) {
-        	ISAKMPPayload payload = payloads.get(i);
-        	if (payload.getType() == PayloadTypeEnum.EncryptedAndAuthenticated) {
-        		payload.writeBytes(baos);
+            ISAKMPPayload payload = payloads.get(i);
+            if (payload.getType() == PayloadTypeEnum.EncryptedAndAuthenticated) {
+                payload.writeBytes(baos);
                 break;
-        	}
+            }
             payload.writeBytes(baos);
         }
     }

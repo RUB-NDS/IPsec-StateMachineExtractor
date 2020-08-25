@@ -27,11 +27,11 @@ public enum TransformENCREnum implements ByteValueEnum {
         this.value = value;
         this.protocolTransformIDEnum = protocolTransformIDEnum;
     }
-    
+
     public ProtocolTransformIDEnum toProtocolTransformIDEnum() {
         return protocolTransformIDEnum;
     }
-    
+
     public String cipherJCEName() {
         switch (this) {
             case AES_CBC:
@@ -39,7 +39,7 @@ public enum TransformENCREnum implements ByteValueEnum {
         }
         throw new UnsupportedOperationException("Impossible unless you extend the enum!");
     }
-    
+
     public String modeOfOperationJCEName() {
         return "CBC"; // it's as simple as that ¯\_(ツ)_/¯
     }

@@ -8,15 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
-
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>

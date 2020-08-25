@@ -11,12 +11,10 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.security.SecureRandom;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
 
 /**
  *
@@ -47,38 +45,38 @@ public class EncryptedPayload extends ISAKMPPayload {
     public byte[] getEncryptedPayloads() {
         return encryptedPayloads.clone();
     }
-    
+
     public void setEncryptedPayloads(byte[] encryptedPayloads) {
-    	this.encryptedPayloads = encryptedPayloads;
+        this.encryptedPayloads = encryptedPayloads;
     }
-    
+
     public byte[] getINTEGChecksumData() {
-    	return INTEGChecksumData.clone();
+        return INTEGChecksumData.clone();
     }
-    
+
     public void setINTEGChecksumData(byte[] INTEGChecksumData) {
-    	this.INTEGChecksumData = INTEGChecksumData;
+        this.INTEGChecksumData = INTEGChecksumData;
     }
-    
+
     public void setPadLength(byte padLength) {
-    	this.padLength = padLength;
+        this.padLength = padLength;
     }
-    
+
     public int getPadLengthINT() {
-    	return (int)padLength;
+        return (int) padLength;
     }
-    
+
     public byte getPadLength() {
-    	return padLength;
+        return padLength;
     }
-    
+
     public byte[] getPadding() {
-    	return padding.clone();
+        return padding.clone();
     }
-    
+
     public void genPadding() {
-    	padding = new byte[(int)padLength];
-    	SecureRandom random = new SecureRandom();
+        padding = new byte[(int) padLength];
+        SecureRandom random = new SecureRandom();
         random.nextBytes(padding);
     }
 
@@ -89,7 +87,7 @@ public class EncryptedPayload extends ISAKMPPayload {
 
     @Override
     public int getLength() {
-    	return ID_HEADER_LEN + 16 + encryptedPayloads.length + 12;
+        return ID_HEADER_LEN + 16 + encryptedPayloads.length + 12;
     }
 
     @Override
@@ -98,12 +96,12 @@ public class EncryptedPayload extends ISAKMPPayload {
         baos.write(IV, 0, IV.length);
         baos.write(encryptedPayloads, 0, encryptedPayloads.length);
         if (INTEGChecksumData.length > 0) {
-        	baos.write(INTEGChecksumData, 0, INTEGChecksumData.length);
+            baos.write(INTEGChecksumData, 0, INTEGChecksumData.length);
         }
     }
 
     public static EncryptedPayload fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-    	EncryptedPayload encPayload = new EncryptedPayload();
+        EncryptedPayload encPayload = new EncryptedPayload();
         encPayload.fillFromStream(bais);
         return encPayload;
     }
@@ -122,7 +120,7 @@ public class EncryptedPayload extends ISAKMPPayload {
             throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - ISAKMP_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
     }
-    
+
     @Override
     protected void setBody(byte[] body) throws ISAKMPParsingException {
         throw new UnsupportedOperationException("Not supported yet.");

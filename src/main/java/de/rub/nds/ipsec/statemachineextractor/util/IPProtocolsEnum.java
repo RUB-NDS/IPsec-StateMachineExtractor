@@ -8,8 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.util;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.AHTransformIDEnum;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -169,7 +167,7 @@ public enum IPProtocolsEnum {
 
     private final String protocolName;
     private final byte protocolNumber;
-    
+
     private IPProtocolsEnum(String name, int number) {
         protocolName = name;
         protocolNumber = (byte) number;
@@ -191,7 +189,7 @@ public enum IPProtocolsEnum {
         }
         return "Unknown protocol 0x" + Integer.toHexString(number);
     }
-    
+
     // Reverse-lookup map
     private static final Map<Byte, IPProtocolsEnum> lookup = new HashMap<Byte, IPProtocolsEnum>();
 

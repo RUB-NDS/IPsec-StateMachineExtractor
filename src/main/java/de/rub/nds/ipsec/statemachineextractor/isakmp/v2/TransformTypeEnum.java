@@ -21,7 +21,7 @@ public enum TransformTypeEnum implements ByteValueEnum {
     PRF((byte) 2),
     INTEG((byte) 3),
     DH((byte) 4),
-	ESN((byte) 5);
+    ESN((byte) 5);
 
     private final byte value;
 

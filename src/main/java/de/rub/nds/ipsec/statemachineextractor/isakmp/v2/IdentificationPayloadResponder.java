@@ -49,16 +49,16 @@ public class IdentificationPayloadResponder extends ISAKMPPayload {
     public void setIdentificationData(byte[] identificationData) {
         this.identificationData = identificationData;
     }
-    
+
     public void setIDr() {
-    	IDr = new byte[reserved.length + identificationData.length + 1];
-    	IDr[0] = idType.getValue();
-    	System.arraycopy(reserved, 0, IDr, 1, reserved.length);
-    	System.arraycopy(identificationData, 0, IDr, 4, identificationData.length);
+        IDr = new byte[reserved.length + identificationData.length + 1];
+        IDr[0] = idType.getValue();
+        System.arraycopy(reserved, 0, IDr, 1, reserved.length);
+        System.arraycopy(identificationData, 0, IDr, 4, identificationData.length);
     }
-    
+
     public byte[] getIDr() {
-    	return IDr.clone();
+        return IDr.clone();
     }
 
     @Override

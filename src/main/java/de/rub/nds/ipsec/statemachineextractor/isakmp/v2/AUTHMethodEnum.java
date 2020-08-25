@@ -34,7 +34,7 @@ public enum AUTHMethodEnum implements ByteValueEnum {
     public byte getValue() {
         return value;
     }
-    
+
     // Reverse-lookup map
     private static final Map<Byte, AUTHMethodEnum> lookup = new HashMap<Byte, AUTHMethodEnum>();
 
@@ -43,7 +43,7 @@ public enum AUTHMethodEnum implements ByteValueEnum {
             lookup.put(type.getValue(), type);
         }
     }
-    
+
     public static AUTHMethodEnum get(byte value) {
         return lookup.get(value);
     }

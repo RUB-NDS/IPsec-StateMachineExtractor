@@ -9,7 +9,6 @@
 package de.rub.nds.ipsec.statemachineextractor.util;
 
 import static java.lang.Math.ceil;
-import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;

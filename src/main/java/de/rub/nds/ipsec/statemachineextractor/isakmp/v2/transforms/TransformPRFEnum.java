@@ -18,7 +18,7 @@ import java.util.Map;
  * @author Benjamin Koltermann <benjamin.koltermann at ruhr-uni-bochum.de>
  */
 public enum TransformPRFEnum implements ByteValueEnum {
-	SHA1((byte) 2, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1);
+    SHA1((byte) 2, ProtocolTransformIDEnum.IKEV2_PRF_HMAC_SHA1);
 
     private final byte value;
     private final ProtocolTransformIDEnum protocolTransformIDEnum;
@@ -27,7 +27,7 @@ public enum TransformPRFEnum implements ByteValueEnum {
         this.value = value;
         this.protocolTransformIDEnum = protocolTransformIDEnum;
     }
-    
+
     public ProtocolTransformIDEnum toProtocolTransformIDEnum() {
         return protocolTransformIDEnum;
     }

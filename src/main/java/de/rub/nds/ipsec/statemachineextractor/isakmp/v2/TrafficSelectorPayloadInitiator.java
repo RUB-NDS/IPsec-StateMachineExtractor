@@ -10,14 +10,9 @@ package de.rub.nds.ipsec.statemachineextractor.isakmp.v2;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
-
 
 /**
  *
@@ -34,13 +29,13 @@ public class TrafficSelectorPayloadInitiator extends ISAKMPPayload {
     public TrafficSelectorPayloadInitiator() {
         super(PayloadTypeEnum.TrafficSelectorInitiator);
     }
-    
+
     public byte getTSNumber() {
-    	return this.tsNumber;
+        return this.tsNumber;
     }
-    
+
     public TrafficSelector getTrafficSelector() {
-    	return this.traffic;
+        return this.traffic;
     }
 
     @Override
@@ -62,7 +57,7 @@ public class TrafficSelectorPayloadInitiator extends ISAKMPPayload {
     }
 
     public static TrafficSelectorPayloadInitiator fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
-    	TrafficSelectorPayloadInitiator tsiPayload = new TrafficSelectorPayloadInitiator();
+        TrafficSelectorPayloadInitiator tsiPayload = new TrafficSelectorPayloadInitiator();
         tsiPayload.fillFromStream(bais);
         return tsiPayload;
     }
@@ -83,7 +78,7 @@ public class TrafficSelectorPayloadInitiator extends ISAKMPPayload {
             throw new ISAKMPParsingException("Input stream ended early after " + (traffic.getLength() + ID_HEADER_LEN) + " bytes (should read " + (length - ISAKMP_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
     }
-    
+
     @Override
     protected void setBody(byte[] body) throws ISAKMPParsingException {
         throw new UnsupportedOperationException("Not supported yet.");

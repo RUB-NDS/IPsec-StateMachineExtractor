@@ -13,7 +13,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.SimpleBinaryPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 
-
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
@@ -36,7 +35,7 @@ public class NoncePayloadv2 extends SimpleBinaryPayload {
     public String toString() {
         return "Nov2";
     }
-    
+
     public static NoncePayloadv2 fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         NoncePayloadv2 noncePayload = new NoncePayloadv2();
         SimpleBinaryPayload.fromStream(bais, noncePayload);

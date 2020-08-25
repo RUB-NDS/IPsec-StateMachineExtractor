@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformDHEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformPRFEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.v2.transforms.TransformENCREnum;
@@ -31,9 +30,9 @@ public class IKEv2Ciphersuite {
     public void setAuthMethod(TransformINTEGEnum authMethod) {
         this.authMethod = authMethod;
     }
-    
+
     public TransformINTEGEnum getAuthMethod() {
-    	return authMethod;
+        return authMethod;
     }
 
     public TransformENCREnum getCipher() {
@@ -71,7 +70,8 @@ public class IKEv2Ciphersuite {
     public int getKeySize() {
         return this.keylength.getKeySize();
     }
-    /**
+
+    /*
     public int getKeySize() {
         if (this.cipher == null) {
             throw new IllegalStateException("No cipher set!");
@@ -85,7 +85,7 @@ public class IKEv2Ciphersuite {
         }
         return this.keylength.getKeySize();
     }
-    **/
+     */
 
     public int getNonceLen() {
         return nonceLen;

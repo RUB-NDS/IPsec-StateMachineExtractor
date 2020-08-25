@@ -49,16 +49,16 @@ public class IdentificationPayloadInitiator extends ISAKMPPayload {
     public void setIdentificationData(byte[] identificationData) {
         this.identificationData = identificationData;
     }
-    
+
     public void setIDi() {
-    	IDi = new byte[reserved.length + identificationData.length + 1];
-    	IDi[0] = idType.getValue();
-    	System.arraycopy(reserved, 0, IDi, 1, reserved.length);
-    	System.arraycopy(identificationData, 0, IDi, 4, identificationData.length);
+        IDi = new byte[reserved.length + identificationData.length + 1];
+        IDi[0] = idType.getValue();
+        System.arraycopy(reserved, 0, IDi, 1, reserved.length);
+        System.arraycopy(identificationData, 0, IDi, 4, identificationData.length);
     }
-    
+
     public byte[] getIDi() {
-    	return IDi.clone();
+        return IDi.clone();
     }
 
     @Override

@@ -15,9 +15,6 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPAttribute;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.ISAKMPTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.AHTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.IPsecAttributeFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -62,11 +59,11 @@ public class TransformPayloadv2 extends ISAKMPPayload {
             attribute.writeBytes(baos);
         }
     }
-    
+
     public void setTransformType(TransformTypeEnum transformType) {
         this.transformType = transformType;
     }
-    
+
     public TransformTypeEnum getTransformType() {
         return transformType;
     }
@@ -103,7 +100,7 @@ public class TransformPayloadv2 extends ISAKMPPayload {
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
     }
-    
+
     private ProtocolTransformIDEnum ENCRselectTransformId(byte value) {
         if (protocolID == null) {
             // no further hint, just guess
@@ -116,7 +113,7 @@ public class TransformPayloadv2 extends ISAKMPPayload {
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
     }
-    
+
     private ProtocolTransformIDEnum PRFselectTransformId(byte value) {
         if (protocolID == null) {
             // no further hint, just guess
@@ -129,7 +126,7 @@ public class TransformPayloadv2 extends ISAKMPPayload {
                 return ProtocolTransformIDEnum.getFirstMatch(value);
         }
     }
-    
+
     private ProtocolTransformIDEnum INTEGselectTransformId(byte value) {
         if (protocolID == null) {
             // no further hint, just guess
@@ -156,21 +153,21 @@ public class TransformPayloadv2 extends ISAKMPPayload {
         byte[] buffer = read4ByteFromStream(bais);
         this.setTransformType(TransformTypeEnum.get(buffer[0]));
         switch (transformType) {
-        	case ENCR:
+            case ENCR:
                 this.setTransformId(ENCRselectTransformId(buffer[3]));
                 break;
-        	case PRF:
+            case PRF:
                 this.setTransformId(PRFselectTransformId(buffer[3]));
                 break;
-        	case INTEG:
+            case INTEG:
                 this.setTransformId(INTEGselectTransformId(buffer[3]));
                 break;
-        	case DH:
+            case DH:
                 this.setTransformId(DHselectTransformId(buffer[3]));
                 break;
             default:
-            	 this.setTransformId(ProtocolTransformIDEnum.getFirstMatch(buffer[2]));
-            	 break;
+                this.setTransformId(ProtocolTransformIDEnum.getFirstMatch(buffer[2]));
+                break;
         }
         int processedLength = 0;
         while (processedLength < (length - TRANSFORM_PAYLOAD_HEADER_LEN)) {

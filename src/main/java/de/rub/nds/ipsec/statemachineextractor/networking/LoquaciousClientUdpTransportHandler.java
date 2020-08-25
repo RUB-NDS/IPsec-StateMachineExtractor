@@ -58,7 +58,7 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
         socket.setSoTimeout((int) getTimeout());
         setStreams(new PushbackInputStream(new UdpInputStream(socket, false)), new UdpOutputStream(socket));
     }
-    
+
     @Override
     public byte[] fetchData() throws IOException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -81,7 +81,7 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
     public void sendData(byte[] data) throws IOException {
         // Discard all data that was received after the last call to fetchData()
         // Creating new streams is much faster than "inStream.skip(inStream.available())"
-        setStreams(new PushbackInputStream(new UdpInputStream(socket, false)), new UdpOutputStream(socket)); 
+        setStreams(new PushbackInputStream(new UdpInputStream(socket, false)), new UdpOutputStream(socket));
         super.sendData(data);
     }
 

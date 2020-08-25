@@ -27,7 +27,7 @@ public enum TransformINTEGEnum implements ByteValueEnum {
         this.value = value;
         this.protocolTransformIDEnum = protocolTransformIDEnum;
     }
-    
+
     public ProtocolTransformIDEnum toProtocolTransformIDEnum() {
         return protocolTransformIDEnum;
     }

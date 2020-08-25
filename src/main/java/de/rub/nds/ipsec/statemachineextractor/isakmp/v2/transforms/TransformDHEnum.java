@@ -24,20 +24,20 @@ public enum TransformDHEnum implements ByteValueEnum {
     private final byte value;
     private final IKEDHGroupEnum group;
     private final ProtocolTransformIDEnum protocolTransformIDEnum;
-    
+
     private TransformDHEnum(byte value, IKEDHGroupEnum group, ProtocolTransformIDEnum protocolTransformIDEnum) {
-    	this.value = value;
-    	this.group = group;
-    	this.protocolTransformIDEnum = protocolTransformIDEnum;
+        this.value = value;
+        this.group = group;
+        this.protocolTransformIDEnum = protocolTransformIDEnum;
     }
-    
+
     public IKEDHGroupEnum getDHGroupParameters() {
         if (group != null) {
-        	return group;
+            return group;
         }
         return null;
     }
-    
+
     public ProtocolTransformIDEnum toProtocolTransformIDEnum() {
         return protocolTransformIDEnum;
     }

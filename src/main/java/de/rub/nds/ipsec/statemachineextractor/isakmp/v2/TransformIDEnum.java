@@ -29,15 +29,15 @@ public enum TransformIDEnum implements ByteValueEnum {
     private TransformIDEnum(byte value) {
         this.value = value;
     }
-    
+
     private TransformIDEnum(byte value, IKEDHGroupEnum group) {
-    	this.value = value;
-    	this.group = group;
+        this.value = value;
+        this.group = group;
     }
-    
+
     public IKEDHGroupEnum getDHGroupParameters() {
         if (group != null) {
-        	return group;
+            return group;
         }
         return null;
     }
