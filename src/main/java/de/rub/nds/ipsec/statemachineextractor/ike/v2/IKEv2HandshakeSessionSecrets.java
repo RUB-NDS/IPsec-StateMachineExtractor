@@ -60,7 +60,7 @@ public class IKEv2HandshakeSessionSecrets extends IKEHandshakeSessionSecrets {
     }
 
     public byte[] getSKpr() {
-        return SK_pi;
+        return SK_pr;
     }
 
     public byte[] getSKeyseed() {
