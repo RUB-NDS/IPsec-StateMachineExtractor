@@ -16,13 +16,14 @@ import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPSerializable;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class TrafficSelector {
+public class TrafficSelector implements ISAKMPSerializable {
 	
 	private byte tsType = 7; //ipv4 address
 	private byte IPProtocolID = 0; //can do all protos tcp, udp..
@@ -36,6 +37,7 @@ public class TrafficSelector {
     public TrafficSelector() {
     }
 
+        @Override
     public void writeBytes(ByteArrayOutputStream baos) {
         baos.write(this.tsType);
         baos.write(this.IPProtocolID);
@@ -53,6 +55,7 @@ public class TrafficSelector {
     }
 
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+        bais.skip(0x10);
         //byte[] buffer = read4ByteFromStream(bais);
         /**
         int readBytes;
@@ -69,5 +72,10 @@ public class TrafficSelector {
         }
         traffic.fromStream(bais);
         **/
+    }
+
+    @Override
+    public int getLength() {
+        return 0x10;
     }
 }

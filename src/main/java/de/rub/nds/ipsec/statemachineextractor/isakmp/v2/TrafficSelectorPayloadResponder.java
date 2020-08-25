@@ -71,19 +71,17 @@ public class TrafficSelectorPayloadResponder extends ISAKMPPayload {
     protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
         byte[] buffer = read4ByteFromStream(bais);
-        int readBytes;
-        try {
-            readBytes = bais.read(buffer);
-        } catch (IOException ex) {
-            throw new ISAKMPParsingException(ex);
-        }
-        if (readBytes < length - ISAKMP_PAYLOAD_HEADER_LEN) {
-            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - ISAKMP_PAYLOAD_HEADER_LEN) + "bytes)!");
-        }
+        this.tsNumber = buffer[0];
         if (getTSNumber() != buffer[0]) {
             throw new ISAKMPParsingException("Only one Traffic Selector parsing is supported!");
         }
-        traffic.fromStream(bais);
+        if (buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0) {
+            throw new ISAKMPParsingException("Reserved bytes are non-zero!");
+        }
+        traffic = TrafficSelector.fromStream(bais);
+        if (traffic.getLength() < length - ID_HEADER_LEN) {
+            throw new ISAKMPParsingException("Input stream ended early after " + (traffic.getLength() + ID_HEADER_LEN) + " bytes (should read " + (length - ISAKMP_PAYLOAD_HEADER_LEN) + "bytes)!");
+        }
     }
     
     @Override

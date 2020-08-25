@@ -63,6 +63,7 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.automatalib.serialization.dot.GraphDOT;
+import java.io.IOException;
 
 /**
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
@@ -71,7 +72,7 @@ public class Main {
     
     public static void main(String[] args) {
     	try {
-        	IKEv2Handshake shake = new IKEv2Handshake(10000, InetAddress.getByName("78.46.206.103"), 500);
+        	IKEv2Handshake shake = new IKEv2Handshake(10000, InetAddress.getByName("10.0.3.10"), 500);
         	shake.reset();
         	ISAKMPMessagev2 answer = shake.Phase1();
         	ISAKMPMessagev2 p2 = shake.Phase2();

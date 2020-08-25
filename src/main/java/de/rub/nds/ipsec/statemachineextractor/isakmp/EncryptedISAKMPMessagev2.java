@@ -109,6 +109,7 @@ public class EncryptedISAKMPMessagev2 extends ISAKMPMessagev2 implements Encrypt
         System.arraycopy(plaintextwithpadding, 0, plain, 0, plain.length);
         this.plaintext = plain;
         System.out.println("Ciphertext: " + DatatypeHelper.byteArrayToHexDump(this.ciphertext));
+        System.out.println("Key: " + DatatypeHelper.byteArrayToHexDump(ENCRsecretKey.getEncoded()));
         System.out.println("Plaintext:  " +  DatatypeHelper.byteArrayToHexDump(this.plaintext));
         byte[] plaintextwithheader = new byte[plaintext.length + 4 + this.ENCRPayload.getIV().length + this.ENCRPayload.getINTEGChecksumData().length + this.ciphertext.length];
         System.arraycopy(header, 0, plaintextwithheader, 0, header.length);
