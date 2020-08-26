@@ -9,14 +9,14 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.HashPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.PKCS1EncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NoncePayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;

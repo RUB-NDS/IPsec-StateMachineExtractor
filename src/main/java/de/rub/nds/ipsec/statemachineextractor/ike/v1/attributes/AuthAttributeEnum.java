@@ -8,15 +8,16 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import de.rub.nds.ipsec.statemachineextractor.ike.BasicIKEAttribute;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum AuthAttributeEnum implements IKEv1Attribute, BasicAttribute {
+public enum AuthAttributeEnum implements ISAKMPAttribute, BasicIKEAttribute {
 
     PSK(0x80030001),
     DSS_Sig(0x80030002),

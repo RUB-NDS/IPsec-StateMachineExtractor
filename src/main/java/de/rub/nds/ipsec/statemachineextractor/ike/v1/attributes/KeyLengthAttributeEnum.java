@@ -8,15 +8,16 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import de.rub.nds.ipsec.statemachineextractor.ike.BasicIKEAttribute;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum KeyLengthAttributeEnum implements IKEv1Attribute, BasicAttribute {
+public enum KeyLengthAttributeEnum implements ISAKMPAttribute, BasicIKEAttribute {
 
     L128(0x800e0080, 16),
     L192(0x800e00C0, 24),

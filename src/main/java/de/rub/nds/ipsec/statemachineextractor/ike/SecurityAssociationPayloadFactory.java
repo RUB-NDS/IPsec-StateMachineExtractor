@@ -15,20 +15,20 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttr
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.ProposalPayloadv2;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.SecurityAssociationPayloadv2;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.TransformPayloadv2;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.TransformTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.ProposalPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAssociationPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TransformPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TransformTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.EncapsulationModeAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.SALifeDurationBasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.SALifeTypeAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProposalPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.TransformPayload;
 
 /**
  *

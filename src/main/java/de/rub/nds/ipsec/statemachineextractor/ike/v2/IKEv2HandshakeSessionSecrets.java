@@ -8,10 +8,10 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeLongtermSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.ISAKMPMessagev2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -22,14 +22,14 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv2HandshakeSessionSecrets extends IKEHandshakeSessionSecrets {
+public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecrets {
 
     private byte[] SKEYSEED, SK_d, SK_ai, SK_ar, SK_ei, SK_er, SK_pi, SK_pr, pad;
     private byte[] IDi, IDr;
     private byte[] octets, message;
     private final IKEv2Ciphersuite ciphersuite;
 
-    public IKEv2HandshakeSessionSecrets(IKEv2Ciphersuite ciphersuite, IKEHandshakeLongtermSecrets ltsecrets) {
+    public IKEv2HandshakeSessionSecrets(IKEv2Ciphersuite ciphersuite, HandshakeLongtermSecrets ltsecrets) {
         super(ciphersuite, ltsecrets);
         this.ciphersuite = ciphersuite;
         updateHandshakeSA();
@@ -80,9 +80,9 @@ public class IKEv2HandshakeSessionSecrets extends IKEHandshakeSessionSecrets {
         byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
         System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
-        byte[] concatCookies = new byte[ISAKMPMessagev2.COOKIE_LEN * 2];
-        System.arraycopy(initiatorCookie, 0, concatCookies, 0, ISAKMPMessagev2.COOKIE_LEN);
-        System.arraycopy(responderCookie, 0, concatCookies, ISAKMPMessagev2.COOKIE_LEN, ISAKMPMessagev2.COOKIE_LEN);
+        byte[] concatCookies = new byte[IKEv2Message.COOKIE_LEN * 2];
+        System.arraycopy(initiatorCookie, 0, concatCookies, 0, IKEv2Message.COOKIE_LEN);
+        System.arraycopy(responderCookie, 0, concatCookies, IKEv2Message.COOKIE_LEN, IKEv2Message.COOKIE_LEN);
         hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
         prf.init(hmacKey);
         SKEYSEED = prf.doFinal(this.HandshakeSA.getDHSecret());

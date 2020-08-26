@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.util;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -39,7 +39,7 @@ public class CryptoHelperTest {
     @Test
     public void testCreateModPPublicKeyFromBytes() throws Exception {
         boolean shortCase = false, longCase = false;
-        DHParameterSpec algoSpec = (DHParameterSpec) IKEDHGroupEnum.GROUP1_768.getAlgorithmParameterSpec();
+        DHParameterSpec algoSpec = (DHParameterSpec) DHGroupEnum.GROUP1_768.getAlgorithmParameterSpec();
         while (!shortCase || !longCase) {
             KeyPair keypair = CryptoHelper.generateKeyPair("DiffieHellman", algoSpec);
             byte[] publicKeyBytes = CryptoHelper.publicKey2Bytes(keypair.getPublic());
@@ -60,7 +60,7 @@ public class CryptoHelperTest {
     public void testCreateECPublicKeyFromBytes() throws Exception {
         boolean xShortCase = false, xLongCase = false;
         boolean yShortCase = false, yLongCase = false;
-        ECParameterSpec algoSpec = (ECParameterSpec) IKEDHGroupEnum.GROUP19_256.getAlgorithmParameterSpec();
+        ECParameterSpec algoSpec = (ECParameterSpec) DHGroupEnum.GROUP19_256.getAlgorithmParameterSpec();
         while (!xShortCase || !xLongCase || !yShortCase || !yLongCase) {
             KeyPair keypair = CryptoHelper.generateKeyPair("EC", algoSpec);
             byte[] publicKeyBytes = CryptoHelper.publicKey2Bytes(keypair.getPublic());
@@ -84,7 +84,7 @@ public class CryptoHelperTest {
      */
     @Test
     public void testDhPublicKey2BytesWithShortValue() throws Exception {
-        DHParameterSpec algoSpec = (DHParameterSpec) IKEDHGroupEnum.GROUP2_1024.getAlgorithmParameterSpec();
+        DHParameterSpec algoSpec = (DHParameterSpec) DHGroupEnum.GROUP2_1024.getAlgorithmParameterSpec();
         BigInteger y = new BigInteger("9c663bb89386d7ed717e48929946049a3d6dda84fbc0848ebb44f69fc9aad2d4e0db72119ba216ae26d90bc0ba1e417431e36ef926ad3608d371d099d6b2f8176be20bab35b2bfbe273e936d652667f7e40427f1990aa79f5e25abbc7ff0fd9c0890b1f5e840504356074c0c25268304b15216297892cdc925a8f2244c44cf", 16);
         DHPublicKeySpec keySpec = new DHPublicKeySpec(y, algoSpec.getP(), algoSpec.getG());
         KeyFactory kf = KeyFactory.getInstance("DH");
@@ -98,7 +98,7 @@ public class CryptoHelperTest {
      */
     @Test
     public void testEcPublicKey2BytesWithShortValues() throws Exception {
-        ECParameterSpec algoSpec = (ECParameterSpec) IKEDHGroupEnum.GROUP19_256.getAlgorithmParameterSpec();
+        ECParameterSpec algoSpec = (ECParameterSpec) DHGroupEnum.GROUP19_256.getAlgorithmParameterSpec();
         BigInteger x = new BigInteger("754f8d9282cac51410fc7bbe801dcfb1251db62498fa5e6a407cd51f43a951", 16);
         BigInteger y = new BigInteger("aeddbbe5d4a0242dea4f6a8229d9f99362c85d4e3f8c61fefe33c685b1233ee6", 16);
         ECPoint ecPoint = new ECPoint(x, y);

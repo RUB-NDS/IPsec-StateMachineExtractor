@@ -9,12 +9,12 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeSessionSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeLongtermSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
@@ -28,14 +28,14 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1HandshakeSessionSecrets extends IKEHandshakeSessionSecrets {
+public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecrets {
 
     private byte[] skeyid, skeyid_d, skeyid_a, skeyid_e, ka, ke_i, ke_r;
     private byte[] identificationPayloadBody;
     private byte[] peerIdentificationPayloadBody;
     private final IKEv1Ciphersuite ciphersuite;
 
-    public IKEv1HandshakeSessionSecrets(IKEv1Ciphersuite ciphersuite, IKEHandshakeLongtermSecrets ltsecrets) {
+    public IKEv1HandshakeSessionSecrets(IKEv1Ciphersuite ciphersuite, HandshakeLongtermSecrets ltsecrets) {
         super(ciphersuite, ltsecrets);
         this.ciphersuite = ciphersuite;
         updateHandshakeSA();
@@ -241,7 +241,7 @@ public class IKEv1HandshakeSessionSecrets extends IKEHandshakeSessionSecrets {
         msg.setEncryptedFlag(encryptedFlag);
         int offset = ISAKMPMessage.ISAKMP_HEADER_LEN;
         ISAKMPPayload firstPayload = msg.getPayloads().iterator().next();
-        if (firstPayload.getType() == PayloadTypeEnum.Hash) {
+        if (firstPayload.getType() == IKEPayloadTypeEnum.Hash) {
             offset += firstPayload.getLength();
         }
         return prf.doFinal(Arrays.copyOfRange(bytes, offset, bytes.length));

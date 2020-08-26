@@ -8,8 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.IdentificationPayloadInitiator;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IdentificationPayloadInitiator;
+import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.net.InetAddress;

@@ -8,14 +8,14 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import de.rub.nds.ipsec.statemachineextractor.ike.BasicIKEAttribute;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum SALifeTypeAttributeEnum implements IPsecAttribute, BasicAttribute {
+public enum SALifeTypeAttributeEnum implements IPsecAttribute, BasicIKEAttribute {
 
     RESERVED(0x80010000),
     SECONDS(0x80010001),

@@ -8,7 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,9 +29,9 @@ public final class IKEv1AttributeFactory {
     }
 
     // Reverse-lookup map
-    private static final Map<Integer, IKEv1Attribute> LOOKUP = new HashMap<>();
+    private static final Map<Integer, ISAKMPAttribute> LOOKUP = new HashMap<>();
 
-    public static IKEv1Attribute fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+    public static ISAKMPAttribute fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
         bais.mark(0);
         int value;
         try {
@@ -54,7 +55,7 @@ public final class IKEv1AttributeFactory {
 //                    return SomeVariableLengthAttribute.fromStream(bais);
 //            }
         } else {
-            IKEv1Attribute dummy;
+            ISAKMPAttribute dummy;
             switch (formatType) {
                 // Intialize the attributes and fill the LOOKUP hashmap
                 case AuthAttributeEnum.FORMAT_TYPE:
@@ -82,7 +83,7 @@ public final class IKEv1AttributeFactory {
         throw new ISAKMPParsingException("Encountered unknown IKEv1 attribute: " + String.format("0x%08x", value));
     }
 
-    static void register(IKEv1Attribute attr, int value) {
+    static void register(ISAKMPAttribute attr, int value) {
         LOOKUP.put(value, attr);
     }
 }

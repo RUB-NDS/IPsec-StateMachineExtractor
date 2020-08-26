@@ -12,6 +12,7 @@ import de.learnlib.api.exception.SULException;
 import de.learnlib.mapper.api.ContextExecutableInput;
 import de.learnlib.mapper.api.SULMapper;
 import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
@@ -21,12 +22,11 @@ import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.IPsecConnection;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -185,7 +185,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                         conn.getHandshake().addPhase2Hash1Payload(msg);
                     }
                     return conn.getHandshake().exchangeMessage(msg);
-                } catch (ISAKMPParsingException ex) {
+                } catch (GenericIKEParsingException ex) {
                     return PARSING_ERROR;
                 }
             }

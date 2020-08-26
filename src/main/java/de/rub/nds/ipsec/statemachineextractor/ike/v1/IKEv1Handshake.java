@@ -9,33 +9,33 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeLongtermSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
 import de.rub.nds.ipsec.statemachineextractor.WireMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.DeletePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.EncryptedISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.KeyExchangePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.NoncePayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.PKCS1EncryptedISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProposalPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.TransformPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.VendorIDPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.DeletePayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.EncryptedISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.HashPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.KeyExchangePayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NoncePayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.PKCS1EncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProposalPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.TransformPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.crypto.BadPaddingException;
 import javax.crypto.spec.SecretKeySpec;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 
 /**
  *
@@ -62,7 +63,7 @@ public final class IKEv1Handshake {
 
     LoquaciousClientUdpTransportHandler udpTH;
     IKEv1Ciphersuite ciphersuite;
-    IKEHandshakeLongtermSecrets ltsecrets;
+    HandshakeLongtermSecrets ltsecrets;
     IKEv1HandshakeSessionSecrets secrets;
     List<WireMessage> messages = new ArrayList<>();
     final long timeout;
@@ -92,7 +93,7 @@ public final class IKEv1Handshake {
         return rxData;
     }
 
-    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
+    public ISAKMPMessage exchangeMessage(ISAKMPMessage messageToSend) throws IOException, GenericIKEParsingException, GeneralSecurityException, IKEHandshakeException {
         if (messageToSend.isEncryptedFlag()) {
             messageToSend = EncryptedISAKMPMessage.fromPlainMessage(messageToSend, new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName()), ciphersuite.getCipher(), secrets.getIV(messageToSend.getMessageId()));
         }
@@ -102,7 +103,7 @@ public final class IKEv1Handshake {
             messageToSend.setInitiatorCookie(secrets.getInitiatorCookie());
         }
         messageToSend.setResponderCookie(secrets.getResponderCookie());
-        if (messageToSend.getNextPayload() == PayloadTypeEnum.SecurityAssociation && secrets.getHandshakeSA().getSAOfferBody() == null) {
+        if (messageToSend.getNextPayload() == IKEPayloadTypeEnum.SecurityAssociation && secrets.getHandshakeSA().getSAOfferBody() == null) {
             secrets.getHandshakeSA().setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
         byte[] txData = messageToSend.getBytes();
@@ -124,7 +125,7 @@ public final class IKEv1Handshake {
         return messageReceived;
     }
 
-    ISAKMPMessage ISAKMPMessageFromByteArray(byte[] bytes) throws ISAKMPParsingException, GeneralSecurityException, IKEHandshakeException {
+    ISAKMPMessage ISAKMPMessageFromByteArray(byte[] bytes) throws GenericIKEParsingException, GeneralSecurityException, IKEHandshakeException {
         if (bytes.length < ISAKMPMessage.ISAKMP_HEADER_LEN) {
             throw new ISAKMPParsingException("Not enough bytes supplied to build an ISAKMPMessage!");
         }
@@ -158,7 +159,7 @@ public final class IKEv1Handshake {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         bais.skip(ISAKMPMessage.ISAKMP_HEADER_LEN);
-        PayloadTypeEnum nextPayload = PayloadTypeEnum.get(bytes[16]);
+        IKEPayloadTypeEnum nextPayload = IKEPayloadTypeEnum.get(bytes[16]);
         if (message.isEncryptedFlag()) {
             message = processEncryptedMessage(message, nextPayload, bais);
         } else {
@@ -170,14 +171,14 @@ public final class IKEv1Handshake {
         return message;
     }
 
-    private ISAKMPMessage processEncryptedMessage(ISAKMPMessage encMessage, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
+    private ISAKMPMessage processEncryptedMessage(ISAKMPMessage encMessage, IKEPayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GeneralSecurityException, ISAKMPParsingException, IKEHandshakeException {
         SecretKeySpec key = new SecretKeySpec(secrets.getKa(), ciphersuite.getCipher().cipherJCEName());
         byte[] iv = secrets.getIV(encMessage.getMessageId());
         EncryptedISAKMPMessage decMessage = EncryptedISAKMPMessage.fromPlainMessage(encMessage, key, ciphersuite.getCipher(), iv);
         decMessage.setCiphertext(bais);
         decMessage.setNextPayload(nextPayload);
         decMessage.decrypt();
-        PayloadTypeEnum payloadType = nextPayload;
+        IKEPayloadTypeEnum payloadType = nextPayload;
         for (ISAKMPPayload payload : decMessage.getPayloads()) {
             switch (payloadType) {
                 case SecurityAssociation:
@@ -234,9 +235,9 @@ public final class IKEv1Handshake {
         return decMessage;
     }
 
-    private void processPlainMessage(ISAKMPMessage message, PayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws ISAKMPParsingException, GeneralSecurityException, IllegalStateException, UnsupportedOperationException, IKEHandshakeException {
+    private void processPlainMessage(ISAKMPMessage message, IKEPayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GenericIKEParsingException, GeneralSecurityException, IllegalStateException, UnsupportedOperationException, IKEHandshakeException {
         ISAKMPPayload payload;
-        while (nextPayload != PayloadTypeEnum.NONE) {
+        while (nextPayload != IKEPayloadTypeEnum.NONE) {
             switch (nextPayload) {
                 case SecurityAssociation:
                     payload = SecurityAssociationPayload.fromStream(bais);
@@ -336,7 +337,7 @@ public final class IKEv1Handshake {
     public void reset() throws IOException, GeneralSecurityException {
         messages.clear();
         ciphersuite = new IKEv1Ciphersuite();
-        ltsecrets = new IKEHandshakeLongtermSecrets();
+        ltsecrets = new HandshakeLongtermSecrets();
         secrets = new IKEv1HandshakeSessionSecrets(ciphersuite, ltsecrets);
         if (this.udpTH != null) {
             dispose();
@@ -364,7 +365,7 @@ public final class IKEv1Handshake {
             throw new IKEHandshakeException("Transform ID is not the the hybrid ISAKMP/Oakley Diffie-Hellman key exchange (IKE).");
         }
         tp.getAttributes().forEach((attr) -> {
-            IKEv1Attribute iattr = (IKEv1Attribute) attr;
+            ISAKMPAttribute iattr = (ISAKMPAttribute) attr;
             iattr.configureCiphersuite(ciphersuite);
         });
         secrets.updateHandshakeSA();

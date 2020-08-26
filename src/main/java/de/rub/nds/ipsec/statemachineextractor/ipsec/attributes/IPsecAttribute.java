@@ -8,12 +8,12 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEAttribute;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public interface IPsecAttribute extends ISAKMPAttribute {
+public interface IPsecAttribute extends GenericIKEAttribute {
 
 }

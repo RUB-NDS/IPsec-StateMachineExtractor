@@ -8,17 +8,18 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.security.GeneralSecurityException;
 import javax.crypto.Cipher;
+import de.rub.nds.ipsec.statemachineextractor.ike.BasicIKEAttribute;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum CipherAttributeEnum implements IKEv1Attribute, BasicAttribute {
+public enum CipherAttributeEnum implements ISAKMPAttribute, BasicIKEAttribute {
 
     DES_CBC(0x80010001, 8),
     IDEA_CBC(0x80010002, 16),

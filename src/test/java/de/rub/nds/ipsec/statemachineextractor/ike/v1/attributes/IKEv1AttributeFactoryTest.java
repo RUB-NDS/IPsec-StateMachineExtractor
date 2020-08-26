@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import org.junit.Test;
@@ -25,7 +26,7 @@ public class IKEv1AttributeFactoryTest {
     @Test
     public void testFromInt() throws Exception {
         byte[] bytes = DatatypeHelper.intTo4ByteArray(0x800b0001);
-        IKEv1Attribute result = IKEv1AttributeFactory.fromStream(new ByteArrayInputStream(bytes));
+        ISAKMPAttribute result = IKEv1AttributeFactory.fromStream(new ByteArrayInputStream(bytes));
         assertEquals("SECONDS", result.toString());
     }
     

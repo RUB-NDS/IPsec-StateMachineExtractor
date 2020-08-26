@@ -8,12 +8,12 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.IKECiphersuite;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.DHGroupTransformEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.PseudoRandomFunctionTransformEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.EncryptionAlgorithmTransformEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.transforms.IntegrityAlgorithmTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.DHGroupTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.PseudoRandomFunctionTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptionAlgorithmTransformEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IntegrityAlgorithmTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
 import java.security.GeneralSecurityException;
 
@@ -21,7 +21,7 @@ import java.security.GeneralSecurityException;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv2Ciphersuite extends IKECiphersuite {
+public class IKEv2Ciphersuite extends GenericIKECiphersuite {
 
     private IntegrityAlgorithmTransformEnum authMethod = IntegrityAlgorithmTransformEnum.SHA1;
     private EncryptionAlgorithmTransformEnum cipher = EncryptionAlgorithmTransformEnum.AES_CBC;
@@ -46,7 +46,7 @@ public class IKEv2Ciphersuite extends IKECiphersuite {
     }
 
     @Override
-    public IKEDHGroupEnum getDhGroup() {
+    public DHGroupEnum getDhGroup() {
         return dhGroup.getDHGroupParameters();
     }
 

@@ -12,7 +12,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEHandshakeException extends Exception {
+public class IKEHandshakeException extends GenericIKEParsingException {
 
     /**
      * Creates a new instance of <code>IKEHandshakeException</code> without

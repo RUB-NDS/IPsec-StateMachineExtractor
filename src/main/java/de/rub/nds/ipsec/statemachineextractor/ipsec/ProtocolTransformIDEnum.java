@@ -9,7 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
 import de.rub.nds.ipsec.statemachineextractor.ByteValueEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

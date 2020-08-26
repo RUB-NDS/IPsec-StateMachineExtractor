@@ -8,8 +8,8 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -24,7 +24,7 @@ import javax.crypto.spec.DHParameterSpec;
  */
 public class SecurityAssociationSecrets implements Cloneable {
 
-    private final IKEDHGroupEnum DHGroup;
+    private final DHGroupEnum DHGroup;
     private KeyPair dhKeyPair;
     private PublicKey peerPublicKey;
     private boolean isInitiatorNonceChosen = false;
@@ -39,7 +39,7 @@ public class SecurityAssociationSecrets implements Cloneable {
     private byte[] inboundKeyMaterial, outboundKeyMaterial;
     private ProtocolIDEnum protocol = ProtocolIDEnum.ISAKMP;
 
-    public SecurityAssociationSecrets(IKEDHGroupEnum DHGroup) {
+    public SecurityAssociationSecrets(DHGroupEnum DHGroup) {
         this.DHGroup = DHGroup;
     }
 
@@ -48,7 +48,7 @@ public class SecurityAssociationSecrets implements Cloneable {
         return (SecurityAssociationSecrets) super.clone();
     }
 
-    public IKEDHGroupEnum getDHGroup() {
+    public DHGroupEnum getDHGroup() {
         return DHGroup;
     }
 

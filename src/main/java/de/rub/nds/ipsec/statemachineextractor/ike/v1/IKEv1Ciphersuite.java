@@ -15,15 +15,15 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttr
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.HashAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKECiphersuite;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
 import java.security.GeneralSecurityException;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class IKEv1Ciphersuite extends IKECiphersuite {
+public class IKEv1Ciphersuite extends GenericIKECiphersuite {
 
     private AuthAttributeEnum authMethod = AuthAttributeEnum.PSK;
     private CipherAttributeEnum cipher = CipherAttributeEnum.DES_CBC;
@@ -50,7 +50,7 @@ public class IKEv1Ciphersuite extends IKECiphersuite {
     }
 
     @Override
-    public IKEDHGroupEnum getDhGroup() {
+    public DHGroupEnum getDhGroup() {
         return dhGroup.getDHGroupParameters();
     }
 

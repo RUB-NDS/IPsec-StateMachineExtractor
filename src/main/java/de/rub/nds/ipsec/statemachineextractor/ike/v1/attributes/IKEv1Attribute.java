@@ -8,15 +8,13 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPAttribute;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPSerializable;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public interface IKEv1Attribute extends ISAKMPAttribute {
-
-    public void configureCiphersuite(IKEv1Ciphersuite ciphersuite);
+public interface IKEv1Attribute extends GenericIKEAttribute, ISAKMPSerializable {
 
 }

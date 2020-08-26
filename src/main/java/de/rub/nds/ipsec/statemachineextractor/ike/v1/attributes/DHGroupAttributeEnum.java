@@ -8,40 +8,41 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEDHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.BasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import de.rub.nds.ipsec.statemachineextractor.ike.BasicIKEAttribute;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public enum DHGroupAttributeEnum implements IKEv1Attribute, BasicAttribute {
+public enum DHGroupAttributeEnum implements ISAKMPAttribute, BasicIKEAttribute {
 
-    GROUP1(0x80040001, IKEDHGroupEnum.GROUP1_768),
-    GROUP2(0x80040002, IKEDHGroupEnum.GROUP2_1024),
-    GROUP5(0x80040005, IKEDHGroupEnum.GROUP5_1536),
-    GROUP14(0x8004000e, IKEDHGroupEnum.GROUP14_2048),
-    GROUP15(0x8004000f, IKEDHGroupEnum.GROUP15_3072),
-    GROUP16(0x80040010, IKEDHGroupEnum.GROUP16_4096),
-    GROUP17(0x80040011, IKEDHGroupEnum.GROUP17_6144),
-    GROUP18(0x80040012, IKEDHGroupEnum.GROUP18_8192),
-    GROUP19(0x80040013, IKEDHGroupEnum.GROUP19_256),
-    GROUP20(0x80040014, IKEDHGroupEnum.GROUP20_384),
-    GROUP21(0x80040015, IKEDHGroupEnum.GROUP21_521);
+    GROUP1(0x80040001, DHGroupEnum.GROUP1_768),
+    GROUP2(0x80040002, DHGroupEnum.GROUP2_1024),
+    GROUP5(0x80040005, DHGroupEnum.GROUP5_1536),
+    GROUP14(0x8004000e, DHGroupEnum.GROUP14_2048),
+    GROUP15(0x8004000f, DHGroupEnum.GROUP15_3072),
+    GROUP16(0x80040010, DHGroupEnum.GROUP16_4096),
+    GROUP17(0x80040011, DHGroupEnum.GROUP17_6144),
+    GROUP18(0x80040012, DHGroupEnum.GROUP18_8192),
+    GROUP19(0x80040013, DHGroupEnum.GROUP19_256),
+    GROUP20(0x80040014, DHGroupEnum.GROUP20_384),
+    GROUP21(0x80040015, DHGroupEnum.GROUP21_521);
 
     protected static final int FORMAT_TYPE = 0x8004;
-    private final IKEDHGroupEnum group;
+    private final DHGroupEnum group;
     private final byte[] bytes;
 
-    private DHGroupAttributeEnum(int value, IKEDHGroupEnum group) {
+    private DHGroupAttributeEnum(int value, DHGroupEnum group) {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
         this.group = group;
         IKEv1AttributeFactory.register(this, value);
     }
 
-    public IKEDHGroupEnum getDHGroupParameters() {
+    public DHGroupEnum getDHGroupParameters() {
         return group;
     }
 

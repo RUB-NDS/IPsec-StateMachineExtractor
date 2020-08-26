@@ -8,8 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.v2.KeyLengthAttributeEnumv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
 import static de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper.read4ByteFromStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

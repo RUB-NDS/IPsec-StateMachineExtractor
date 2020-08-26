@@ -10,16 +10,16 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessage;
-import static de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPMessageTest.getTestIKEv1MainModeSecurityAssociationMessage;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.ISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.NotificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.NotifyMessageTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.PayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
+import static de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessageTest.getTestIKEv1MainModeSecurityAssociationMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotificationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotifyMessageTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
@@ -93,7 +93,7 @@ public class IKEv1HandshakeTest {
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("3287d995d890aaed"), instance.getResponderCookie());
         assertEquals(ExchangeTypeEnum.Informational, instance.getExchangeType());
         assertEquals(1, instance.getPayloads().size());
-        assertEquals(PayloadTypeEnum.Notification, instance.getPayloads().get(0).getType());
+        assertEquals(IKEPayloadTypeEnum.Notification, instance.getPayloads().get(0).getType());
         assertEquals(NotifyMessageTypeEnum.PayloadMalformed, ((NotificationPayload) instance.getPayloads().get(0)).getNotifyMessageType());
     }
 

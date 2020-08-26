@@ -9,10 +9,10 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttribute;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.IKEv1Attribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 
 /**
  *
@@ -21,11 +21,11 @@ import static org.junit.Assert.*;
 public class IKEv1AttributeTest {
     
     /**
-     * Test of hashCode method, of class IKEv1Attribute.
+     * Test of hashCode method, of class ISAKMPAttribute.
      */
     @Test
     public void testHashCode() {
-        IKEv1Attribute instance = LifeDurationAttribute.get(28800);
+        ISAKMPAttribute instance = LifeDurationAttribute.get(28800);
         byte[] expResult = DatatypeHelper.intTo4ByteArray(0x800c7080);
         assertArrayEquals(expResult, instance.getBytes());
     }
