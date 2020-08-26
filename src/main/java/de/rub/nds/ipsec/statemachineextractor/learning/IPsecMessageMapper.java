@@ -14,7 +14,7 @@ import de.learnlib.mapper.api.SULMapper;
 import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.SecurityAssociationPayloadFactory;
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPTransformIDEnum;
@@ -113,18 +113,18 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                     while (!tokens.isEmpty()) {
                         switch (tokens.pop()) {
                             case "PSK":
-                                sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
+                                sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
                                 break;
                             case "PKE":
-                                sa = SecurityAssociationPayloadFactory.P1_PKE_AES128_SHA1_G5;
+                                sa = SecurityAssociationPayloadFactory.V1_P1_PKE_AES128_SHA1_G5;
                                 break;
                             case "RPKE":
-                                sa = SecurityAssociationPayloadFactory.P1_RPKE_AES128_SHA1_G5;
+                                sa = SecurityAssociationPayloadFactory.V1_P1_RPKE_AES128_SHA1_G5;
                                 break;
                             case "SA":
                                 switch (msg.getExchangeType()) {
                                     case QuickMode:
-                                        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
+                                        sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
                                         conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
                                         break;
 

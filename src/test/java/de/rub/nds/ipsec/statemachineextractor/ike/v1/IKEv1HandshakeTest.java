@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
@@ -105,7 +106,7 @@ public class IKEv1HandshakeTest {
 
         ISAKMPMessage msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.Aggressive);
-        sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
+        sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
         msg.addPayload(sa);
         handshake.adjustCiphersuite(sa);
         msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
@@ -124,7 +125,7 @@ public class IKEv1HandshakeTest {
         msg.setEncryptedFlag(true);
         msg.setMessageIdRandom();
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
+        sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
@@ -155,7 +156,7 @@ public class IKEv1HandshakeTest {
 
         ISAKMPMessage msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-        sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
+        sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
         msg.addPayload(sa);
         handshake.adjustCiphersuite(sa);
         answer = handshake.exchangeMessage(msg);
@@ -181,7 +182,7 @@ public class IKEv1HandshakeTest {
         msg.setEncryptedFlag(true);
         msg.setMessageIdRandom();
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
+        sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
         msg.addPayload(sa);
         msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();

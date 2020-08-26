@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.isakmp.IDTypeEnum;
@@ -200,7 +201,7 @@ public class IKEv1HandshakeIT {
         ISAKMPMessage msg, answer;
         SecurityAssociationPayload sa;
 
-        sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
+        sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
         handshake.adjustCiphersuite(sa);
         IKEv1HandshakeSessionSecrets secrets = handshake.secrets;
         secrets.generateDefaults();
@@ -240,7 +241,7 @@ public class IKEv1HandshakeIT {
         msg.setEncryptedFlag(true);
         msg.setMessageId(DatatypeHelper.hexDumpToByteArray("e582bf04"));
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
+        sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("f94d660a"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("35496d7f0f01f56f"));
@@ -274,7 +275,7 @@ public class IKEv1HandshakeIT {
         ISAKMPMessage msg, answer;
         SecurityAssociationPayload sa;
 
-        sa = SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2;
+        sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
         handshake.adjustCiphersuite(sa);
         IKEv1HandshakeSessionSecrets secrets = handshake.secrets;
         secrets.generateDefaults();
@@ -321,7 +322,7 @@ public class IKEv1HandshakeIT {
         msg.setEncryptedFlag(true);
         msg.setMessageId(DatatypeHelper.hexDumpToByteArray("259cf133"));
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
+        sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("b75ad16c"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("695346ebcf35ab90"));
@@ -355,7 +356,7 @@ public class IKEv1HandshakeIT {
         ISAKMPMessage msg, answer;
         SecurityAssociationPayload sa;
 
-        sa = SecurityAssociationPayloadFactory.P1_PKE_AES128_SHA1_G5;
+        sa = SecurityAssociationPayloadFactory.V1_P1_PKE_AES128_SHA1_G5;
         handshake.adjustCiphersuite(sa);
         IKEv1HandshakeSessionSecrets secrets = handshake.secrets;
         secrets.generateDefaults();
@@ -409,7 +410,7 @@ public class IKEv1HandshakeIT {
         msg.setEncryptedFlag(true);
         msg.setMessageId(DatatypeHelper.hexDumpToByteArray("45c9ec04"));
         handshake.setMostRecentMessageID(msg.getMessageId());
-        sa = SecurityAssociationPayloadFactory.getP2_ESP_TUNNEL_AES128_SHA1();
+        sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("ac8eca3c"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("508d6b24469f8136"));

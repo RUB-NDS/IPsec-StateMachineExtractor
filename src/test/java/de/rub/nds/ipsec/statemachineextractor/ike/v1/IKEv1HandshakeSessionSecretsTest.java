@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.net.InetAddress;
@@ -34,7 +35,7 @@ public class IKEv1HandshakeSessionSecretsTest {
     @Test
     public void testComputeSecretKeys() throws Exception {
         IKEv1Handshake handshake = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2);
+        handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2);
         IKEv1HandshakeSessionSecrets instance = handshake.secrets;
         instance.generateDefaults();
         handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
@@ -65,7 +66,7 @@ public class IKEv1HandshakeSessionSecretsTest {
     @Test
     public void testComputeSecretKeysInformationalExchange() throws Exception {
         IKEv1Handshake handshake = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2);
+        handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2);
         IKEv1HandshakeSessionSecrets instance = handshake.secrets;
         instance.generateDefaults();
         handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
@@ -97,7 +98,7 @@ public class IKEv1HandshakeSessionSecretsTest {
     @Test
     public void testComputeDHSecret() throws Exception {
         IKEv1Handshake handshake = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.P1_PSK_AES128_SHA1_G2);
+        handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2);
         IKEv1HandshakeSessionSecrets instance = handshake.secrets;
         PKCS8EncodedKeySpec key1SpecPriv = new PKCS8EncodedKeySpec(DatatypeHelper.hexDumpToByteArray("3082012102010030819506092A864886F70D01030130818702818100FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE65381FFFFFFFFFFFFFFFF020102048183028180357449FA7673FCF4FAF97D5BD90F42F7CEF89AF2523D7B49C500377BFE3F8DB3A55DA3AD0ABDD0E363FB69EDEA9F97539F8C9EBABA87C4056A23AA52C6ED5F866EBE68C8F7AA3C4984FE3846BF35D64252DAEC4D52A076220487B8B098FA04F5156E6C68BDCC1D9C156AE80F4DB02ED4B33840FE2C8B5C20D1335CCA08A53EAC"));
         X509EncodedKeySpec key1SpecPub = new X509EncodedKeySpec(DatatypeHelper.hexDumpToByteArray("3082011D30819306072A8648CE3E020130818702818100FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE65381FFFFFFFFFFFFFFFF0201020381840002818075212BD6A675FB8764A87E119AE2F17CE5AE39F584BD202B7A38F560192F6A2EE60D74917C84D2C2F73275837DEFBC3F1A1290C42E8E8C40786D8262F1A8774DE94556916A138603ED28606C6451C52FA6002A5B82B23407D525584AB12BC94970E42E0A9206ED6985A516739DF996159BCB61B1718F56D05AC96446A598D31B"));

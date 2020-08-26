@@ -13,6 +13,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeLongtermSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.IdentificationPayloadInitiator;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.AuthenticationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.payloads.AUTHMethodEnum;
@@ -400,11 +401,11 @@ public final class IKEv2Handshake {
     }
 
     public ISAKMPPayload preparePhase1SecurityAssociation() {
-        return SecurityAssociationPayloadFactoryv2.P1_AES_128_CBC_SHA1;
+        return SecurityAssociationPayloadFactory.V2_P1_AES_128_CBC_SHA1;
     }
 
     public ISAKMPPayload preparePhase2SecurityAssociation() {
-        return SecurityAssociationPayloadFactoryv2.P2_AES_128_CBC_SHA1_ESN;
+        return SecurityAssociationPayloadFactory.V2_P2_AES_128_CBC_SHA1_ESN;
     }
 
     public byte[] getMostRecentMessageID() {
