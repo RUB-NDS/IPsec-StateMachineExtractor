@@ -20,7 +20,7 @@ import java.util.Map;
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
 public enum IPProtocolsEnum {
-    HOPOPT("IPv6 Hop-by-Hop Option", 0),
+    ANY("Any Protocol", 0), // could also mean "IPv6 Hop-by-Hop Option"
     ICMP("Internet Control Message Protocol", 1),
     IGMP("Internet Group Management Protocol", 2),
     GGP("Gateway-to-Gateway Protocol", 3),

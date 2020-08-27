@@ -22,7 +22,7 @@ public abstract class TrafficSelectorPayload extends IKEv2Payload {
 
     protected static final int TRAFFIC_SELECTOR_HEADER_LEN = 8;
     private byte tsNumber = 1;
-    private TrafficSelector trafficSelector = new TrafficSelector();
+    private TrafficSelectorSubstructure trafficSelector = new TrafficSelectorSubstructure();
 
     public TrafficSelectorPayload(IKEPayloadTypeEnum type) {
         super(type);
@@ -32,7 +32,7 @@ public abstract class TrafficSelectorPayload extends IKEv2Payload {
         return this.tsNumber;
     }
 
-    public TrafficSelector getTrafficSelector() {
+    public TrafficSelectorSubstructure getTrafficSelector() {
         return this.trafficSelector;
     }
 
@@ -60,7 +60,7 @@ public abstract class TrafficSelectorPayload extends IKEv2Payload {
         if (buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0) {
             throw new IKEv2ParsingException("Reserved bytes are non-zero!");
         }
-        trafficSelector = TrafficSelector.fromStream(bais);
+        trafficSelector = TrafficSelectorSubstructure.fromStream(bais);
         if (trafficSelector.getLength() < length - TRAFFIC_SELECTOR_HEADER_LEN) {
             throw new IKEv2ParsingException("Input stream ended early after " + (trafficSelector.getLength() + TRAFFIC_SELECTOR_HEADER_LEN) + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
