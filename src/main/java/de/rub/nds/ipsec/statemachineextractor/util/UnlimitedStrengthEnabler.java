@@ -40,7 +40,7 @@ public class UnlimitedStrengthEnabler {
             }
         } catch (IllegalAccessException | ClassNotFoundException | IllegalArgumentException | NoSuchAlgorithmException
                 | NoSuchFieldException | SecurityException ex) {
-            System.out.println("It is not possible to use unrestricted policy with this JDK, "
+            System.err.println("It is not possible to use unrestricted policy with this JDK, "
                     + "consider reconfiguration: " + ex.getLocalizedMessage());
         }
     }

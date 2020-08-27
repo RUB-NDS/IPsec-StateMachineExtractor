@@ -27,9 +27,8 @@ public class KeyExchangePayloadv2 extends IKEv2Payload {
     private byte[] keyExchangeData;
     private byte[] body;
 
-    public KeyExchangePayloadv2(DHGroupEnum dhGroup) {
+    public KeyExchangePayloadv2() {
         super(IKEPayloadTypeEnum.KeyExchangev2);
-        this.dhGroup = DHGroupTransformEnum.valueOf(dhGroup.name());
     }
 
     public void setDhGroup(DHGroupTransformEnum dhGroup) {
@@ -89,7 +88,7 @@ public class KeyExchangePayloadv2 extends IKEv2Payload {
     }
 
     public static KeyExchangePayloadv2 fromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {
-        KeyExchangePayloadv2 keyExchangePayload = new KeyExchangePayloadv2(null);
+        KeyExchangePayloadv2 keyExchangePayload = new KeyExchangePayloadv2();
         keyExchangePayload.fillFromStream(bais);
         return keyExchangePayload;
     }

@@ -11,7 +11,6 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
 

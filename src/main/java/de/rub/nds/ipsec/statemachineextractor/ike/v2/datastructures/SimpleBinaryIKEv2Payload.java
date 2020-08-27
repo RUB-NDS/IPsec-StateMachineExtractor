@@ -14,6 +14,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.SimpleBinaryPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
@@ -41,14 +42,20 @@ public abstract class SimpleBinaryIKEv2Payload extends IKEv2Payload implements S
         return HEADER_LEN + binaryData.length;
     }
 
-    protected static SimpleBinaryIKEv2Payload fromStream(ByteArrayInputStream bais, SimpleBinaryIKEv2Payload payload) throws GenericIKEParsingException {
-        payload.fillFromStream(bais);
-        return payload;
+    @Override
+    public void writeBytes(ByteArrayOutputStream baos) {
+        super.writeBytes(baos);
+        baos.write(binaryData, 0, binaryData.length);
     }
 
     @Override
     protected void setBody(byte[] body) throws ISAKMPParsingException {
         this.setBinaryData(body);
+    }
+
+    protected static SimpleBinaryIKEv2Payload fromStream(ByteArrayInputStream bais, SimpleBinaryIKEv2Payload payload) throws GenericIKEParsingException {
+        payload.fillFromStream(bais);
+        return payload;
     }
 
     @Override

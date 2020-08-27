@@ -10,11 +10,9 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -41,7 +39,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedISAK
     private final EncryptionAlgorithmTransformEnum mode;
     private final IntegrityAlgorithmTransformEnum auth;
     private byte[] header = new byte[4];
-    private EncryptedPayload ENCRPayload = new EncryptedPayload();
+    protected EncryptedPayload ENCRPayload = new EncryptedPayload();
 
     public EncryptedIKEv2Message(SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         this.ENCRsecretKey = ENCRsecretKey;
@@ -58,28 +56,13 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedISAK
     public void encrypt() throws GeneralSecurityException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         this.writeBytesOfPayloads(baos);
-        try {
-            cipherEnc.init(Cipher.ENCRYPT_MODE, ENCRsecretKey, IV);
-        } catch (InvalidKeyException ex) {
-            // Generate a null key if there is no good key material available
-            /**
-             * byte[] nullKeyArr; if (mode.isFixedKeySize()) { nullKeyArr = new
-             * byte[mode.getKeySize()]; } else { nullKeyArr = new byte[16]; //
-             * 128 bit has good chances to work with the majority of cipher
-             * algorithms } cipherEnc =
-             * Cipher.getInstance(cipherEnc.getAlgorithm()); // we need a new
-             * object to circumvent a bug in openJDK-8
-             * cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(nullKeyArr,
-             * mode.cipherJCEName()), IV);
-            *
-             */
-            System.out.println("Invalid Key");
-        }
+        cipherEnc.init(Cipher.ENCRYPT_MODE, ENCRsecretKey, IV);
+        // TODO: Generate a null key if there is no good key material available
         this.plaintext = baos.toByteArray();
         //padding check
         if (this.plaintext.length % 16 != 0) {
             this.ENCRPayload.setPadLength((byte) (16 - ((this.plaintext.length % 16) + 1)));
-            this.ENCRPayload.genPadding();
+            this.ENCRPayload.genRandomPadding();
             byte[] toEncrypt = new byte[plaintext.length + ENCRPayload.getPadLengthINT() + 1];
             System.arraycopy(plaintext, 0, toEncrypt, 0, plaintext.length);
             System.arraycopy(ENCRPayload.getPadding(), 0, toEncrypt, plaintext.length, ENCRPayload.getPadding().length);
@@ -103,9 +86,6 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedISAK
         byte[] plain = new byte[plaintextwithpadding.length - plaintextwithpadding[plaintextwithpadding.length - 1] - 1];
         System.arraycopy(plaintextwithpadding, 0, plain, 0, plain.length);
         this.plaintext = plain;
-        System.out.println("Ciphertext: " + DatatypeHelper.byteArrayToHexDump(this.ciphertext));
-        System.out.println("Key: " + DatatypeHelper.byteArrayToHexDump(ENCRsecretKey.getEncoded()));
-        System.out.println("Plaintext:  " + DatatypeHelper.byteArrayToHexDump(this.plaintext));
         byte[] plaintextwithheader = new byte[plaintext.length + 4 + this.ENCRPayload.getIV().length + this.ENCRPayload.getINTEGChecksumData().length + this.ciphertext.length];
         System.arraycopy(header, 0, plaintextwithheader, 0, header.length);
         System.arraycopy(this.ENCRPayload.getIV(), 0, plaintextwithheader, header.length, this.ENCRPayload.getIV().length);
@@ -127,8 +107,6 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedISAK
             nextPayload = payload.getNextPayload();
             this.addPayload(payload);
         }
-        //this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipherDec.getBlockSize(), this.ciphertext.length);
-        //this.plaintext = Arrays.copyOf(this.plaintext, super.getLength() - HEADER_LEN); // remove padding
         this.isInSync = true;
     }
 

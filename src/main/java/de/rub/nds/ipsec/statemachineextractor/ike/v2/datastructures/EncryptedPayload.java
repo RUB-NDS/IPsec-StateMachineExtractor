@@ -74,7 +74,12 @@ public class EncryptedPayload extends IKEv2Payload {
         return padding.clone();
     }
 
-    public void genPadding() {
+    public void setPadding(byte[] padding) {
+        this.padding = padding.clone();
+        this.padLength = (byte) this.padding.length;
+    }
+
+    public void genRandomPadding() {
         padding = new byte[(int) padLength];
         SecureRandom random = new SecureRandom();
         random.nextBytes(padding);

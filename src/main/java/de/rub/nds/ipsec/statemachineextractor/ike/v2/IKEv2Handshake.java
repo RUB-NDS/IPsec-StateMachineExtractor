@@ -20,6 +20,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFact
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IdentificationPayloadInitiator;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.AuthenticationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.AuthMethodEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.DHGroupTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedIKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorPayloadResponder;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorPayloadInitiator;
@@ -135,9 +136,9 @@ public final class IKEv2Handshake {
         } else {
             processPlainMessage(message, nextPayload, bais);
         }
-        //if (messageLength != message.getLength()) {
-        //  throw new IKEv2ParsingException("Message lengths differ - Computed: " + message.getLength() + " vs. Received: " + messageLength + "!");
-        //}
+//        if (messageLength != message.getLength()) {
+//          throw new IKEv2ParsingException("Message lengths differ - Computed: " + message.getLength() + " vs. Received: " + messageLength + "!");
+//        }
         return message;
     }
 
@@ -149,8 +150,18 @@ public final class IKEv2Handshake {
         decMessage.setCiphertext(bais);
         decMessage.setNextPayload(nextPayload);
         decMessage.decrypt();
-        //return decMessage;
-        return null;
+        IKEPayloadTypeEnum payloadType = nextPayload;
+//        for (IKEv2Payload payload : decMessage.getPayloads()) {
+//            switch (payloadType) {
+//                case EncryptedAndAuthenticated:
+//                    //payload.getBody();
+//                    break;
+//                default:
+//                    throw new IKEHandshakeException("Not implemented yet!");
+//            }
+//            payloadType = payload.getNextPayload();
+//        }
+        return decMessage;
     }
 
     private void processPlainMessage(IKEv2Message message, IKEPayloadTypeEnum nextPayload, ByteArrayInputStream bais) throws GenericIKEParsingException, GeneralSecurityException, IllegalStateException, UnsupportedOperationException, IKEHandshakeException, IOException {
@@ -182,11 +193,6 @@ public final class IKEv2Handshake {
                     }
                     secrets.computeSecretKeys();
                     break;
-                /*
-                case VendorID:
-                    payload = VendorIDPayload.fromStream(bais);
-                    break;
-                 */
                 case Notify:
                     payload = NotificationPayloadv2.fromStream(bais);
                     break;
@@ -279,8 +285,8 @@ public final class IKEv2Handshake {
 
     public IKEv2Payload prepareKeyExchangePayload(byte[] msgID) throws GeneralSecurityException, IKEv2ParsingException {
         SecurityAssociationSecrets sas = this.secrets.getSA(msgID);
-        KeyExchangePayloadv2 result = new KeyExchangePayloadv2(sas.getDHGroup());
-        //System.out.println(new String(sas.generateKeyExchangeData(), 0));
+        KeyExchangePayloadv2 result = new KeyExchangePayloadv2();
+        result.setDhGroup(DHGroupTransformEnum.valueOf(sas.getDHGroup().name()));
         result.setKeyExchangeData(sas.generateKeyExchangeData());
         result.configureBody();
         return result;
