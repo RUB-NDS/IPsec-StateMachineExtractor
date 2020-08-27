@@ -6,7 +6,7 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import de.rub.nds.ipsec.statemachineextractor.ByteValueEnum;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public enum ProtocolIDEnum implements ByteValueEnum {
     RESERVED((byte) 0),
-    ISAKMP((byte) 1), //in IKEv2 it got renamed to IKE
+    ISAKMP_IKE((byte) 1),
     IPSEC_AH((byte) 2),
     IPSEC_ESP((byte) 3),
     IPCOMP((byte) 4);

@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import java.io.ByteArrayInputStream;
@@ -27,7 +28,7 @@ public class ProposalPayload extends ISAKMPPayload {
     protected static final int PROPOSAL_PAYLOAD_HEADER_LEN = 8;
 
     private byte proposalNumber = -128;
-    private ProtocolIDEnum protocolId = ProtocolIDEnum.ISAKMP;
+    private ProtocolIDEnum protocolId = ProtocolIDEnum.ISAKMP_IKE;
     private byte[] SPI = new byte[0];
     private final List<TransformPayload> transforms = new ArrayList<>();
 

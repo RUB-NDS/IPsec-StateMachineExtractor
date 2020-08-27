@@ -9,11 +9,9 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,7 +29,7 @@ public class ProposalPayloadv2 extends IKEv2Payload {
     protected static final int PROPOSAL_PAYLOAD_HEADER_LEN = 8;
 
     private byte proposalNumber = -128;
-    private ProtocolIDEnum protocolId = ProtocolIDEnum.ISAKMP;
+    private ProtocolIDEnum protocolId = ProtocolIDEnum.ISAKMP_IKE;
     private byte[] SPI = new byte[0];
     private final List<TransformPayloadv2> transforms = new ArrayList<>();
 
@@ -127,21 +125,21 @@ public class ProposalPayloadv2 extends IKEv2Payload {
         try {
             int read = bais.read(this.SPI);
             if (read != spiSize) {
-                throw new ISAKMPParsingException("Reading from InputStream failed!");
+                throw new IKEv2ParsingException("Reading from InputStream failed!");
             }
         } catch (IOException ex) {
-            throw new ISAKMPParsingException(ex);
+            throw new IKEv2ParsingException(ex);
         }
         for (byte i = 0; i < nrTransforms; i++) {
             this.addTransform(TransformPayloadv2.fromStream(bais, this.getProtocolId()));
         }
         if (length != this.getLength()) {
-            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");
+            throw new IKEv2ParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");
         }
     }
 
     @Override
-    protected void setBody(byte[] body) throws ISAKMPParsingException {
+    protected void setBody(byte[] body) throws IKEv2ParsingException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

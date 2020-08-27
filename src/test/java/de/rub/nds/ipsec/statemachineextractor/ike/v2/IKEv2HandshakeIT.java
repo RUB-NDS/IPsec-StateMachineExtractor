@@ -10,7 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotifyMessageTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.NotifyMessageTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedIKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedIKEv2MessageMock;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedPayloadMock;

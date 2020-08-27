@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 
 /**
  *
@@ -73,7 +74,7 @@ public class AuthenticationPayload extends IKEv2Payload {
     }
 
     @Override
-    protected void setBody(byte[] body) throws ISAKMPParsingException {
+    protected void setBody(byte[] body) throws IKEv2ParsingException {
         this.setAuthMethod(AuthMethodEnum.get(body[0]));
         this.setAuthenticationData(Arrays.copyOfRange(body, 4, body.length));
     }

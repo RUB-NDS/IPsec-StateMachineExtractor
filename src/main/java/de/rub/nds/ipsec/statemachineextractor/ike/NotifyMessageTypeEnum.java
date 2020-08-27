@@ -6,7 +6,7 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import java.util.HashMap;
 import java.util.Map;

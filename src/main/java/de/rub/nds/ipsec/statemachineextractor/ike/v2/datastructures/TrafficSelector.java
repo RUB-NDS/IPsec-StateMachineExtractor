@@ -8,10 +8,10 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Serializable;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 
 /**
@@ -42,13 +42,13 @@ public class TrafficSelector implements IKEv2Serializable {
         baos.write(this.endAddress, 0, this.endAddress.length);
     }
 
-    public static TrafficSelector fromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+    public static TrafficSelector fromStream(ByteArrayInputStream bais) throws IKEv2ParsingException {
         TrafficSelector ts = new TrafficSelector();
         ts.fillFromStream(bais);
         return ts;
     }
 
-    protected void fillFromStream(ByteArrayInputStream bais) throws ISAKMPParsingException {
+    protected void fillFromStream(ByteArrayInputStream bais) throws IKEv2ParsingException {
         bais.skip(0x10);
         //byte[] buffer = read4ByteFromStream(bais);
         /**

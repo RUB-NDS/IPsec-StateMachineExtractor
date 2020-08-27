@@ -30,7 +30,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.PKCS1EncryptedISAKMP
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProposalPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
@@ -354,7 +354,7 @@ public final class IKEv1Handshake {
             throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
         }
         ProposalPayload pp = payload.getProposalPayloads().get(0);
-        if (pp.getProtocolId() != ProtocolIDEnum.ISAKMP) {
+        if (pp.getProtocolId() != ProtocolIDEnum.ISAKMP_IKE) {
             throw new IKEHandshakeException("Proposal protocol is not ISAKMP.");
         }
         if (pp.getTransformPayloads().size() != 1) {

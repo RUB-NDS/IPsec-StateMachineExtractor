@@ -12,7 +12,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 
 /**
  *
@@ -68,19 +68,19 @@ public class TrafficSelectorPayloadResponder extends IKEv2Payload {
         byte[] buffer = read4ByteFromStream(bais);
         this.tsNumber = buffer[0];
         if (getTSNumber() != buffer[0]) {
-            throw new ISAKMPParsingException("Only one Traffic Selector parsing is supported!");
+            throw new IKEv2ParsingException("Only one Traffic Selector parsing is supported!");
         }
         if (buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0) {
-            throw new ISAKMPParsingException("Reserved bytes are non-zero!");
+            throw new IKEv2ParsingException("Reserved bytes are non-zero!");
         }
         traffic = TrafficSelector.fromStream(bais);
         if (traffic.getLength() < length - ID_HEADER_LEN) {
-            throw new ISAKMPParsingException("Input stream ended early after " + (traffic.getLength() + ID_HEADER_LEN) + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
+            throw new IKEv2ParsingException("Input stream ended early after " + (traffic.getLength() + ID_HEADER_LEN) + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
     }
 
     @Override
-    protected void setBody(byte[] body) throws ISAKMPParsingException {
+    protected void setBody(byte[] body) throws IKEv2ParsingException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

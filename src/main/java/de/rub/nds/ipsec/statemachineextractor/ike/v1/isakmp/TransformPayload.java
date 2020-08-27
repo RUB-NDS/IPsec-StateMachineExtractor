@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
@@ -95,7 +96,7 @@ public class TransformPayload extends ISAKMPPayload {
             return ProtocolTransformIDEnum.getFirstMatch(value);
         }
         switch (protocolID) {
-            case ISAKMP:
+            case ISAKMP_IKE:
                 return ISAKMPTransformIDEnum.get(value).toProtocolTransformIDEnum();
             case IPSEC_ESP:
                 return ESPTransformIDEnum.get(value).toProtocolTransformIDEnum();

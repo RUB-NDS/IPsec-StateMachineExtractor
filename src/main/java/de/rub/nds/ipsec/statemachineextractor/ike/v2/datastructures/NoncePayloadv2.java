@@ -9,8 +9,8 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
-import java.io.ByteArrayInputStream;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import java.io.ByteArrayInputStream;
 
 /**
  *

@@ -9,9 +9,8 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -80,12 +79,12 @@ public class SecurityAssociationPayloadv2 extends IKEv2Payload {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
         this.addProposalPayloadv2(ProposalPayloadv2.fromStream(bais));
         if (length != this.getLength()) {
-            throw new ISAKMPParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");
+            throw new IKEv2ParsingException("Payload lengths differ - Computed: " + this.getLength() + " bytes vs. Received: " + length + " bytes!");
         }
     }
 
     @Override
-    protected void setBody(byte[] body) throws ISAKMPParsingException {
+    protected void setBody(byte[] body) throws IKEv2ParsingException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

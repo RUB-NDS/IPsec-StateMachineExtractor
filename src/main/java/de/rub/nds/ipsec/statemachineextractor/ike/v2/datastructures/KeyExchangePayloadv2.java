@@ -8,13 +8,12 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 
 /**
  *

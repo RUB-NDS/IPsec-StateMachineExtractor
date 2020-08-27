@@ -9,7 +9,6 @@
 package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -37,7 +36,7 @@ public class SecurityAssociationSecrets implements Cloneable {
     private byte[] inboundSPI = new byte[]{0x7f, 0x7f, 0x7f, 0x7f};
     private byte[] outboundSPI = new byte[]{0x7f, 0x7f, 0x7f, 0x7f};
     private byte[] inboundKeyMaterial, outboundKeyMaterial;
-    private ProtocolIDEnum protocol = ProtocolIDEnum.ISAKMP;
+    private ProtocolIDEnum protocol = ProtocolIDEnum.ISAKMP_IKE;
 
     public SecurityAssociationSecrets(DHGroupEnum DHGroup) {
         this.DHGroup = DHGroup;

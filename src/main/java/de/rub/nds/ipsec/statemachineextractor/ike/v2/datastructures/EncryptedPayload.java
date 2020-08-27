@@ -9,12 +9,12 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
 
 /**
  *
@@ -119,15 +119,15 @@ public class EncryptedPayload extends IKEv2Payload {
         try {
             readBytes = bais.read(buffer);
         } catch (IOException ex) {
-            throw new ISAKMPParsingException(ex);
+            throw new IKEv2ParsingException(ex);
         }
         if (readBytes < length - GENERIC_PAYLOAD_HEADER_LEN) {
-            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
+            throw new IKEv2ParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
     }
 
     @Override
-    protected void setBody(byte[] body) throws ISAKMPParsingException {
+    protected void setBody(byte[] body) throws IKEv2ParsingException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

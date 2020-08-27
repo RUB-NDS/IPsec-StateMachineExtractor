@@ -9,13 +9,13 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
 
 /**
  *
@@ -86,7 +86,7 @@ public class IdentificationPayloadInitiator extends IKEv2Payload {
     }
 
     @Override
-    protected void setBody(byte[] body) throws ISAKMPParsingException {
+    protected void setBody(byte[] body) throws IKEv2ParsingException {
         this.setIdType(IDTypeEnum.get(body[0]));
         this.setIdentificationData(Arrays.copyOfRange(body, 4, body.length));
     }
@@ -99,10 +99,10 @@ public class IdentificationPayloadInitiator extends IKEv2Payload {
         try {
             readBytes = bais.read(buffer);
         } catch (IOException ex) {
-            throw new ISAKMPParsingException(ex);
+            throw new IKEv2ParsingException(ex);
         }
         if (readBytes < length - GENERIC_PAYLOAD_HEADER_LEN) {
-            throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
+            throw new IKEv2ParsingException("Input stream ended early after " + readBytes + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
         this.setBody(buffer);
         setIDi();

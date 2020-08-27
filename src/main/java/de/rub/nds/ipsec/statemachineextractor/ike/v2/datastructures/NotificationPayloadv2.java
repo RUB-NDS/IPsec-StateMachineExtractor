@@ -9,9 +9,9 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotifyMessageTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.NotifyMessageTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -106,7 +106,7 @@ public class NotificationPayloadv2 extends IKEv2Payload {
         this.setProtocolID(buffer[0]);
         this.setNotifyMessageType(NotifyMessageTypeEnum.get(Arrays.copyOfRange(buffer, 2, 4)));
         if (buffer[1] > 16 || buffer[1] < 0) {
-            throw new ISAKMPParsingException("Security Parameter Index (SPI) length may be from zero (0) to sixteen (16)");
+            throw new IKEv2ParsingException("Security Parameter Index (SPI) length may be from zero (0) to sixteen (16)");
         }
         if (buffer[1] > 0) {
             byte[] spidata = new byte[buffer[1]];
@@ -114,10 +114,10 @@ public class NotificationPayloadv2 extends IKEv2Payload {
             try {
                 readBytes = bais.read(spidata);
             } catch (IOException ex) {
-                throw new ISAKMPParsingException(ex);
+                throw new IKEv2ParsingException(ex);
             }
             if (readBytes < spidata.length) {
-                throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + spidata.length + "bytes)!");
+                throw new IKEv2ParsingException("Input stream ended early after " + readBytes + " bytes (should read " + spidata.length + "bytes)!");
             }
             this.setSpi(spidata);
         }
@@ -127,17 +127,17 @@ public class NotificationPayloadv2 extends IKEv2Payload {
             try {
                 readBytes = bais.read(buffer);
             } catch (IOException ex) {
-                throw new ISAKMPParsingException(ex);
+                throw new IKEv2ParsingException(ex);
             }
             if (readBytes < buffer.length) {
-                throw new ISAKMPParsingException("Input stream ended early after " + readBytes + " bytes (should read " + buffer.length + "bytes)!");
+                throw new IKEv2ParsingException("Input stream ended early after " + readBytes + " bytes (should read " + buffer.length + "bytes)!");
             }
             this.setNotificationData(buffer);
         }
     }
 
     @Override
-    protected void setBody(byte[] body) throws ISAKMPParsingException {
+    protected void setBody(byte[] body) throws IKEv2ParsingException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

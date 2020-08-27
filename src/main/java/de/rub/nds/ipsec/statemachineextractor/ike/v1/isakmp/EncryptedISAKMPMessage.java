@@ -8,6 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.EncryptedIKEData;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
@@ -25,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedISAKMPData {
+public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIKEData {
 
     private final SecretKey secretKey;
     private final IvParameterSpec IV;

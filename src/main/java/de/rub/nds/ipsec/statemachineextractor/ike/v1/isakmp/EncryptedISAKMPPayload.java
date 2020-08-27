@@ -8,11 +8,13 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.EncryptedIKEData;
+
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public interface EncryptedISAKMPPayload extends EncryptedISAKMPData {
+public interface EncryptedISAKMPPayload extends EncryptedIKEData {
 
     ISAKMPPayload getUnderlyingPayload();
 

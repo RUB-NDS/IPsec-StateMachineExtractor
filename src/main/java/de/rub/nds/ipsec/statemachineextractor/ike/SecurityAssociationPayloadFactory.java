@@ -26,7 +26,6 @@ import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.EncapsulationMode
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.SALifeDurationBasicAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.SALifeTypeAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProposalPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.TransformPayload;
 

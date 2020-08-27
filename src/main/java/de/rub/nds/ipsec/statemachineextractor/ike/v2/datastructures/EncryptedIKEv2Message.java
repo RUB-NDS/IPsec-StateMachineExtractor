@@ -8,8 +8,10 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.EncryptedIKEData;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
@@ -19,14 +21,11 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.EncryptedISAKMPData;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
-
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedISAKMPData {
+public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKEData {
 
     private final SecretKey ENCRsecretKey;
     private byte[] INTEGsecretKey;
@@ -101,7 +100,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedISAK
             try {
                 payload = payloadType.getConstructor((Class<?>[]) null).newInstance((Object[]) null);
             } catch (ReflectiveOperationException | SecurityException ex) {
-                throw new ISAKMPParsingException(ex);
+                throw new IKEv2ParsingException(ex);
             }
             payload.fillFromStream(bais);
             nextPayload = payload.getNextPayload();

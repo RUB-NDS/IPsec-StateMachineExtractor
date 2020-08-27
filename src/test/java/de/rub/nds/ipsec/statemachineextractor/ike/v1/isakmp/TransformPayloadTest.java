@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
@@ -68,7 +68,7 @@ public class TransformPayloadTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         getTestTransformPayload().writeBytes(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        TransformPayload instance = TransformPayload.fromStream(bais, ProtocolIDEnum.ISAKMP);
+        TransformPayload instance = TransformPayload.fromStream(bais, ProtocolIDEnum.ISAKMP_IKE);
         assertEquals(0, bais.available());
         assertEquals(1, instance.getTransformId().getValue());
         assertEquals(0, instance.getTransformNumber());
