@@ -16,20 +16,20 @@ import java.io.ByteArrayInputStream;
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class TrafficSelectorPayloadResponder extends TrafficSelectorPayload {
+public class TrafficSelectorInitiatorPayload extends TrafficSelectorPayload {
 
-    public TrafficSelectorPayloadResponder() {
-        super(IKEPayloadTypeEnum.TrafficSelectorResponder);
+    public TrafficSelectorInitiatorPayload() {
+        super(IKEPayloadTypeEnum.TrafficSelectorInitiator);
     }
 
     @Override
     public String toString() {
-        return "TSr";
+        return "TSi";
     }
 
-    public static TrafficSelectorPayloadResponder fromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {
-        TrafficSelectorPayloadResponder tsrPayload = new TrafficSelectorPayloadResponder();
-        tsrPayload.fillFromStream(bais);
-        return tsrPayload;
+    public static TrafficSelectorInitiatorPayload fromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {
+        TrafficSelectorInitiatorPayload tsiPayload = new TrafficSelectorInitiatorPayload();
+        tsiPayload.fillFromStream(bais);
+        return tsiPayload;
     }
 }

@@ -9,25 +9,23 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 /**
  *
  * @author Dennis Felsch <dennis.felsch at ruhr-uni-bochum.de>
  */
-public class TrafficSelectorPayloadInitiator extends IKEv2Payload {
+public abstract class TrafficSelectorPayload extends IKEv2Payload {
 
-    protected static final int ID_HEADER_LEN = 8;
-
+    protected static final int TRAFFIC_SELECTOR_HEADER_LEN = 8;
     private byte tsNumber = 1;
-    private final byte[] reserved = new byte[]{0x00, 0x00, 0x00};
-    private TrafficSelector traffic = new TrafficSelector();
+    private TrafficSelector trafficSelector = new TrafficSelector();
 
-    public TrafficSelectorPayloadInitiator() {
-        super(IKEPayloadTypeEnum.TrafficSelectorInitiator);
+    public TrafficSelectorPayload(IKEPayloadTypeEnum type) {
+        super(type);
     }
 
     public byte getTSNumber() {
@@ -35,31 +33,20 @@ public class TrafficSelectorPayloadInitiator extends IKEv2Payload {
     }
 
     public TrafficSelector getTrafficSelector() {
-        return this.traffic;
-    }
-
-    @Override
-    public String toString() {
-        return "TSi";
+        return this.trafficSelector;
     }
 
     @Override
     public int getLength() {
-        return ID_HEADER_LEN + 16;
+        return TRAFFIC_SELECTOR_HEADER_LEN + 16;
     }
 
     @Override
     public void writeBytes(ByteArrayOutputStream baos) {
         super.writeBytes(baos);
         baos.write(tsNumber);
-        baos.write(reserved, 0, reserved.length);
-        traffic.writeBytes(baos);
-    }
-
-    public static TrafficSelectorPayloadInitiator fromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {
-        TrafficSelectorPayloadInitiator tsiPayload = new TrafficSelectorPayloadInitiator();
-        tsiPayload.fillFromStream(bais);
-        return tsiPayload;
+        baos.write(new byte[]{0x00, 0x00, 0x00}, 0, 3);
+        trafficSelector.writeBytes(baos);
     }
 
     @Override
@@ -73,9 +60,9 @@ public class TrafficSelectorPayloadInitiator extends IKEv2Payload {
         if (buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0) {
             throw new IKEv2ParsingException("Reserved bytes are non-zero!");
         }
-        traffic = TrafficSelector.fromStream(bais);
-        if (traffic.getLength() < length - ID_HEADER_LEN) {
-            throw new IKEv2ParsingException("Input stream ended early after " + (traffic.getLength() + ID_HEADER_LEN) + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
+        trafficSelector = TrafficSelector.fromStream(bais);
+        if (trafficSelector.getLength() < length - TRAFFIC_SELECTOR_HEADER_LEN) {
+            throw new IKEv2ParsingException("Input stream ended early after " + (trafficSelector.getLength() + TRAFFIC_SELECTOR_HEADER_LEN) + " bytes (should read " + (length - GENERIC_PAYLOAD_HEADER_LEN) + "bytes)!");
         }
     }
 
@@ -83,4 +70,5 @@ public class TrafficSelectorPayloadInitiator extends IKEv2Payload {
     protected void setBody(byte[] body) throws IKEv2ParsingException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
 }

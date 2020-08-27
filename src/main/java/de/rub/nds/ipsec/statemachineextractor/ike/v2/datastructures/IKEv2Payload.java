@@ -42,7 +42,7 @@ public abstract class IKEv2Payload extends GenericIKEPayload {
             case SecurityAssociationv2:
                 return SecurityAssociationPayloadv2.class;
             case TrafficSelectorInitiator:
-                return TrafficSelectorPayloadInitiator.class;
+                return TrafficSelectorInitiatorPayload.class;
             case TrafficSelectorResponder:
                 return TrafficSelectorPayloadResponder.class;
             default:

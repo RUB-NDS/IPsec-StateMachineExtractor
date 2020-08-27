@@ -23,7 +23,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.AuthMethodEn
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.DHGroupTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedIKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorPayloadResponder;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorPayloadInitiator;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorInitiatorPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.NotificationPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.KeyExchangePayloadv2;
@@ -322,8 +322,8 @@ public final class IKEv2Handshake {
         return result;
     }
 
-    public TrafficSelectorPayloadInitiator prepareTrafficSelectorPayloadInitiator() {
-        TrafficSelectorPayloadInitiator result = new TrafficSelectorPayloadInitiator();
+    public TrafficSelectorInitiatorPayload prepareTrafficSelectorPayloadInitiator() {
+        TrafficSelectorInitiatorPayload result = new TrafficSelectorInitiatorPayload();
         return result;
     }
 
