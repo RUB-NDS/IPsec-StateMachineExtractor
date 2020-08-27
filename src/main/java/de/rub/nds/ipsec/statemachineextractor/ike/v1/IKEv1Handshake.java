@@ -126,7 +126,7 @@ public final class IKEv1Handshake {
     }
 
     ISAKMPMessage ISAKMPMessageFromByteArray(byte[] bytes) throws GenericIKEParsingException, GeneralSecurityException, IKEHandshakeException {
-        if (bytes.length < ISAKMPMessage.ISAKMP_HEADER_LEN) {
+        if (bytes.length < ISAKMPMessage.IKE_MESSAGE_HEADER_LEN) {
             throw new ISAKMPParsingException("Not enough bytes supplied to build an ISAKMPMessage!");
         }
         switch (ExchangeTypeEnum.get(bytes[18])) {
@@ -158,7 +158,7 @@ public final class IKEv1Handshake {
         secrets.setResponderCookie(message.getResponderCookie());
 
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-        bais.skip(ISAKMPMessage.ISAKMP_HEADER_LEN);
+        bais.skip(ISAKMPMessage.IKE_MESSAGE_HEADER_LEN);
         IKEPayloadTypeEnum nextPayload = IKEPayloadTypeEnum.get(bytes[16]);
         if (message.isEncryptedFlag()) {
             message = processEncryptedMessage(message, nextPayload, bais);

@@ -106,7 +106,7 @@ public final class IKEv2Handshake {
     }
 
     IKEv2Message IKEv2MessageFromByteArray(byte[] bytes) throws GenericIKEParsingException, GeneralSecurityException, IKEHandshakeException, IOException {
-        if (bytes.length < IKEv2Message.HEADER_LEN) {
+        if (bytes.length < IKEv2Message.IKE_MESSAGE_HEADER_LEN) {
             throw new IKEv2ParsingException("Not enough bytes supplied to build an IKEv2Message!");
         }
         switch (ExchangeTypeEnum.get(bytes[18])) {
@@ -129,7 +129,7 @@ public final class IKEv2Handshake {
         secrets.setResponderCookie(message.getResponderCookie());
 
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-        bais.skip(IKEv2Message.HEADER_LEN);
+        bais.skip(IKEv2Message.IKE_MESSAGE_HEADER_LEN);
         IKEPayloadTypeEnum nextPayload = IKEPayloadTypeEnum.get(bytes[16]);
         if (nextPayload == IKEPayloadTypeEnum.EncryptedAndAuthenticated) {
             processEncryptedMessage(message, nextPayload, bais);

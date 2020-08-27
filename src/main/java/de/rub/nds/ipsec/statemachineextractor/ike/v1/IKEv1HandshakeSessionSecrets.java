@@ -239,7 +239,7 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         msg.setEncryptedFlag(false);
         byte[] bytes = msg.getBytes();
         msg.setEncryptedFlag(encryptedFlag);
-        int offset = ISAKMPMessage.ISAKMP_HEADER_LEN;
+        int offset = ISAKMPMessage.IKE_MESSAGE_HEADER_LEN;
         ISAKMPPayload firstPayload = msg.getPayloads().iterator().next();
         if (firstPayload.getType() == IKEPayloadTypeEnum.Hash) {
             offset += firstPayload.getLength();

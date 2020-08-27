@@ -101,7 +101,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIK
             this.addPayload(payload);
         }
         this.nextIV = Arrays.copyOfRange(this.ciphertext, this.ciphertext.length - cipherDec.getBlockSize(), this.ciphertext.length);
-        this.plaintext = Arrays.copyOf(this.plaintext, super.getLength() - ISAKMP_HEADER_LEN); // remove padding
+        this.plaintext = Arrays.copyOf(this.plaintext, super.getLength() - IKE_MESSAGE_HEADER_LEN); // remove padding
         this.isInSync = true;
     }
 
@@ -159,7 +159,7 @@ public class EncryptedISAKMPMessage extends ISAKMPMessage implements EncryptedIK
                 throw new RuntimeException(ex);
             }
         }
-        return ISAKMP_HEADER_LEN + this.ciphertext.length;
+        return IKE_MESSAGE_HEADER_LEN + this.ciphertext.length;
     }
 
     @Override

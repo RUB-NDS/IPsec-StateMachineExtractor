@@ -168,7 +168,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
                 throw new RuntimeException(ex);
             }
         }
-        return HEADER_LEN + this.ENCRPayload.getLength();
+        return IKE_MESSAGE_HEADER_LEN + this.ENCRPayload.getLength();
     }
 
     @Override
