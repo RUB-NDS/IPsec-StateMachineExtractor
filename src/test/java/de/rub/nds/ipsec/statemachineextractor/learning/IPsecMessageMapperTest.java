@@ -96,11 +96,11 @@ public class IPsecMessageMapperTest {
             IPsecMessageMapper instance = new IPsecMessageMapper();
             IPsecConnection conn = new IPsecConnection(InetAddress.getByName("10.0.3.10"), 500, 2000);
 
-            abstractInput = "v2_SAINIT_SA-KE-No";
+            abstractInput = "v2_SAINIT_PSK-SA-KE-No";
             executableInput = instance.mapInput(abstractInput);
             concreteOutput = executableInput.execute(conn);
             abstractOutput = instance.mapOutput(concreteOutput);
-            assertEquals("v1_MM_SA-V-V", abstractOutput);
+            assertEquals("v2_SAINIT_SA-KE-No-MultipleAuthSupport", abstractOutput);
         } catch (Exception ex) {
             Logger.getLogger(IPsecMessageMapperTest.class.getName()).log(Level.SEVERE, null, ex);
             throw ex;

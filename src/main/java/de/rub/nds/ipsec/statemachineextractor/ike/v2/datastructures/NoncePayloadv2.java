@@ -32,7 +32,7 @@ public class NoncePayloadv2 extends SimpleBinaryIKEv2Payload {
 
     @Override
     public String toString() {
-        return "Nov2";
+        return "No";
     }
 
     public static NoncePayloadv2 fromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {

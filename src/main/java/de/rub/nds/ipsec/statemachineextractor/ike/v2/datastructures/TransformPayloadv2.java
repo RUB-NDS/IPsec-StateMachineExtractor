@@ -12,9 +12,11 @@ import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEAttribute;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.IKEv2Attribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.IKEv2AttributeFactory;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.IPsecAttributeFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ public class TransformPayloadv2 extends IKEv2Payload {
     protected static final int TRANSFORM_PAYLOAD_HEADER_LEN = 8;
 
     private ProtocolTransformIDEnum transformId; //= ISAKMPTransformIDEnum.KEY_IKE.toProtocolTransformIDEnum();
-    private final List<GenericIKEAttribute> attributes = new ArrayList<>();
+    private final List<IKEv2Attribute> attributes = new ArrayList<>();
     private TransformTypeEnum transformType;
     private ProtocolIDEnum protocolID; //?
 
@@ -79,12 +81,32 @@ public class TransformPayloadv2 extends IKEv2Payload {
         this.transformId = transformId;
     }
 
-    public void addAttribute(GenericIKEAttribute attribute) {
+    public void addAttribute(IKEv2Attribute attribute) {
         attributes.add(attribute);
     }
 
-    public List<GenericIKEAttribute> getAttributes() {
+    public List<IKEv2Attribute> getAttributes() {
         return Collections.unmodifiableList(attributes);
+    }
+    
+    public void configureCiphersuite(IKEv2Ciphersuite ciphersuite) {
+        switch (transformType) {
+            case ENCR:
+                ciphersuite.setCipher(EncryptionAlgorithmTransformEnum.get(this.transformId.getValue()));
+                break;
+            case PRF:
+                ciphersuite.setPrf(PseudoRandomFunctionTransformEnum.get(this.transformId.getValue()));
+                break;
+            case INTEG:
+                ciphersuite.setAuthMethod(IntegrityAlgorithmTransformEnum.get(this.transformId.getValue()));
+                break;
+            case DH:
+                ciphersuite.setDhGroup(DHGroupTransformEnum.get(this.transformId.getValue()));
+                break;
+            default:
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
+        this.attributes.forEach(attr -> attr.configureCiphersuite(ciphersuite));
     }
 
     private ProtocolTransformIDEnum DHselectTransformId(byte value) {
@@ -170,8 +192,8 @@ public class TransformPayloadv2 extends IKEv2Payload {
         }
         int processedLength = 0;
         while (processedLength < (length - TRANSFORM_PAYLOAD_HEADER_LEN)) {
-            GenericIKEAttribute attr;
-            attr = IPsecAttributeFactory.fromStream(bais);
+            IKEv2Attribute attr;
+            attr = IKEv2AttributeFactory.fromStream(bais);
             this.addAttribute(attr);
             processedLength += attr.getLength();
         }

@@ -10,6 +10,7 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes;
 
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.ike.BasicIKEAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
 
 /**
  *
@@ -26,6 +27,7 @@ public enum KeyLengthAttributeEnum implements IKEv2Attribute, BasicIKEAttribute 
     private KeyLengthAttributeEnum(int value, int size) {
         this.bytes = DatatypeHelper.intTo4ByteArray(value);
         this.keySize = size;
+        IKEv2AttributeFactory.register(this, value);
     }
 
     public int getKeySize() {
@@ -35,5 +37,10 @@ public enum KeyLengthAttributeEnum implements IKEv2Attribute, BasicIKEAttribute 
     @Override
     public byte[] getBytes() {
         return bytes.clone();
+    }
+
+    @Override
+    public void configureCiphersuite(IKEv2Ciphersuite ciphersuite) {
+        ciphersuite.setKeylength(this);
     }
 }

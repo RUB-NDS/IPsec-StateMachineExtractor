@@ -41,7 +41,7 @@ public class SecurityAssociationPayloadv2 extends IKEv2Payload {
 
     @Override
     public String toString() {
-        return "SAv2";
+        return "SA";
     }
 
     @Override

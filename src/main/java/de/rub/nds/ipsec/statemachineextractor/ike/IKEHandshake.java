@@ -38,6 +38,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Payload
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IdentificationPayloadInitiator;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.KeyExchangePayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.NoncePayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAssociationPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorInitiatorPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorPayloadResponder;
 import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
@@ -356,6 +357,10 @@ public class IKEHandshake {
 
     public void adjustCiphersuite(SecurityAssociationPayload sa) throws GeneralSecurityException, IKEHandshakeException {
         ciphersuite_v1.adjust(sa, secrets_v1);
+    }
+
+    public void adjustCiphersuite(SecurityAssociationPayloadv2 sa) throws GeneralSecurityException, IKEHandshakeException {
+        ciphersuite_v2.adjust(sa, secrets_v2);
     }
 
     public IKEv2Payload prepareIKEv2KeyExchangePayload(byte[] msgID) throws GeneralSecurityException, IKEv2ParsingException {

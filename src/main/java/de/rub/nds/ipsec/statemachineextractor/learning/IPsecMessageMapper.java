@@ -28,6 +28,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAssociationPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -192,6 +193,8 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
 
             private IKEv2Message executeIKEv2(IPsecConnection conn) throws GeneralSecurityException, IKEHandshakeException, UnsupportedOperationException, IOException {
                 IKEv2Message msg = new IKEv2Message();
+                msg.setInitiatorFlag(true);
+                SecurityAssociationPayloadv2 sa = null;
                 try {
                     ArrayDeque<String> tokens = new ArrayDeque<>(Arrays.asList(abstractInput.split("_|\\*")));
                     switch (tokens.pop()) {
@@ -209,6 +212,39 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                             break;
                         default:
                             throw new UnsupportedOperationException("Not supported yet.");
+                    }
+                    String token = tokens.pop();
+                    if (!tokens.isEmpty()) {
+                        throw new UnsupportedOperationException("Malformed message identifier");
+                    }
+                    tokens = new ArrayDeque<>(Arrays.asList(token.split("-")));
+                    while (!tokens.isEmpty()) {
+                        switch (tokens.pop()) {
+                            case "PSK":
+                                sa = SecurityAssociationPayloadFactory.V2_P1_AES_128_CBC_SHA1;
+                                break;
+                            case "SA":
+                                switch (msg.getExchangeType()) {
+                                    case IKE_AUTH:
+                                        sa = SecurityAssociationPayloadFactory.V2_P2_AES_128_CBC_SHA1_ESN;
+//                                        conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
+                                        break;
+
+                                    default:
+                                        conn.getHandshake().adjustCiphersuite(sa);
+                                        break;
+                                }
+                                msg.addPayload(sa);
+                                break;
+                            case "KE":
+                                msg.addPayload(conn.getHandshake().prepareIKEv2KeyExchangePayload(msg.getMessageId()));
+                                break;
+                            case "No":
+                                msg.addPayload(conn.getHandshake().prepareIKEv2NoncePayload(msg.getMessageId()));
+                                break;
+                            default:
+                                throw new UnsupportedOperationException("Malformed message identifier");
+                        }
                     }
                     return (IKEv2Message) conn.getHandshake().exchangeMessage(msg);
                 } catch (GenericIKEParsingException ex) {

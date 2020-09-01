@@ -83,7 +83,7 @@ public class KeyExchangePayloadv2 extends IKEv2Payload {
 
     @Override
     public String toString() {
-        return "KEv2";
+        return "KE";
     }
 
     public static KeyExchangePayloadv2 fromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {

@@ -10,11 +10,15 @@ package de.rub.nds.ipsec.statemachineextractor.ike.v2;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.DHGroupTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.PseudoRandomFunctionTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptionAlgorithmTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IntegrityAlgorithmTransformEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes.KeyLengthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.ProposalPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAssociationPayloadv2;
 import java.security.GeneralSecurityException;
 
 /**
@@ -78,5 +82,22 @@ public class IKEv2Ciphersuite extends GenericIKECiphersuite {
     @Override
     public int getCipherBlocksize() throws GeneralSecurityException {
         return this.cipher.getBlockSize();
+    }
+
+    public void adjust(SecurityAssociationPayloadv2 payload, IKEv2HandshakeSessionSecrets secrets) throws GeneralSecurityException, IKEHandshakeException {
+        if (payload.getProposalPayloads().size() != 1) {
+            throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+        }
+        ProposalPayloadv2 pp = payload.getProposalPayloads().get(0);
+        if (pp.getProtocolId() != ProtocolIDEnum.ISAKMP_IKE) {
+            throw new IKEHandshakeException("Proposal protocol is not ISAKMP.");
+        }
+        if (pp.getTransformPayloads().isEmpty()) {
+            throw new IKEHandshakeException("No transform payloads found. There should be some.");
+        }
+        pp.getTransformPayloads().forEach((tp) -> {
+            tp.configureCiphersuite(this);
+        });
+        secrets.updateHandshakeSA();
     }
 }

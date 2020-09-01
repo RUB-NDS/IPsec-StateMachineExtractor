@@ -8,8 +8,9 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.attributes;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Serializable;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Serializable;
 
 /**
  *
@@ -17,4 +18,5 @@ import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEAttribute;
  */
 public interface IKEv2Attribute extends GenericIKEAttribute, IKEv2Serializable {
 
+    public void configureCiphersuite(IKEv2Ciphersuite ciphersuite);
 }
