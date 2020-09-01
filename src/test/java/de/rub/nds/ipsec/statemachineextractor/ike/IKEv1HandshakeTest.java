@@ -6,19 +6,14 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import static de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessageTest.getTestIKEv1MainModeSecurityAssociationMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.NotifyMessageTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
@@ -39,35 +34,35 @@ public class IKEv1HandshakeTest {
     }
 
     /**
-     * Test of prepareKeyExchangePayload method, of class IKEv1Handshake.
+     * Test of prepareIKEv1KeyExchangePayload method, of class IKEHandshake.
      */
     @Test
     public void testPrepareKeyExchangePayload() throws Exception {
-        IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
-        assertTrue(result.getLength() <= instance.ciphersuite.getDhGroup().getPublicKeySizeInBytes() + 4);
+        IKEHandshake instance = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        ISAKMPPayload result = instance.prepareIKEv1KeyExchangePayload(new byte[4]);
+        assertTrue(result.getLength() <= instance.ciphersuite_v1.getDhGroup().getPublicKeySizeInBytes() + 4);
     }
 
     /**
-     * Test of prepareKeyExchangePayload method, of class IKEv1Handshake.
+     * Test of prepareIKEv1KeyExchangePayload method, of class IKEHandshake.
      */
     @Test
     public void testPrepareKeyExchangePayloadEC() throws Exception {
-        IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        instance.ciphersuite.setDhGroup(DHGroupAttributeEnum.GROUP19);
-        instance.secrets.generateDefaults();
-        ISAKMPPayload result = instance.prepareKeyExchangePayload(new byte[4]);
-        assertEquals(instance.ciphersuite.getDhGroup().getPublicKeySizeInBytes() + 4, result.getLength());
+        IKEHandshake instance = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        instance.ciphersuite_v1.setDhGroup(DHGroupAttributeEnum.GROUP19);
+        instance.secrets_v1.generateDefaults();
+        ISAKMPPayload result = instance.prepareIKEv1KeyExchangePayload(new byte[4]);
+        assertEquals(instance.ciphersuite_v1.getDhGroup().getPublicKeySizeInBytes() + 4, result.getLength());
     }
 
     /**
-     * Test of prepareNoncePayload method, of class IKEv1Handshake.
+     * Test of prepareIKEv1NoncePayload method, of class IKEHandshake.
      */
     @Test
     public void testPrepareNoncePayload() throws Exception {
-        IKEv1Handshake instance = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        ISAKMPPayload result = instance.prepareNoncePayload(new byte[4]);
-        assertEquals(instance.ciphersuite.getNonceLen() + 4, result.getLength());
+        IKEHandshake instance = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        ISAKMPPayload result = instance.prepareIKEv1NoncePayload(new byte[4]);
+        assertEquals(instance.ciphersuite_v1.getNonceLen() + 4, result.getLength());
     }
 
     /**
@@ -77,8 +72,8 @@ public class IKEv1HandshakeTest {
     public void testFromByteArray_IKEv1MainModeSecurityAssociationMessage() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         getTestIKEv1MainModeSecurityAssociationMessage().writeBytes(baos);
-        IKEv1Handshake handshake = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        ISAKMPMessage instance = handshake.ISAKMPMessageFromByteArray(baos.toByteArray());
+        IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        IKEMessage instance = handshake.IKEMessageFromByteArray(baos.toByteArray());
         assertEquals(1, instance.getPayloads().size());
     }
 
@@ -88,8 +83,8 @@ public class IKEv1HandshakeTest {
     @Test
     public void testFromByteArray_IKEv1PayloadMalformedNotification() throws Exception {
         byte[] wiresharkDump = DatatypeHelper.hexDumpToByteArray("00574fee41e8f80a3287d995d890aaed0b100500d9ac8bc0000000280000000c0000000101000010");
-        IKEv1Handshake handshake = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
-        ISAKMPMessage instance = handshake.ISAKMPMessageFromByteArray(wiresharkDump);
+        IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        IKEMessage instance = handshake.IKEMessageFromByteArray(wiresharkDump);
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("3287d995d890aaed"), instance.getResponderCookie());
         assertEquals(ExchangeTypeEnum.Informational, instance.getExchangeType());
         assertEquals(1, instance.getPayloads().size());
@@ -100,19 +95,19 @@ public class IKEv1HandshakeTest {
     @Test
     @Ignore
     public void testAggressiveHandhake() throws Exception {
-        IKEv1Handshake handshake = new IKEv1Handshake(500, InetAddress.getByName("10.0.3.10"), 500);
+        IKEHandshake handshake = new IKEHandshake(500, InetAddress.getByName("10.0.3.10"), 500);
         SecurityAssociationPayload sa;
-        ISAKMPMessage answer;
+        IKEMessage answer;
 
         ISAKMPMessage msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.Aggressive);
         sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
         msg.addPayload(sa);
         handshake.adjustCiphersuite(sa);
-        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
-        msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
+        msg.addPayload(handshake.prepareIKEv1KeyExchangePayload(new byte[4]));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(new byte[4]));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v1.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v1.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
@@ -127,7 +122,7 @@ public class IKEv1HandshakeTest {
         handshake.setMostRecentMessageID(msg.getMessageId());
         sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
         msg.addPayload(sa);
-        msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
@@ -136,23 +131,23 @@ public class IKEv1HandshakeTest {
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
         msg.addPayload(id);
-        handshake.addPhase2Hash1Payload(msg);
+        handshake.addIKEv1Phase2Hash1Payload(msg);
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);
         msg.setEncryptedFlag(true);
         msg.setMessageId(handshake.getMostRecentMessageID());
-        handshake.addPhase2Hash3Payload(msg);
+        handshake.addIKEv1Phase2Hash3Payload(msg);
         answer = handshake.exchangeMessage(msg);
     }
 
     @Test
     @Ignore
     public void testMainModeHandhake() throws Exception {
-        IKEv1Handshake handshake = new IKEv1Handshake(1000, InetAddress.getByName("10.0.3.2"), 500);
+        IKEHandshake handshake = new IKEHandshake(1000, InetAddress.getByName("10.0.3.2"), 500);
         SecurityAssociationPayload sa;
-        ISAKMPMessage answer;
+        IKEMessage answer;
 
         ISAKMPMessage msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
@@ -163,16 +158,16 @@ public class IKEv1HandshakeTest {
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
-        msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
+        msg.addPayload(handshake.prepareIKEv1KeyExchangePayload(new byte[4]));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(new byte[4]));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v1.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
+        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v1.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         msg.setEncryptedFlag(true);
-        msg.addPayload(handshake.prepareIdentificationPayload());
+        msg.addPayload(handshake.prepareIKEv1IdentificationPayload());
         msg.addPayload(handshake.preparePhase1HashPayload());
         answer = handshake.exchangeMessage(msg);
         System.out.println(answer.toString());
@@ -184,7 +179,7 @@ public class IKEv1HandshakeTest {
         handshake.setMostRecentMessageID(msg.getMessageId());
         sa = SecurityAssociationPayloadFactory.getV1_P2_ESP_TUNNEL_AES128_SHA1();
         msg.addPayload(sa);
-        msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000100ffffff00"));
@@ -193,7 +188,7 @@ public class IKEv1HandshakeTest {
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000200ffffff00"));
         msg.addPayload(id);
-        handshake.addPhase2Hash1Payload(msg);
+        handshake.addIKEv1Phase2Hash1Payload(msg);
         answer = handshake.exchangeMessage(msg);
         System.out.println(answer);
         assertFalse(answer.toString().contains("!"));
@@ -202,7 +197,7 @@ public class IKEv1HandshakeTest {
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);
         msg.setEncryptedFlag(true);
         msg.setMessageId(handshake.getMostRecentMessageID());
-        handshake.addPhase2Hash3Payload(msg);
+        handshake.addIKEv1Phase2Hash3Payload(msg);
         answer = handshake.exchangeMessage(msg);
     }
 }

@@ -6,10 +6,10 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v2;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IdentificationPayloadInitiator;
-import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2HandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.net.InetAddress;
@@ -31,8 +31,8 @@ public class IKEv2HandshakeSessionSecretsTest {
      */
     @Test
     public void testComputeSecretKeys() throws Exception {
-        IKEv2Handshake handshake = new IKEv2Handshake(0, InetAddress.getLocalHost(), 500);
-        IKEv2HandshakeSessionSecrets instance = handshake.secrets;
+        IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        IKEv2HandshakeSessionSecrets instance = handshake.secrets_v2;
         instance.generateDefaults();
         handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
         instance.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("63ff9cfe89d87d4d"));
@@ -58,8 +58,8 @@ public class IKEv2HandshakeSessionSecretsTest {
      */
     @Test
     public void testComputeAUTH() throws Exception {
-        IKEv2Handshake handshake = new IKEv2Handshake(0, InetAddress.getLocalHost(), 500);
-        IKEv2HandshakeSessionSecrets instance = handshake.secrets;
+        IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        IKEv2HandshakeSessionSecrets instance = handshake.secrets_v2;
         instance.generateDefaults();
         handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
         instance.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("2b52e39c2e82e183"));

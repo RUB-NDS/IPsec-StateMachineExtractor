@@ -6,18 +6,28 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import de.rub.nds.ipsec.statemachineextractor.FixedLengthByteStreamSerializable;
 import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.util.AbstractMap;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.StringJoiner;
 
@@ -33,7 +43,7 @@ public abstract class IKEMessage implements SerializableMessage, FixedLengthByte
     private byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     private byte version;
     private ExchangeTypeEnum exchangeType = ExchangeTypeEnum.NONE;
-    protected final BitSet flags;
+    protected BitSet flags;
     private byte[] messageId = new byte[]{0x00, 0x00, 0x00, 0x00};
 
     protected IKEMessage(byte version, int numFlags) {
@@ -149,6 +159,30 @@ public abstract class IKEMessage implements SerializableMessage, FixedLengthByte
             }
         }
     }
+
+    protected final Map.Entry<Integer, IKEPayloadTypeEnum> fillHeaderFromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {
+        if (bais.available() < IKEMessage.IKE_MESSAGE_HEADER_LEN) {
+            throw new GenericIKEParsingException("Not enough bytes supplied to build an IKEMessage!");
+        }
+        this.initiatorCookie = new byte[COOKIE_LEN];
+        bais.read(this.initiatorCookie, 0, COOKIE_LEN);
+        bais.read(this.responderCookie, 0, COOKIE_LEN);
+        IKEPayloadTypeEnum firstPayload = IKEPayloadTypeEnum.get((byte) bais.read());
+        if ((byte) bais.read() != this.version) {
+            throw new GenericIKEParsingException("Wrong IKE version!");
+        }
+        this.exchangeType = ExchangeTypeEnum.get((byte) bais.read());
+        this.flags = BitSet.valueOf(new byte[]{(byte) bais.read()});
+        bais.read(messageId, 0, messageId.length);
+        int messageLength;
+        byte[] lengthArray = new byte[4];
+        bais.read(lengthArray, 0, lengthArray.length);
+        messageLength = new BigInteger(lengthArray).intValue();
+        return new AbstractMap.SimpleEntry(messageLength, firstPayload);
+        // Non-abstract class has to parse payloads
+    }
+
+    public abstract void processFromStream(ByteArrayInputStream bais, GenericIKECiphersuite ciphersuite, GenericIKEHandshakeSessionSecrets secrets, HandshakeLongtermSecrets ltsecrets) throws GenericIKEParsingException, GeneralSecurityException;
 
     protected void writeBytesWithoutPayloads(ByteArrayOutputStream baos) {
         baos.write(getInitiatorCookie(), 0, 8);

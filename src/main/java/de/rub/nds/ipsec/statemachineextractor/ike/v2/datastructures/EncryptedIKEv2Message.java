@@ -9,12 +9,18 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.EncryptedIKEData;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2HandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
+import java.util.Map;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -205,6 +211,36 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         this.isInSync = true;
     }
 
+    @Override
+    public void processFromStream(ByteArrayInputStream bais, GenericIKECiphersuite genericCiphersuite, GenericIKEHandshakeSessionSecrets genericSecrets, HandshakeLongtermSecrets ltsecrets) throws GenericIKEParsingException, GeneralSecurityException {
+        IKEv2HandshakeSessionSecrets secrets = (IKEv2HandshakeSessionSecrets) genericSecrets;
+        IKEv2Ciphersuite ciphersuite = (IKEv2Ciphersuite) genericCiphersuite;
+        Map.Entry<Integer, IKEPayloadTypeEnum> entry = super.fillHeaderFromStream(bais);
+        int length = entry.getKey();
+        this.setNextPayload(entry.getValue());
+        secrets.setResponderCookie(this.getResponderCookie());
+        if (nextPayload != IKEPayloadTypeEnum.EncryptedAndAuthenticated) {
+            bais.reset();
+            throw new IsNotEncryptedException();
+        }
+        this.setCiphertext(bais);
+        this.decrypt();
+//        IKEPayloadTypeEnum payloadType = getNextPayload();
+//        for (IKEv2Payload payload : decMessage.getPayloads()) {
+//            switch (payloadType) {
+//                case EncryptedAndAuthenticated:
+//                    //payload.getBody();
+//                    break;
+//                default:
+//                    throw new IKEHandshakeException("Not implemented yet!");
+//            }
+//            payloadType = payload.getNextPayload();
+//        }
+        if (length != this.getLength()) {
+            throw new IKEv2ParsingException("Message lengths differ - Computed: " + this.getLength() + " vs. Received: " + length + "!");
+        }
+    }
+
     public static EncryptedIKEv2Message fromPlainMessage(IKEv2Message msg, SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         EncryptedIKEv2Message enc = new EncryptedIKEv2Message(ENCRsecretKey, mode, IV, INTEGsecretKey, auth);
         enc.setInitiatorCookie(msg.getInitiatorCookie());
@@ -221,4 +257,9 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         return enc;
     }
 
+    private static class IsNotEncryptedException extends GenericIKEParsingException {
+
+        public IsNotEncryptedException() {
+        }
+    }
 }

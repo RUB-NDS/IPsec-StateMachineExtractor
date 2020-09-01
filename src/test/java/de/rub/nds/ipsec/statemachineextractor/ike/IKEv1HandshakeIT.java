@@ -6,12 +6,10 @@
  * Licensed under Apache License 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
-package de.rub.nds.ipsec.statemachineextractor.ike.v1;
+package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
-import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.HashPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1HandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.PKCS1EncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
@@ -47,7 +45,7 @@ public class IKEv1HandshakeIT {
         CryptoHelper.prepare();
     }
 
-    IKEv1Handshake handshake;
+    IKEHandshake handshake;
     HashMap<String, String> msgPairs = new HashMap<>();
 
     protected static final String CSR2PubPEM = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxWJ9sySuB3FKqYRwTIPC"
@@ -141,7 +139,7 @@ public class IKEv1HandshakeIT {
 
     @Before
     public void setUp() throws Exception {
-        handshake = new IKEv1Handshake(0, InetAddress.getLocalHost(), 500);
+        handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
         handshake.udpTH = new ClientUdpTransportHandlerMock(new byte[]{10, 0, 3, 1});
         byte[] decoded = Base64.getDecoder().decode(CSR1PrivPEM);
         KeySpec spec = new PKCS8EncodedKeySpec(decoded);
@@ -198,12 +196,13 @@ public class IKEv1HandshakeIT {
 
     @Test
     public void testAggressiveModePSKHandshake() throws Exception {
-        ISAKMPMessage msg, answer;
+        ISAKMPMessage msg;
+        IKEMessage answer;
         SecurityAssociationPayload sa;
 
         sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
         handshake.adjustCiphersuite(sa);
-        IKEv1HandshakeSessionSecrets secrets = handshake.secrets;
+        IKEv1HandshakeSessionSecrets secrets = handshake.secrets_v1;
         secrets.generateDefaults();
 
         handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
@@ -221,9 +220,9 @@ public class IKEv1HandshakeIT {
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.Aggressive);
         msg.addPayload(sa);
-        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
-        msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
-        msg.addPayload(handshake.prepareIdentificationPayload());
+        msg.addPayload(handshake.prepareIKEv1KeyExchangePayload(new byte[4]));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(new byte[4]));
+        msg.addPayload(handshake.prepareIKEv1IdentificationPayload());
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("0534fc1813e089e1"), secrets.getResponderCookie());
@@ -245,7 +244,7 @@ public class IKEv1HandshakeIT {
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("f94d660a"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("35496d7f0f01f56f"));
-        msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
@@ -254,7 +253,7 @@ public class IKEv1HandshakeIT {
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
         msg.addPayload(id);
-        handshake.addPhase2Hash1Payload(msg);
+        handshake.addIKEv1Phase2Hash1Payload(msg);
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("cc23d268"), ((SecurityAssociationPayload) answer.getPayloads().get(1)).getProposalPayloads().get(0).getSPI());
@@ -264,7 +263,7 @@ public class IKEv1HandshakeIT {
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);
         msg.setEncryptedFlag(true);
         msg.setMessageId(handshake.getMostRecentMessageID());
-        handshake.addPhase2Hash3Payload(msg);
+        handshake.addIKEv1Phase2Hash3Payload(msg);
         answer = handshake.exchangeMessage(msg);
 
         assertNull(answer);
@@ -272,12 +271,13 @@ public class IKEv1HandshakeIT {
 
     @Test
     public void testMainModePSKHandshake() throws Exception {
-        ISAKMPMessage msg, answer;
+        ISAKMPMessage msg;
+        IKEMessage answer;
         SecurityAssociationPayload sa;
 
         sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
         handshake.adjustCiphersuite(sa);
-        IKEv1HandshakeSessionSecrets secrets = handshake.secrets;
+        IKEv1HandshakeSessionSecrets secrets = handshake.secrets_v1;
         secrets.generateDefaults();
 
         handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
@@ -302,8 +302,8 @@ public class IKEv1HandshakeIT {
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
-        msg.addPayload(handshake.prepareNoncePayload(new byte[4]));
+        msg.addPayload(handshake.prepareIKEv1KeyExchangePayload(new byte[4]));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(new byte[4]));
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("ce2b9ff5f8519260b6c8f153529bc5a43121e3aa57a3de7d0d63baba86679e57"), ((NoncePayload) answer.getPayloads().get(answer.getPayloads().size() - 1)).getNonceData());
@@ -311,7 +311,7 @@ public class IKEv1HandshakeIT {
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         msg.setEncryptedFlag(true);
-        msg.addPayload(handshake.prepareIdentificationPayload());
+        msg.addPayload(handshake.prepareIKEv1IdentificationPayload());
         msg.addPayload(handshake.preparePhase1HashPayload());
         answer = handshake.exchangeMessage(msg);
 
@@ -326,7 +326,7 @@ public class IKEv1HandshakeIT {
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("b75ad16c"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("695346ebcf35ab90"));
-        msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
@@ -335,7 +335,7 @@ public class IKEv1HandshakeIT {
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(new byte[8]);
         msg.addPayload(id);
-        handshake.addPhase2Hash1Payload(msg);
+        handshake.addIKEv1Phase2Hash1Payload(msg);
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("c6bf8b4d"), ((SecurityAssociationPayload) answer.getPayloads().get(1)).getProposalPayloads().get(0).getSPI());
@@ -345,7 +345,7 @@ public class IKEv1HandshakeIT {
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);
         msg.setEncryptedFlag(true);
         msg.setMessageId(handshake.getMostRecentMessageID());
-        handshake.addPhase2Hash3Payload(msg);
+        handshake.addIKEv1Phase2Hash3Payload(msg);
         answer = handshake.exchangeMessage(msg);
 
         assertNull(answer);
@@ -353,12 +353,13 @@ public class IKEv1HandshakeIT {
 
     @Test
     public void testMainModePKEHandshake() throws Exception {
-        ISAKMPMessage msg, answer;
+        ISAKMPMessage msg;
+        IKEMessage answer;
         SecurityAssociationPayload sa;
 
         sa = SecurityAssociationPayloadFactory.V1_P1_PKE_AES128_SHA1_G5;
         handshake.adjustCiphersuite(sa);
-        IKEv1HandshakeSessionSecrets secrets = handshake.secrets;
+        IKEv1HandshakeSessionSecrets secrets = handshake.secrets_v1;
         secrets.generateDefaults();
 
         secrets.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("11e79c308ebbd717"));
@@ -382,14 +383,14 @@ public class IKEv1HandshakeIT {
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
-        PKCS1EncryptedISAKMPPayload noncePayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareNoncePayload(new byte[4]);
+        msg.addPayload(handshake.prepareIKEv1KeyExchangePayload(new byte[4]));
+        PKCS1EncryptedISAKMPPayload noncePayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIKEv1NoncePayload(new byte[4]);
         noncePayload.encrypt();
         Field encryptedBodyField = noncePayload.getClass().getDeclaredField("encryptedBody");
         encryptedBodyField.setAccessible(true);
         encryptedBodyField.set(noncePayload, DatatypeHelper.hexDumpToByteArray("665a9218eb9f8eb3703725e73257c7abdbfdf913147419d719f98a811551b38bcb97958ae356b1db28dc12f09c451fe50a8d7b21083c2ef61bcc28e6920f87c836a0b3b6aa1f4161af8bf2bd3224f4229855a794454e678947e44530a5cbb8aad8c7ae0de0fee80fc6ab7aab648803d52afc30c9485aa6dc33b75d15004cc91bfaf9ebb509a45d0d2c5e3ce03f3a3c92ffacbdacb53bcdf2871659abeb1caf4013d9e44aeabbce348352f375b5722ce87efc708770665baba249407a98d29cd1e4e4afffb62b72ae7f6dfa4da65849b950ea56348075e5151168cff2e9e451014e4abf053edebfb39d1ab083adefb3dba1da147914938fe370784bd943899c58"));
         msg.addPayload(noncePayload);
-        PKCS1EncryptedISAKMPPayload identificationPayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIdentificationPayload();
+        PKCS1EncryptedISAKMPPayload identificationPayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIKEv1IdentificationPayload();
         identificationPayload.encrypt();
         encryptedBodyField.set(identificationPayload, DatatypeHelper.hexDumpToByteArray("467c30bc16916a50eb1590b15b8a9373bca1fe0db7ef22ad761c2101b21f37f941f5b78738b6a1b2b82b80d615df308a55048552bbac4ff5d4388e3ebab9ec0942906944e2fdca0eb41a524ba83e8f071a1f8b1360358a6c6f170adb16e30cff29c098960bf7980ff68aedf41583dc766b382a832fea27d7ec744ca9f1aee731a6e19a3c91b630f42a07b0756211d13ba34eb0fa2f6aee903afd72b005e3907afade66fabd7757ab2075df47c3f41593a1466174e238e094461236cbabd76d71d9028d4d1b365c042dfb80356103530ea3f8b295ddf4a0f7ffef80b1fbd1642ae10b75fc9e8f856add7c0f18bd08607b41f5b8c1d26c45736298c2660c44bf69"));
         msg.addPayload(identificationPayload);
@@ -414,7 +415,7 @@ public class IKEv1HandshakeIT {
         sa.getProposalPayloads().get(0).setSPI(DatatypeHelper.hexDumpToByteArray("ac8eca3c"));
         msg.addPayload(sa);
         secrets.getSA(msg.getMessageId()).setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("508d6b24469f8136"));
-        msg.addPayload(handshake.prepareNoncePayload(msg.getMessageId()));
+        msg.addPayload(handshake.prepareIKEv1NoncePayload(msg.getMessageId()));
         IdentificationPayload id = new IdentificationPayload();
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000100ffffff00"));
@@ -423,7 +424,7 @@ public class IKEv1HandshakeIT {
         id.setIdType(IDTypeEnum.IPV4_ADDR_SUBNET);
         id.setIdentificationData(DatatypeHelper.hexDumpToByteArray("0a000200ffffff00"));
         msg.addPayload(id);
-        handshake.addPhase2Hash1Payload(msg);
+        handshake.addIKEv1Phase2Hash1Payload(msg);
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("4589f1f1"), ((SecurityAssociationPayload) answer.getPayloads().get(1)).getProposalPayloads().get(0).getSPI());
@@ -433,7 +434,7 @@ public class IKEv1HandshakeIT {
         msg.setExchangeType(ExchangeTypeEnum.QuickMode);
         msg.setEncryptedFlag(true);
         msg.setMessageId(handshake.getMostRecentMessageID());
-        handshake.addPhase2Hash3Payload(msg);
+        handshake.addIKEv1Phase2Hash3Payload(msg);
         answer = handshake.exchangeMessage(msg);
 
         assertNull(answer);
@@ -441,13 +442,14 @@ public class IKEv1HandshakeIT {
 
     @Test
     public void testMoreThanOneMessageHandshake() throws Exception {
-        ISAKMPMessage msg, answer;
+        ISAKMPMessage msg;
+        IKEMessage answer;
         SecurityAssociationPayload sa;
 
         handshake.udpTH = new ClientUdpTransportHandlerMock(new byte[]{10, 14, 0, 1});
-        sa = SecurityAssociationPayloadFactory.P1_PKE_AES128_SHA1_G5;
+        sa = SecurityAssociationPayloadFactory.V1_P1_PKE_AES128_SHA1_G5;
         handshake.adjustCiphersuite(sa);
-        IKEv1HandshakeSessionSecrets secrets = handshake.secrets;
+        IKEv1HandshakeSessionSecrets secrets = handshake.secrets_v1;
         secrets.generateDefaults();
 
         secrets.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("3bc6ed46d2f233aa"));
@@ -469,14 +471,14 @@ public class IKEv1HandshakeIT {
 
         msg = new ISAKMPMessage();
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
-        PKCS1EncryptedISAKMPPayload identificationPayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIdentificationPayload();
+        PKCS1EncryptedISAKMPPayload identificationPayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIKEv1IdentificationPayload();
         identificationPayload.encrypt();
         Field encryptedBodyField = identificationPayload.getClass().getDeclaredField("encryptedBody");
         encryptedBodyField.setAccessible(true);
         encryptedBodyField.set(identificationPayload, DatatypeHelper.hexDumpToByteArray("428eabd734da66543900fee747990d5be354067da5bf7594355ea424c62727cd8563c0caf8ebba0e57b187fbf36d27a5dc02362cbbbd0ff6f9a7a3700de74c7cd0799bbf06be7446f9b5d4d485cd122c199c21117c041677a9ae2e47374f28fc78ef839e6910664951afa4bd2d1f6333cbb302e4440b33b10aac6f5359f14590b491ea1978edd4d1c2ff0ae212e118190ae1856bb6f6f635d5a22aa31e74aadb0d9bcf27bd5b4d311ad147b5f84949ddc81f84a94b90139589a389c689771977e0b30ed29e6a88ce41d74016d4363d852df589ce707a7a17248a0dbbeb1beddf72ba4f624ad44c75b3ec331d8a48dce89e23359aea45843f9b221d6644290b2e"));
         msg.addPayload(identificationPayload);
-        msg.addPayload(handshake.prepareKeyExchangePayload(new byte[4]));
-        PKCS1EncryptedISAKMPPayload noncePayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareNoncePayload(new byte[4]);
+        msg.addPayload(handshake.prepareIKEv1KeyExchangePayload(new byte[4]));
+        PKCS1EncryptedISAKMPPayload noncePayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIKEv1NoncePayload(new byte[4]);
         noncePayload.encrypt();
         encryptedBodyField = noncePayload.getClass().getDeclaredField("encryptedBody");
         encryptedBodyField.setAccessible(true);
@@ -489,7 +491,7 @@ public class IKEv1HandshakeIT {
         msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
         msg.setEncryptedFlag(true);
         msg.addPayload(handshake.preparePhase1HashPayload());
-        identificationPayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIdentificationPayload();
+        identificationPayload = (PKCS1EncryptedISAKMPPayload) handshake.prepareIKEv1IdentificationPayload();
         identificationPayload.encrypt();
         encryptedBodyField = identificationPayload.getClass().getDeclaredField("encryptedBody");
         encryptedBodyField.setAccessible(true);

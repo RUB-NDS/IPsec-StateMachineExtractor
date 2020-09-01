@@ -14,7 +14,7 @@ import de.learnlib.mapper.api.SULMapper;
 import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage;
@@ -27,6 +27,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,7 +41,8 @@ import java.util.Arrays;
  */
 public class IPsecMessageMapper implements SULMapper<String, String, ContextExecutableInput<SerializableMessage, IPsecConnection>, SerializableMessage> {
 
-    static final ISAKMPMessage PARSING_ERROR = new ISAKMPMessage();
+    static final ISAKMPMessage PARSING_ERROR_v1 = new ISAKMPMessage();
+    static final IKEv2Message PARSING_ERROR_v2 = new IKEv2Message();
 
     @Override
     public ContextExecutableInput<SerializableMessage, IPsecConnection> mapInput(String abstractInput) {
@@ -57,8 +59,10 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                         adjustQuickModeMessageID(conn.getHandshake(), new ISAKMPMessage());
                         return null;
                     }
-                    if (abstractInput.startsWith("v")) {
+                    if (abstractInput.startsWith("v1")) {
                         return executeISAKMP(conn);
+                    } else if (abstractInput.startsWith("v2")) {
+                        return executeIKEv2(conn);
                     } else {
                         return executeESP(conn);
                     }
@@ -75,13 +79,9 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                     ArrayDeque<String> tokens = new ArrayDeque<>(Arrays.asList(abstractInput.split("_|\\*")));
                     switch (tokens.pop()) {
                         case "v1":
-                            msg.setVersion((byte) 0x10);
-                            break;
-                        case "v2":
-                            msg.setVersion((byte) 0x20);
                             break;
                         default:
-                            throw new UnsupportedOperationException("Not supported yet.");
+                            throw new UnsupportedOperationException("ISAKMP is tightly connected to IKEv1; if you use the ISAKMP method, use a 'v1' message identifier!");
                     }
                     switch (tokens.pop()) {
                         case "MM":
@@ -136,16 +136,16 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 break;
                             case "KE":
                             case "(KE)":
-                                msg.addPayload(conn.getHandshake().prepareKeyExchangePayload(msg.getMessageId()));
+                                msg.addPayload(conn.getHandshake().prepareIKEv1KeyExchangePayload(msg.getMessageId()));
                                 break;
                             case "No":
                             case "<No>":
-                                msg.addPayload(conn.getHandshake().prepareNoncePayload(msg.getMessageId()));
+                                msg.addPayload(conn.getHandshake().prepareIKEv1NoncePayload(msg.getMessageId()));
                                 break;
                             case "ID":
                             case "<ID>":
                             case "(ID)":
-                                msg.addPayload(conn.getHandshake().prepareIdentificationPayload());
+                                msg.addPayload(conn.getHandshake().prepareIKEv1IdentificationPayload());
                                 break;
                             case "IDci":
                                 id = new IdentificationPayload();
@@ -163,15 +163,15 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 msg.addPayload(conn.getHandshake().preparePhase1HashPayload());
                                 break;
                             case "DEL":
-                                msg.addPayload(conn.getHandshake().prepareDeletePayload());
-                                // Intentionally no break here
+                                msg.addPayload(conn.getHandshake().prepareIKEv1DeletePayload());
+                            // Intentionally no break here
                             case "HASH1":
                                 adjustQuickModeMessageID(conn.getHandshake(), msg);
                                 requiresHash1PostProcessing = true;
                                 break;
                             case "HASH3":
                                 adjustQuickModeMessageID(conn.getHandshake(), msg);
-                                conn.getHandshake().addPhase2Hash3Payload(msg);
+                                conn.getHandshake().addIKEv1Phase2Hash3Payload(msg);
                                 SecurityAssociationSecrets sas = conn.getHandshake().getMostRecentSecurityAssociation();
                                 conn.getHandshake().computeIPsecKeyMaterial(sas);
                                 conn.establishTunnel(sas, ESPTransformIDEnum.AES, KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA);
@@ -182,15 +182,41 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                         }
                     }
                     if (requiresHash1PostProcessing) {
-                        conn.getHandshake().addPhase2Hash1Payload(msg);
+                        conn.getHandshake().addIKEv1Phase2Hash1Payload(msg);
                     }
-                    return conn.getHandshake().exchangeMessage(msg);
+                    return (ISAKMPMessage) conn.getHandshake().exchangeMessage(msg);
                 } catch (GenericIKEParsingException ex) {
-                    return PARSING_ERROR;
+                    return PARSING_ERROR_v1;
                 }
             }
 
-            private void adjustQuickModeMessageID(IKEv1Handshake handshake, ISAKMPMessage msg) {
+            private IKEv2Message executeIKEv2(IPsecConnection conn) throws GeneralSecurityException, IKEHandshakeException, UnsupportedOperationException, IOException {
+                IKEv2Message msg = new IKEv2Message();
+                try {
+                    ArrayDeque<String> tokens = new ArrayDeque<>(Arrays.asList(abstractInput.split("_|\\*")));
+                    switch (tokens.pop()) {
+                        case "v2":
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("If you use the IKEv2 method, use a 'v2' message identifier!");
+                    }
+                    switch (tokens.pop()) {
+                        case "SAINIT":
+                            msg.setExchangeType(ExchangeTypeEnum.IKE_SA_INIT);
+                            break;
+                        case "AUTH":
+                            msg.setExchangeType(ExchangeTypeEnum.IKE_AUTH);
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Not supported yet.");
+                    }
+                    return (IKEv2Message) conn.getHandshake().exchangeMessage(msg);
+                } catch (GenericIKEParsingException ex) {
+                    return PARSING_ERROR_v2;
+                }
+            }
+
+            private void adjustQuickModeMessageID(IKEHandshake handshake, ISAKMPMessage msg) {
                 if (handshake.getMostRecentMessageID() == null) {
                     msg.setMessageIdRandom();
                     handshake.setMostRecentMessageID(msg.getMessageId());
@@ -212,7 +238,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
         if (concreteOutput == null) {
             return IPsecOutputAlphabet.NO_RESPONSE;
         }
-        if (concreteOutput == PARSING_ERROR) {
+        if (concreteOutput == PARSING_ERROR_v1) {
             return IPsecOutputAlphabet.PARSING_ERROR;
         }
         return concreteOutput.toString();

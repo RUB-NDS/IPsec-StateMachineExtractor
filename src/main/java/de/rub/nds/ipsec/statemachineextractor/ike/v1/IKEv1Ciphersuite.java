@@ -17,6 +17,13 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.KeyLengthAttribu
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeTypeAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProposalPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.TransformPayload;
+import de.rub.nds.ipsec.statemachineextractor.ipsec.ProtocolTransformIDEnum;
 import java.security.GeneralSecurityException;
 
 /**
@@ -108,5 +115,27 @@ public class IKEv1Ciphersuite extends GenericIKECiphersuite {
     @Override
     public int getCipherBlocksize() throws GeneralSecurityException {
         return this.cipher.getBlockSize();
+    }
+
+    public void adjust(SecurityAssociationPayload payload, IKEv1HandshakeSessionSecrets secrets) throws GeneralSecurityException, IKEHandshakeException {
+        if (payload.getProposalPayloads().size() != 1) {
+            throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+        }
+        ProposalPayload pp = payload.getProposalPayloads().get(0);
+        if (pp.getProtocolId() != ProtocolIDEnum.ISAKMP_IKE) {
+            throw new IKEHandshakeException("Proposal protocol is not ISAKMP.");
+        }
+        if (pp.getTransformPayloads().size() != 1) {
+            throw new IKEHandshakeException("Wrong number of transform payloads found. There should only be one.");
+        }
+        TransformPayload tp = pp.getTransformPayloads().get(0);
+        if (tp.getTransformId().getValue() != ProtocolTransformIDEnum.ISAKMP_KEY_IKE.getValue()) {
+            throw new IKEHandshakeException("Transform ID is not the the hybrid ISAKMP/Oakley Diffie-Hellman key exchange (IKE).");
+        }
+        tp.getAttributes().forEach((attr) -> {
+            ISAKMPAttribute iattr = (ISAKMPAttribute) attr;
+            iattr.configureCiphersuite(this);
+        });
+        secrets.updateHandshakeSA();
     }
 }

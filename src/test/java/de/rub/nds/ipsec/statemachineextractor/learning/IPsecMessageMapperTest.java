@@ -31,7 +31,7 @@ public class IPsecMessageMapperTest {
 
     @Test
     @Ignore
-    public void testMapInputMapOutput() throws Exception {
+    public void testMapInputMapOutputIKEv1() throws Exception {
         try {
             String abstractInput, abstractOutput;
             ContextExecutableInput<SerializableMessage, IPsecConnection> executableInput;
@@ -80,6 +80,27 @@ public class IPsecMessageMapperTest {
             concreteOutput = executableInput.execute(conn);
             abstractOutput = instance.mapOutput(concreteOutput);
             assertEquals("ESP_IPv4_TCP_SYNACK", abstractOutput);
+        } catch (Exception ex) {
+            Logger.getLogger(IPsecMessageMapperTest.class.getName()).log(Level.SEVERE, null, ex);
+            throw ex;
+        }
+    }
+
+    @Test
+    @Ignore
+    public void testMapInputMapOutputIKEv2() throws Exception {
+        try {
+            String abstractInput, abstractOutput;
+            ContextExecutableInput<SerializableMessage, IPsecConnection> executableInput;
+            SerializableMessage concreteOutput;
+            IPsecMessageMapper instance = new IPsecMessageMapper();
+            IPsecConnection conn = new IPsecConnection(InetAddress.getByName("10.0.3.10"), 500, 2000);
+
+            abstractInput = "v2_SAINIT_SA-KE-No";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("v1_MM_SA-V-V", abstractOutput);
         } catch (Exception ex) {
             Logger.getLogger(IPsecMessageMapperTest.class.getName()).log(Level.SEVERE, null, ex);
             throw ex;

@@ -41,7 +41,7 @@ public class EncryptedISAKMPMessageTest {
         EncryptedISAKMPMessage encMessage = new EncryptedISAKMPMessage(new SecretKeySpec(key, "AES"), CipherAttributeEnum.AES_CBC, iv);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         bais.skip(ISAKMPMessage.IKE_MESSAGE_HEADER_LEN);
-        encMessage.setCiphertext(bais);
+        encMessage.setCiphertext(bais, bais.available());
         encMessage.setNextPayload(IKEPayloadTypeEnum.Hash);
         encMessage.decrypt();
         assertArrayEquals(expected, encMessage.getPlaintext());

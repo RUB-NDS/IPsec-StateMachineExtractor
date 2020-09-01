@@ -8,13 +8,24 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures;
 
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
+import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IKEMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2HandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Serializable;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -95,13 +106,74 @@ public class IKEv2Message extends IKEMessage implements IKEv2Serializable {
     protected void toString(StringBuilder name) {
         switch (this.getExchangeType()) {
             case IKE_SA_INIT:
-                name.append("INIT");
+                name.append("SAINIT");
                 break;
             case IKE_AUTH:
                 name.append("AUTH");
                 break;
             default:
                 throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    @Override
+    public void processFromStream(ByteArrayInputStream bais, GenericIKECiphersuite genericCiphersuite, GenericIKEHandshakeSessionSecrets genericSecrets, HandshakeLongtermSecrets ltsecrets) throws GenericIKEParsingException, GeneralSecurityException {
+        IKEv2HandshakeSessionSecrets secrets = (IKEv2HandshakeSessionSecrets) genericSecrets;
+        IKEv2Ciphersuite ciphersuite = (IKEv2Ciphersuite) genericCiphersuite;
+        Map.Entry<Integer, IKEPayloadTypeEnum> entry = super.fillHeaderFromStream(bais);
+        int length = entry.getKey();
+        IKEPayloadTypeEnum nextPayload = entry.getValue();
+        secrets.setResponderCookie(this.getResponderCookie());
+        if (nextPayload == IKEPayloadTypeEnum.EncryptedAndAuthenticated) {
+            bais.reset();
+            throw new IsEncryptedException();
+        }
+        IKEv2Payload payload;
+        while (nextPayload != IKEPayloadTypeEnum.NONE) {
+            switch (nextPayload) {
+                case SecurityAssociationv2:
+                    payload = SecurityAssociationPayloadv2.fromStream(bais);
+                    SecurityAssociationPayloadv2 receivedSAPayload = (SecurityAssociationPayloadv2) payload;
+                    //adjustCiphersuite(receivedSAPayload);
+                    break;
+                case KeyExchangev2:
+                    switch (ciphersuite.getAuthMethod()) {
+                        //case MD5:
+                        default:
+                            payload = KeyExchangePayloadv2.fromStream(bais);
+                            secrets.getHandshakeSA().setPeerKeyExchangeData(((KeyExchangePayloadv2) payload).getKeyExchangeData());
+                            break;
+                    }
+                    secrets.getHandshakeSA().computeDHSecret();
+                    break;
+                case Noncev2:
+                    switch (ciphersuite.getAuthMethod()) {
+                        //case MD5:
+                        default:
+                            payload = NoncePayloadv2.fromStream(bais);
+                            secrets.getHandshakeSA().setResponderNonce(((NoncePayloadv2) payload).getNonceData());
+                            break;
+                    }
+                    secrets.computeSecretKeys();
+                    break;
+                case Notify:
+                    payload = NotificationPayloadv2.fromStream(bais);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Not supported yet.");
+            }
+            nextPayload = payload.getNextPayload();
+            this.addPayload(payload);
+        }
+
+        if (length != this.getLength()) {
+            throw new IKEv2ParsingException("Message lengths differ - Computed: " + this.getLength() + " vs. Received: " + length + "!");
+        }
+    }
+
+    public static class IsEncryptedException extends GenericIKEParsingException {
+
+        public IsEncryptedException() {
         }
     }
 }

@@ -8,7 +8,7 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ipsec;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Handshake;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshake;
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
@@ -31,7 +31,7 @@ import org.savarese.vserv.tcpip.TCPPacket;
  */
 public final class IPsecConnection {
 
-    private IKEv1Handshake handshake;
+    private IKEHandshake handshake;
     private final int timeout;
     private final InetAddress localTunnelEndpoint, remoteTunnelEndpoint;
     private final int remotePort;
@@ -60,7 +60,7 @@ public final class IPsecConnection {
 
     protected void reset() throws IOException, GeneralSecurityException {
         this.dispose();
-        this.handshake = new IKEv1Handshake(timeout, remoteTunnelEndpoint, remotePort);
+        this.handshake = new IKEHandshake(timeout, remoteTunnelEndpoint, remotePort);
         this.SA = new SecurityAssociationSecrets(DHGroupAttributeEnum.GROUP1.getDHGroupParameters());
         this.SA.setProtocol(ProtocolIDEnum.IPSEC_ESP);
         this.SA.setInboundSpi(DatatypeHelper.intTo4ByteArray(new Random().nextInt()));
@@ -69,7 +69,7 @@ public final class IPsecConnection {
         this.tunnel = new TunnelMode(localTunnelEndpoint, remoteTunnelEndpoint, SA, ESPTransformIDEnum.DES, null, null, timeout);
     }
 
-    public IKEv1Handshake getHandshake() {
+    public IKEHandshake getHandshake() {
         return handshake;
     }
 

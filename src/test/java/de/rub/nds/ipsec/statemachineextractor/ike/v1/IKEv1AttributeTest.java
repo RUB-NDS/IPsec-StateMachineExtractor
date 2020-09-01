@@ -9,10 +9,10 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.LifeDurationAttribute;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPAttribute;
 
 /**
  *
