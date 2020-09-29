@@ -8,8 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedISAKMPPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.HashPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;

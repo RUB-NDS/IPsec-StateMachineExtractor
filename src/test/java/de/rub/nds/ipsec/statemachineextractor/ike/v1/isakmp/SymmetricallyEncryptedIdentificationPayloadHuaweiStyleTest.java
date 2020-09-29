@@ -8,8 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
 import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.Arrays;
 
 /**
  * Taken from: TLS-Attacker - A Modular Penetration Testing Framework for TLS
@@ -51,8 +52,7 @@ public class UdpOutputStream extends OutputStream {
 
     @Override
     public void flush() throws IOException {
-        byte[] outData = new byte[index];
-        System.arraycopy(dataBuffer, 0, outData, 0, index);
+        byte[] outData = Arrays.copyOf(dataBuffer, index);
         DatagramPacket packet = new DatagramPacket(outData, index);
         socket.send(packet);
         index = 0;

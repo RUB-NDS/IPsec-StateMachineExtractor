@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import static de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProposalPayloadTest.getTestProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;

@@ -8,13 +8,10 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedIKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAssociationPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
-import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.net.InetAddress;
-import javax.crypto.spec.SecretKeySpec;
 import org.junit.Ignore;
 import org.junit.Test;
 

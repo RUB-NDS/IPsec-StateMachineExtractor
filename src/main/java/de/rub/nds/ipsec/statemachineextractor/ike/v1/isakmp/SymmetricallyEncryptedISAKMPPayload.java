@@ -63,8 +63,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
         if (in.length % cipher.getBlockSize() == 0) {
             byteLength += cipher.getBlockSize();
         }
-        byte[] out = new byte[byteLength];
-        System.arraycopy(in, 0, out, 0, in.length);
+        byte[] out = Arrays.copyOf(in, byteLength);
         out[out.length - 1] = (byte) (out.length - in.length - 1);
         return out;
     }
@@ -102,9 +101,7 @@ public class SymmetricallyEncryptedISAKMPPayload extends ISAKMPPayload implement
                 }
             }
         }
-        byte[] out = new byte[in.length - padLength];
-        System.arraycopy(in, 0, out, 0, in.length - padLength);
-        return out;
+        return Arrays.copyOf(in, in.length - padLength);
     }
 
     @Override

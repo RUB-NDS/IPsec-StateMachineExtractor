@@ -24,9 +24,9 @@ import java.util.Arrays;
 public class IdentificationPayloadResponder extends IKEv2Payload {
 
     protected static final int ID_HEADER_LEN = 8;
+    protected static final int RESERVED_LEN = 3;
 
     private IDTypeEnum idType = IDTypeEnum.RESERVED;
-    private final byte[] reserved = new byte[]{0x00, 0x00, 0x00};
     private byte[] identificationData = new byte[0];
     private byte[] IDr;
 
@@ -51,10 +51,9 @@ public class IdentificationPayloadResponder extends IKEv2Payload {
     }
 
     public void setIDr() {
-        IDr = new byte[reserved.length + identificationData.length + 1];
+        IDr = new byte[identificationData.length + RESERVED_LEN + 1];
         IDr[0] = idType.getValue();
-        System.arraycopy(reserved, 0, IDr, 1, reserved.length);
-        System.arraycopy(identificationData, 0, IDr, 4, identificationData.length);
+        System.arraycopy(identificationData, 0, IDr, RESERVED_LEN + 1, identificationData.length);
     }
 
     public byte[] getIDr() {
@@ -75,7 +74,7 @@ public class IdentificationPayloadResponder extends IKEv2Payload {
     public void writeBytes(ByteArrayOutputStream baos) {
         super.writeBytes(baos);
         baos.write(idType.getValue());
-        baos.write(reserved, 0, reserved.length);
+        baos.write(new byte[RESERVED_LEN], 0, RESERVED_LEN);
         baos.write(identificationData, 0, identificationData.length);
     }
 

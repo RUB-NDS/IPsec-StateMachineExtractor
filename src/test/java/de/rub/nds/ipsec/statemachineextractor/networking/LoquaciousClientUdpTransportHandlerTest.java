@@ -11,6 +11,7 @@ package de.rub.nds.ipsec.statemachineextractor.networking;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
 import org.junit.Test;
@@ -139,9 +140,8 @@ public class LoquaciousClientUdpTransportHandlerTest {
     }
 
     private byte[] concatenate(byte[] a, byte[] b) {
-        byte[] result = new byte[a.length + b.length];
-        System.arraycopy(a, 0, result, 0, a.length);
-        System.arraycopy(b, 0, result, 0, b.length);
+        byte[] result = Arrays.copyOf(a, a.length + b.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
         return result;
     }
 

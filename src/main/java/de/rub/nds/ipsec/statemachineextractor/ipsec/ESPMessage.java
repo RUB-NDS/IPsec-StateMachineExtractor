@@ -148,8 +148,7 @@ public class ESPMessage implements SerializableMessage {
         if ((in.length + 1) % cipher.getBlockSize() == 0) {
             targetByteLength += cipher.getBlockSize();
         }
-        byte[] out = new byte[targetByteLength];
-        System.arraycopy(in, 0, out, 0, in.length);
+        byte[] out = Arrays.copyOf(in, targetByteLength);
         byte code = 1;
         while (inOff < targetByteLength - 2) {
             out[inOff++] = code++;
@@ -173,9 +172,7 @@ public class ESPMessage implements SerializableMessage {
             }
             i--;
         }
-        byte[] out = new byte[in.length - padLength - 2];
-        System.arraycopy(in, 0, out, 0, in.length - padLength - 2);
-        return out;
+        return Arrays.copyOf(in, in.length - padLength - 2);
     }
 
     public byte[] getSpi() {

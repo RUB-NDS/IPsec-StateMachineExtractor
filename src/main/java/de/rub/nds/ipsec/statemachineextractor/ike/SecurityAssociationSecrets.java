@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.DHGroupEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;

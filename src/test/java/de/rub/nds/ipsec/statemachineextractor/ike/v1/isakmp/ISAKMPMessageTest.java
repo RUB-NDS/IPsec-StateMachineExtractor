@@ -8,9 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.VendorIDPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
 import static de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayloadTest.getTestSecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;

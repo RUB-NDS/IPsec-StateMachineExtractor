@@ -24,6 +24,7 @@ import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.DHPublicKeySpec;
@@ -70,9 +71,7 @@ public class CryptoHelper {
             publicKeyBytes = byteArrayPrepend(publicKeyBytes, (byte) 0x00);
         }
         if (publicKeyBytes.length == paramLen + 1 && publicKeyBytes[0] == 0) {
-            byte[] shortPublicKeyBytes = new byte[publicKeyBytes.length - 1];
-            System.arraycopy(publicKeyBytes, 1, shortPublicKeyBytes, 0, publicKeyBytes.length - 1);
-            return shortPublicKeyBytes;
+            return Arrays.copyOfRange(publicKeyBytes, 1, publicKeyBytes.length);
         }
         return publicKeyBytes;
     }
@@ -99,6 +98,7 @@ public class CryptoHelper {
 
     public static byte[] byteArrayPrepend(byte[] a, byte b) {
         byte[] na = new byte[a.length + 1];
+        na[0] = b;
         System.arraycopy(a, 0, na, 1, a.length);
         return na;
     }

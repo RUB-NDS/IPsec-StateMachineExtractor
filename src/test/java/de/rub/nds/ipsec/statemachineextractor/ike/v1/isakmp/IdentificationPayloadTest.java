@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -13,8 +13,11 @@ import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecr
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -77,11 +80,9 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
             initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         }
         byte[] responderNonce = this.HandshakeSA.getResponderNonce();
-        byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
-        System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
+        byte[] concatNonces = Arrays.copyOf(initiatorNonce, initiatorNonce.length + responderNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
-        byte[] concatCookies = new byte[IKEv2Message.COOKIE_LEN * 2];
-        System.arraycopy(initiatorCookie, 0, concatCookies, 0, IKEv2Message.COOKIE_LEN);
+        byte[] concatCookies = Arrays.copyOf(initiatorCookie, IKEv2Message.COOKIE_LEN * 2);
         System.arraycopy(responderCookie, 0, concatCookies, IKEv2Message.COOKIE_LEN, IKEv2Message.COOKIE_LEN);
         hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
         prf.init(hmacKey);
@@ -115,8 +116,7 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         if (SK_ei_pre.length < ciphersuite.getKeySize()) {
             throw new UnsupportedOperationException("Not enough keying material. Additional PRF runs needed.");
         } else if (SK_ei_pre.length > ciphersuite.getKeySize()) {
-            SK_ei = new byte[ciphersuite.getKeySize()];
-            System.arraycopy(SK_ei_pre, 0, SK_ei, 0, SK_ei.length);
+            SK_ei = Arrays.copyOf(SK_ei_pre, ciphersuite.getKeySize());
             pad = new byte[SK_ei_pre.length - SK_ei.length];
             System.arraycopy(SK_ei_pre, SK_ei.length, pad, 0, SK_ei_pre.length - SK_ei.length);
         } else {
@@ -193,12 +193,15 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         hmacKey = new SecretKeySpec(this.SK_pi, HmacIdentifier);
         prf.init(hmacKey);
         byte[] MACedIDForI = prf.doFinal(this.IDi);
-        byte[] RealMessage1 = getMessage();
-        byte[] NonceRData = this.HandshakeSA.getResponderNonce();
-        octets = new byte[MACedIDForI.length + RealMessage1.length + NonceRData.length];
-        System.arraycopy(RealMessage1, 0, octets, 0, RealMessage1.length);
-        System.arraycopy(NonceRData, 0, octets, RealMessage1.length, NonceRData.length);
-        System.arraycopy(MACedIDForI, 0, octets, RealMessage1.length + NonceRData.length, MACedIDForI.length);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            baos.write(getMessage());
+            baos.write(this.HandshakeSA.getResponderNonce());
+            baos.write(MACedIDForI);
+        } catch (IOException ex) {
+            throw new RuntimeException("If your JRE's implementation of ByteArrayOutputStream is sane, then it's impossible that this exception is thrown", ex);
+        }
+        octets = baos.toByteArray();
     }
 
     public byte[] getIDi() {

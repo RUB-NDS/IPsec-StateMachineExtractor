@@ -9,7 +9,6 @@
 package de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp;
 
 import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.TransformPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.AuthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.CipherAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.attributes.DHGroupAttributeEnum;

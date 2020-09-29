@@ -93,11 +93,9 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
             initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         }
         byte[] responderNonce = this.HandshakeSA.getResponderNonce();
-        byte[] concatNonces = new byte[initiatorNonce.length + responderNonce.length];
-        System.arraycopy(initiatorNonce, 0, concatNonces, 0, initiatorNonce.length);
+        byte[] concatNonces = Arrays.copyOf(initiatorNonce, initiatorNonce.length + responderNonce.length);
         System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
-        byte[] concatCookies = new byte[ISAKMPMessage.COOKIE_LEN * 2];
-        System.arraycopy(initiatorCookie, 0, concatCookies, 0, ISAKMPMessage.COOKIE_LEN);
+        byte[] concatCookies = Arrays.copyOf(initiatorCookie, ISAKMPMessage.COOKIE_LEN * 2);
         System.arraycopy(responderCookie, 0, concatCookies, ISAKMPMessage.COOKIE_LEN, ISAKMPMessage.COOKIE_LEN);
         switch (ciphersuite.getAuthMethod()) {
             case RSA_Sig:
@@ -119,13 +117,11 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
                 hmacKey = new SecretKeySpec(initiatorNonce, HmacIdentifier);
                 prf.init(hmacKey);
                 byte[] Ne_i = prf.doFinal(initiatorCookie);
-                ke_i = new byte[ciphersuite.getCipher().getBlockSize()];
-                System.arraycopy(Ne_i, 0, ke_i, 0, ke_i.length);
+                ke_i = Arrays.copyOf(Ne_i, ciphersuite.getCipher().getBlockSize());
                 hmacKey = new SecretKeySpec(responderNonce, HmacIdentifier);
                 prf.init(hmacKey);
                 byte[] Ne_r = prf.doFinal(responderCookie);
-                ke_r = new byte[ciphersuite.getCipher().getBlockSize()];
-                System.arraycopy(Ne_r, 0, ke_r, 0, ke_r.length);
+                ke_r = Arrays.copyOf(Ne_r, ciphersuite.getCipher().getBlockSize());
                 // For public key encryption: SKEYID = prf(hash(Ni_b | Nr_b), CKY-I | CKY-R)
                 MessageDigest digest = MessageDigest.getInstance(mapHashName(ciphersuite.getHash()));
                 hmacKey = new SecretKeySpec(digest.digest(concatNonces), HmacIdentifier);
@@ -161,8 +157,7 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         if (skeyid_e.length < ciphersuite.getKeySize()) {
             throw new UnsupportedOperationException("Not enough keying material. Additional PRF runs needed.");
         }
-        ka = new byte[ciphersuite.getKeySize()];
-        System.arraycopy(skeyid_e, 0, ka, 0, ka.length);
+        ka = Arrays.copyOf(skeyid_e, ciphersuite.getKeySize());
     }
 
     public byte[] getHASH_I() throws GeneralSecurityException {

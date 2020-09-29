@@ -8,7 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import java.security.GeneralSecurityException;
 
 /**

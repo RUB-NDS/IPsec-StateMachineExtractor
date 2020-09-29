@@ -69,8 +69,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         if (this.plaintext.length % 16 != 0) {
             this.ENCRPayload.setPadLength((byte) (16 - ((this.plaintext.length % 16) + 1)));
             this.ENCRPayload.genRandomPadding();
-            byte[] toEncrypt = new byte[plaintext.length + ENCRPayload.getPadLengthINT() + 1];
-            System.arraycopy(plaintext, 0, toEncrypt, 0, plaintext.length);
+            byte[] toEncrypt = Arrays.copyOf(plaintext, plaintext.length + ENCRPayload.getPadLengthINT() + 1);
             System.arraycopy(ENCRPayload.getPadding(), 0, toEncrypt, plaintext.length, ENCRPayload.getPadding().length);
             toEncrypt[plaintext.length + ENCRPayload.getPadLengthINT()] = ENCRPayload.getPadLength();
             this.ciphertext = cipherEnc.doFinal(toEncrypt);
@@ -195,8 +194,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             super.writeBytes(baos);
             byte[] predata = checksumData.doFinal(baos.toByteArray());
-            byte[] data = new byte[12]; //dymanic legth!!!!
-            System.arraycopy(predata, 0, data, 0, data.length);
+            byte[] data = Arrays.copyOf(predata, 12); //dymanic legth!!!!
             this.ENCRPayload.setINTEGChecksumData(data);
         } catch (GeneralSecurityException ex) {
             throw new RuntimeException(ex);

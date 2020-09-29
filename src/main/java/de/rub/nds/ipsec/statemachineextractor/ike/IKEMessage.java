@@ -10,13 +10,6 @@ package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import de.rub.nds.ipsec.statemachineextractor.FixedLengthByteStreamSerializable;
 import de.rub.nds.ipsec.statemachineextractor.SerializableMessage;
-import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
-import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
-import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEPayload;
-import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;

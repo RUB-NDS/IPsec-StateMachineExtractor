@@ -13,6 +13,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  *
@@ -42,9 +43,7 @@ public abstract class GenericIKEPayload implements FixedLengthByteStreamSerializ
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         this.writeBytes(baos);
         byte[] bytes = baos.toByteArray();
-        byte[] result = new byte[bytes.length - GENERIC_PAYLOAD_HEADER_LEN];
-        System.arraycopy(bytes, GENERIC_PAYLOAD_HEADER_LEN, result, 0, result.length);
-        return result;
+        return Arrays.copyOfRange(bytes, GENERIC_PAYLOAD_HEADER_LEN, bytes.length);
     }
 
     public IKEPayloadTypeEnum getNextPayload() {
