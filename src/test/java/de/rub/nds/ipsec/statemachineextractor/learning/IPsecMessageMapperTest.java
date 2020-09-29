@@ -101,6 +101,13 @@ public class IPsecMessageMapperTest {
             concreteOutput = executableInput.execute(conn);
             abstractOutput = instance.mapOutput(concreteOutput);
             assertEquals("v2_SAINIT_SA-KE-No-MultipleAuthSupport", abstractOutput);
+            
+            abstractInput = "v2_AUTH_PSK-IDi-AUTH-SA-TSi-TSr";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("v2_AUTH_IDr-AUTH-SA-TSi-TSr", abstractOutput);
+            
         } catch (Exception ex) {
             Logger.getLogger(IPsecMessageMapperTest.class.getName()).log(Level.SEVERE, null, ex);
             throw ex;

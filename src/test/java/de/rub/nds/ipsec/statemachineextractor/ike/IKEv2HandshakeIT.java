@@ -8,10 +8,6 @@
  */
 package de.rub.nds.ipsec.statemachineextractor.ike;
 
-import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationPayloadFactory;
-import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
-import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshake;
-import de.rub.nds.ipsec.statemachineextractor.ike.NotifyMessageTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2HandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedIKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedIKEv2MessageMock;
@@ -24,6 +20,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -63,8 +60,20 @@ public class IKEv2HandshakeIT {
 
     @Before
     public void setUp() throws Exception {
-        handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        handshake = new IKEHandshakeMock(0, InetAddress.getLocalHost(), 500);
         handshake.udpTH = new ClientUdpTransportHandlerMock();
+    }
+
+    class IKEHandshakeMock extends IKEHandshake {
+
+        public IKEHandshakeMock(long timeout, InetAddress remoteAddress, int remotePort) throws IOException, GeneralSecurityException {
+            super(timeout, remoteAddress, remotePort);
+        }
+
+        @Override
+        protected IKEv2Message prepareIKEv2MessageForSending(IKEv2Message messageToSend) throws GeneralSecurityException {
+            return messageToSend;
+        }
     }
 
     class ClientUdpTransportHandlerMock extends LoquaciousClientUdpTransportHandler {
@@ -167,9 +176,9 @@ public class IKEv2HandshakeIT {
         byte[] iv = handshake.secrets_v2.getIV(msgID);
         EncryptedIKEv2Message ENCmsg = EncryptedIKEv2MessageMock.fromPlainMessage(msg, ENCRkey, handshake.ciphersuite_v2.getCipher(), iv, handshake.secrets_v2.getSKai(), handshake.ciphersuite_v2.getAuthMethod());
         EncryptedPayloadMock ENCRPayload = new EncryptedPayloadMock();
-        ENCRPayload.setIV(((EncryptedIKEv2MessageMock)ENCmsg).getENCRPayload().getIV());
+        ENCRPayload.setIV(((EncryptedIKEv2MessageMock) ENCmsg).getENCRPayload().getIV());
         ENCRPayload.setPresetPadding(DatatypeHelper.hexDumpToByteArray("689EDB13A9EC81374F4C7C"));
-        ((EncryptedIKEv2MessageMock)ENCmsg).setENCRPayload(ENCRPayload);
+        ((EncryptedIKEv2MessageMock) ENCmsg).setENCRPayload(ENCRPayload);
         answer = handshake.exchangeMessage(ENCmsg);
 
 //        TODO: Check parsing of message

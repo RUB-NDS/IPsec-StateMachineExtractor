@@ -20,6 +20,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Map;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -88,18 +89,10 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         }
         cipherDec.init(Cipher.DECRYPT_MODE, ENCRsecretKey, IV);
         byte[] plaintextwithpadding = cipherDec.doFinal(this.ciphertext);
-        byte[] plain = new byte[plaintextwithpadding.length - plaintextwithpadding[plaintextwithpadding.length - 1] - 1];
-        System.arraycopy(plaintextwithpadding, 0, plain, 0, plain.length);
-        this.plaintext = plain;
-        byte[] plaintextwithheader = new byte[plaintext.length + 4 + this.ENCRPayload.getIV().length + this.ENCRPayload.getINTEGChecksumData().length + this.ciphertext.length];
-        System.arraycopy(header, 0, plaintextwithheader, 0, header.length);
-        System.arraycopy(this.ENCRPayload.getIV(), 0, plaintextwithheader, header.length, this.ENCRPayload.getIV().length);
-        System.arraycopy(this.ciphertext, 0, plaintextwithheader, header.length + this.ENCRPayload.getIV().length, this.ciphertext.length);
-        System.arraycopy(this.ENCRPayload.getINTEGChecksumData(), 0, plaintextwithheader, header.length + this.ENCRPayload.getIV().length + this.ciphertext.length, this.ENCRPayload.getINTEGChecksumData().length);
-        System.arraycopy(plaintext, 0, plaintextwithheader, header.length + this.ENCRPayload.getIV().length + this.ciphertext.length + this.ENCRPayload.getINTEGChecksumData().length, plaintext.length);
-        ByteArrayInputStream bais = new ByteArrayInputStream(plaintextwithheader);
+        this.plaintext = Arrays.copyOf(plaintextwithpadding, plaintextwithpadding.length - plaintextwithpadding[plaintextwithpadding.length - 1] - 1);
+        ByteArrayInputStream bais = new ByteArrayInputStream(this.plaintext);
         this.payloads.clear();
-        IKEPayloadTypeEnum nextPayload = this.getNextPayload();
+        IKEPayloadTypeEnum nextPayload = IKEPayloadTypeEnum.get(header[0]);
         while (nextPayload != IKEPayloadTypeEnum.NONE) {
             Class<? extends IKEv2Payload> payloadType = IKEv2Payload.getImplementingClass(nextPayload);
             IKEv2Payload payload;

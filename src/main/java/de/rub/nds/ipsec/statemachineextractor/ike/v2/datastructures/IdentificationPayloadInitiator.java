@@ -63,7 +63,7 @@ public class IdentificationPayloadInitiator extends IKEv2Payload {
 
     @Override
     public String toString() {
-        return "IDInit";
+        return "IDi";
     }
 
     @Override

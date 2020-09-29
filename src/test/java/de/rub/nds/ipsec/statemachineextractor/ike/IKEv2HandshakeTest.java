@@ -36,8 +36,6 @@ public class IKEv2HandshakeTest {
         IKEMessage answer;
         
         IKEv2Message msg = new IKEv2Message();
-        byte[] msgID = DatatypeHelper.hexDumpToByteArray("00000000");
-        msg.setMessageId(msgID);
         msg.setExchangeType(ExchangeTypeEnum.IKE_SA_INIT);
         msg.setInitiatorFlag(true);
         msg.setVersionFlag(false);
@@ -45,29 +43,23 @@ public class IKEv2HandshakeTest {
         sa = SecurityAssociationPayloadFactory.V2_P1_AES_128_CBC_SHA1;
         msg.addPayload(sa);
         //handshake.adjustCiphersuite(sa);
-        msg.addPayload(handshake.prepareIKEv2KeyExchangePayload(msgID));
-        msg.addPayload(handshake.prepareIKEv2NoncePayload(msgID));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v2.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
-        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v2.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
+        msg.addPayload(handshake.prepareIKEv2KeyExchangePayload(handshake.getNextv2MessageID()));
+        msg.addPayload(handshake.prepareIKEv2NoncePayload(handshake.getNextv2MessageID()));
+//        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v2.getHandshakeSA().getDhKeyPair().getPrivate().getEncoded()));
+//        System.out.println(DatatypeHelper.byteArrayToHexDump(handshake.secrets_v2.getHandshakeSA().getDhKeyPair().getPublic().getEncoded()));
         answer = handshake.exchangeMessage(msg);
 
         msg = new IKEv2Message();
-        msgID = DatatypeHelper.hexDumpToByteArray("00000001");
-        msg.setMessageId(msgID);
         msg.setExchangeType(ExchangeTypeEnum.IKE_AUTH);
         msg.setInitiatorFlag(true);
         msg.setVersionFlag(false);
         msg.setResponseFlag(false);
-        handshake.secrets_v2.setMessage(handshake.messages.get(0).getMessage().getBytes());
         msg.addPayload(handshake.prepareIKEv2IdentificationInitiator());
-        handshake.secrets_v2.computeOctets();
         msg.addPayload(handshake.prepareIKEv2AuthenticationPayload());
-        msg.addPayload(handshake.prepareIKEv2Phase2SecurityAssociation());
+        sa = SecurityAssociationPayloadFactory.V2_P2_AES_128_CBC_SHA1_ESN;
+        msg.addPayload(sa);
         msg.addPayload(handshake.prepareIKEv2TrafficSelectorPayloadInitiator());
         msg.addPayload(handshake.prepareIKEv2TrafficSelectorPayloadResponder());
-        SecretKeySpec ENCRkey = new SecretKeySpec(handshake.secrets_v2.getSKei(), handshake.ciphersuite_v2.getCipher().cipherJCEName());
-        byte[] iv = handshake.secrets_v2.getIV(msgID);
-        EncryptedIKEv2Message ENCmsg = EncryptedIKEv2Message.fromPlainMessage(msg, ENCRkey, handshake.ciphersuite_v2.getCipher(), iv, handshake.secrets_v2.getSKai(), handshake.ciphersuite_v2.getAuthMethod());
-        answer = handshake.exchangeMessage(ENCmsg);
+        answer = handshake.exchangeMessage(msg);
     }
 }

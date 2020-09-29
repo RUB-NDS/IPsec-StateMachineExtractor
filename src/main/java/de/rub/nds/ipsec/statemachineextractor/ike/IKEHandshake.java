@@ -42,6 +42,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAsso
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorInitiatorPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorPayloadResponder;
 import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -69,6 +70,7 @@ public class IKEHandshake {
     IKEv2Ciphersuite ciphersuite_v2;
     IKEv1HandshakeSessionSecrets secrets_v1;
     IKEv2HandshakeSessionSecrets secrets_v2;
+    int nextv2MessageID = 0;
     List<WireMessage> messages = new ArrayList<>();
     final long timeout;
     final InetAddress remoteAddress;
@@ -127,8 +129,11 @@ public class IKEHandshake {
             return null;
         }
 
+        //received an answer, so store necessary stuff
+        secrets_v2.setMessage(txData);
+        nextv2MessageID += 1;
         if ((messageToSend instanceof ISAKMPMessage) && ((ISAKMPMessage) messageToSend).isEncryptedFlag()) {
-            //received an answer, so store last ciphertext block as IV for decryption
+            //store last ciphertext block as IV for decryption
             secrets_v1.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage) messageToSend).getNextIV());
         }
         messageReceived = IKEMessageFromByteArray(rxData);
@@ -189,6 +194,12 @@ public class IKEHandshake {
     }
 
     protected IKEv2Message prepareIKEv2MessageForSending(IKEv2Message messageToSend) throws GeneralSecurityException {
+        messageToSend.setMessageId(getNextv2MessageID());
+        if (messageToSend.getExchangeType() != ExchangeTypeEnum.IKE_SA_INIT) {
+            SecretKeySpec ENCRkey = new SecretKeySpec(secrets_v2.getSKei(), ciphersuite_v2.getCipher().cipherJCEName());
+            byte[] iv = secrets_v2.getIV(getNextv2MessageID());
+            messageToSend = EncryptedIKEv2Message.fromPlainMessage(messageToSend, ENCRkey, ciphersuite_v2.getCipher(), iv, secrets_v2.getSKai(), ciphersuite_v2.getAuthMethod());
+        }
         if (messageToSend.getNextPayload() == IKEPayloadTypeEnum.SecurityAssociationv2 && secrets_v2.getHandshakeSA().getSAOfferBody() == null) {
             secrets_v2.getHandshakeSA().setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
         }
@@ -347,14 +358,6 @@ public class IKEHandshake {
         msg.addPayload(0, hashPayload);
     }
 
-    public IKEv2Payload prepareIKEv2Phase1SecurityAssociation() {
-        return SecurityAssociationPayloadFactory.V2_P1_AES_128_CBC_SHA1;
-    }
-
-    public IKEv2Payload prepareIKEv2Phase2SecurityAssociation() {
-        return SecurityAssociationPayloadFactory.V2_P2_AES_128_CBC_SHA1_ESN;
-    }
-
     public void adjustCiphersuite(SecurityAssociationPayload sa) throws GeneralSecurityException, IKEHandshakeException {
         ciphersuite_v1.adjust(sa, secrets_v1);
     }
@@ -385,13 +388,14 @@ public class IKEHandshake {
         return result;
     }
 
-    public IdentificationPayloadInitiator prepareIKEv2IdentificationInitiator() throws IOException {
+    public IdentificationPayloadInitiator prepareIKEv2IdentificationInitiator() throws IOException, GeneralSecurityException {
         InetAddress addr = udpTH.getLocalAddress();
         IdentificationPayloadInitiator result = new IdentificationPayloadInitiator();
         result.setIdType(IDTypeEnum.IPV4_ADDR);
         result.setIdentificationData(addr.getAddress());
         result.setIDi();
         secrets_v2.setIDi(result.getIDi());
+        secrets_v2.computeOctets();
         return result;
     }
 
@@ -411,4 +415,9 @@ public class IKEHandshake {
         TrafficSelectorPayloadResponder result = new TrafficSelectorPayloadResponder();
         return result;
     }
+
+    public byte[] getNextv2MessageID() {
+        return DatatypeHelper.intTo4ByteArray(nextv2MessageID);
+    }
+   
 }

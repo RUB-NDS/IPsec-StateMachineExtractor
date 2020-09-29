@@ -221,18 +221,27 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                     while (!tokens.isEmpty()) {
                         switch (tokens.pop()) {
                             case "PSK":
-                                sa = SecurityAssociationPayloadFactory.V2_P1_AES_128_CBC_SHA1;
+                                switch (msg.getExchangeType()) {
+                                    case IKE_SA_INIT:
+                                        sa = SecurityAssociationPayloadFactory.V2_P1_AES_128_CBC_SHA1;
+                                        break;
+                                    case IKE_AUTH:
+                                        sa = SecurityAssociationPayloadFactory.V2_P2_AES_128_CBC_SHA1_ESN;
+                                        break;
+                                    default:
+                                        throw new UnsupportedOperationException("Not supported yet.");
+                                }
                                 break;
                             case "SA":
                                 switch (msg.getExchangeType()) {
-                                    case IKE_AUTH:
-                                        sa = SecurityAssociationPayloadFactory.V2_P2_AES_128_CBC_SHA1_ESN;
-//                                        conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
-                                        break;
-
-                                    default:
+                                    case IKE_SA_INIT:
                                         conn.getHandshake().adjustCiphersuite(sa);
                                         break;
+                                    case IKE_AUTH:
+//                                      conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
+                                        break;
+                                    default:
+                                        throw new UnsupportedOperationException("Not supported yet.");
                                 }
                                 msg.addPayload(sa);
                                 break;
@@ -241,6 +250,18 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 break;
                             case "No":
                                 msg.addPayload(conn.getHandshake().prepareIKEv2NoncePayload(msg.getMessageId()));
+                                break;
+                            case "IDi":
+                                msg.addPayload(conn.getHandshake().prepareIKEv2IdentificationInitiator());
+                                break;
+                            case "AUTH":
+                                msg.addPayload(conn.getHandshake().prepareIKEv2AuthenticationPayload());
+                                break;
+                            case "TSi":
+                                msg.addPayload(conn.getHandshake().prepareIKEv2TrafficSelectorPayloadInitiator());
+                                break;
+                            case "TSr":
+                                msg.addPayload(conn.getHandshake().prepareIKEv2TrafficSelectorPayloadResponder());
                                 break;
                             default:
                                 throw new UnsupportedOperationException("Malformed message identifier");

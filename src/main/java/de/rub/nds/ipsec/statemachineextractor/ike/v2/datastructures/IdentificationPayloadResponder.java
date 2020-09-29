@@ -63,7 +63,7 @@ public class IdentificationPayloadResponder extends IKEv2Payload {
 
     @Override
     public String toString() {
-        return "IDResp";
+        return "IDr";
     }
 
     @Override
