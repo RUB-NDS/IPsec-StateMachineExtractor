@@ -145,6 +145,13 @@ public final class IKEv1Handshake {
         message.setAuthenticationOnlyFlag((bytes[19] & 4) > 0);
         message.setMessageId(Arrays.copyOfRange(bytes, 20, 24));
         int messageLength = new BigInteger(Arrays.copyOfRange(bytes, 24, 28)).intValue();
+        if (messageLength < bytes.length) {
+            //received more data than the message's length field said.
+            //this happens when the responder e.g. sends a Notification during the handshake (e.g. ResponderLifetime)
+            //for now, we just ignore this additional message
+            //TODO: Parse more than one message
+            bytes = Arrays.copyOf(bytes, messageLength);
+        }
         secrets.setResponderCookie(message.getResponderCookie());
 
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
