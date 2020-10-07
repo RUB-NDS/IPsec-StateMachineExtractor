@@ -38,6 +38,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Payload
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IdentificationPayloadInitiator;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.KeyExchangePayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.NoncePayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.ProposalPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAssociationPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorInitiatorPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.TrafficSelectorPayloadResponder;
@@ -195,6 +196,7 @@ public class IKEHandshake {
 
     protected IKEv2Message prepareIKEv2MessageForSending(IKEv2Message messageToSend) throws GeneralSecurityException {
         messageToSend.setMessageId(getNextv2MessageID());
+        this.setMostRecentMessageID(messageToSend.getMessageId());
         if (messageToSend.getExchangeType() != ExchangeTypeEnum.IKE_SA_INIT) {
             SecretKeySpec ENCRkey = new SecretKeySpec(secrets_v2.getSKei(), ciphersuite_v2.getCipher().cipherJCEName());
             byte[] iv = secrets_v2.getIV(getNextv2MessageID());
@@ -206,7 +208,7 @@ public class IKEHandshake {
         return messageToSend;
     }
 
-    public void reset() throws IOException, GeneralSecurityException {
+    public final void reset() throws IOException, GeneralSecurityException {
         messages.clear();
         ltsecrets = new HandshakeLongtermSecrets();
         ciphersuite_v1 = new IKEv1Ciphersuite();
@@ -219,7 +221,7 @@ public class IKEHandshake {
         this.udpTH = new LoquaciousClientUdpTransportHandler(this.timeout, this.remoteAddress.getHostAddress(), this.remotePort);
         prepareIKEv1IdentificationPayload(); // sets secrets_v1.identificationPayloadBody
         secrets_v1.setPeerIdentificationPayloadBody(secrets_v1.getIdentificationPayloadBody()); // only a default
-        secrets_v1.getHandshakeSA().setSAOfferBody(null);
+        secrets_v1.getHandshakeSA().setSAOfferBody(new byte[0]);
         secrets_v1.generateDefaults();
         secrets_v2.generateDefaults();
     }
@@ -235,15 +237,23 @@ public class IKEHandshake {
     }
 
     public void setMostRecentMessageID(byte[] mostRecentMessageID) {
-        secrets_v1.setMostRecentMessageID(mostRecentMessageID);
+        secrets_v1.setMostRecentMessageID(mostRecentMessageID.clone());
     }
 
-    public SecurityAssociationSecrets getMostRecentSecurityAssociation() {
+    public SecurityAssociationSecrets getMostRecentSecurityAssociationv1() {
         return secrets_v1.getSA(secrets_v1.getMostRecentMessageID());
     }
 
-    public void computeIPsecKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException {
+    public SecurityAssociationSecrets getIPsecSecurityAssociationv2() {
+        return secrets_v2.getIPsecSA();
+    }
+
+    public void computeIPsecKeyMaterialv1(SecurityAssociationSecrets sas) throws GeneralSecurityException {
         secrets_v1.computeKeyMaterial(sas);
+    }
+
+    public void computeIPsecKeyMaterialv2(SecurityAssociationSecrets sas) throws GeneralSecurityException {
+        secrets_v2.computeKeyMaterial(sas);
     }
 
     public SecurityAssociationSecrets addInboundSPIAndProtocolToIPsecSecurityAssociation(SecurityAssociationPayload payload) throws GeneralSecurityException, IKEHandshakeException {
@@ -251,7 +261,18 @@ public class IKEHandshake {
             throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
         }
         ProposalPayload pp = payload.getProposalPayloads().get(0);
-        SecurityAssociationSecrets sas = this.getMostRecentSecurityAssociation();
+        SecurityAssociationSecrets sas = this.getMostRecentSecurityAssociationv1();
+        sas.setInboundSpi(pp.getSPI());
+        sas.setProtocol(pp.getProtocolId());
+        return sas;
+    }
+
+    public SecurityAssociationSecrets addInboundSPIAndProtocolToIPsecSecurityAssociation(SecurityAssociationPayloadv2 payload) throws GeneralSecurityException, IKEHandshakeException {
+        if (payload.getProposalPayloads().size() != 1) {
+            throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+        }
+        ProposalPayloadv2 pp = payload.getProposalPayloads().get(0);
+        SecurityAssociationSecrets sas = this.getIPsecSecurityAssociationv2();
         sas.setInboundSpi(pp.getSPI());
         sas.setProtocol(pp.getProtocolId());
         return sas;

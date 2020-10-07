@@ -12,11 +12,13 @@ import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKECiphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.HandshakeLongtermSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEHandshakeException;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEMessage;
+import de.rub.nds.ipsec.statemachineextractor.ike.ProtocolIDEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2HandshakeSessionSecrets;
-import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2ParsingException;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.IKEv2Serializable;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -132,28 +134,12 @@ public class IKEv2Message extends IKEMessage implements IKEv2Serializable {
             switch (nextPayload) {
                 case SecurityAssociationv2:
                     payload = SecurityAssociationPayloadv2.fromStream(bais);
-                    SecurityAssociationPayloadv2 receivedSAPayload = (SecurityAssociationPayloadv2) payload;
-                    //adjustCiphersuite(receivedSAPayload);
                     break;
                 case KeyExchangev2:
-                    switch (ciphersuite.getAuthMethod()) {
-                        //case MD5:
-                        default:
-                            payload = KeyExchangePayloadv2.fromStream(bais);
-                            secrets.getHandshakeSA().setPeerKeyExchangeData(((KeyExchangePayloadv2) payload).getKeyExchangeData());
-                            break;
-                    }
-                    secrets.getHandshakeSA().computeDHSecret();
+                    payload = KeyExchangePayloadv2.fromStream(bais);
                     break;
                 case Noncev2:
-                    switch (ciphersuite.getAuthMethod()) {
-                        //case MD5:
-                        default:
-                            payload = NoncePayloadv2.fromStream(bais);
-                            secrets.getHandshakeSA().setResponderNonce(((NoncePayloadv2) payload).getNonceData());
-                            break;
-                    }
-                    secrets.computeSecretKeys();
+                    payload = NoncePayloadv2.fromStream(bais);
                     break;
                 case Notify:
                     payload = NotificationPayloadv2.fromStream(bais);
@@ -164,9 +150,31 @@ public class IKEv2Message extends IKEMessage implements IKEv2Serializable {
             nextPayload = payload.getNextPayload();
             this.addPayload(payload);
         }
+        adjustSA(secrets.getSA(this.getMessageId()), ciphersuite);
+        secrets.computeSecretKeys();
+    }
 
-        if (length != this.getLength()) {
-            throw new IKEv2ParsingException("Message lengths differ - Computed: " + this.getLength() + " vs. Received: " + length + "!");
+    protected void adjustSA(SecurityAssociationSecrets sas, IKEv2Ciphersuite ciphersuite) throws GeneralSecurityException, IKEHandshakeException {
+        for (IKEv2Payload payload : payloads) {
+            switch (payload.getType()) {
+                case SecurityAssociationv2:
+                    SecurityAssociationPayloadv2 receivedSAPayload = (SecurityAssociationPayloadv2) payload;
+                    if (receivedSAPayload.getProposalPayloads().size() != 1) {
+                        throw new IKEHandshakeException("Wrong number of proposal payloads found. There should only be one.");
+                    }
+                    ProposalPayloadv2 pp = receivedSAPayload.getProposalPayloads().get(0);
+                    if (pp.getProtocolId() != ProtocolIDEnum.ISAKMP_IKE) {
+                        sas.setOutboundSpi(pp.getSPI());
+                    }
+                    break;
+                case KeyExchangev2:
+                    sas.setPeerKeyExchangeData(((KeyExchangePayloadv2) payload).getKeyExchangeData());
+                    sas.computeDHSecret();
+                    break;
+                case Noncev2:
+                    sas.setResponderNonce(((NoncePayloadv2) payload).getNonceData());
+                    break;
+            }
         }
     }
 

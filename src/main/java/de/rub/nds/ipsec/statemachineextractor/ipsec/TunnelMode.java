@@ -13,6 +13,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import static de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage.IPv4_HEADER_LENGTH;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
+import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.IPProtocolsEnum;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -42,7 +43,7 @@ public class TunnelMode {
     private int keySize;
     private int nextOutboundSequenceNumber = 1;
     private Integer nextInboundSequenceNumber;
-    private SecretKeySpec outboundKeyEnc, inboundKeyEnc, outboundKeyAuth, inboundKeyAuth;
+    SecretKeySpec outboundKeyEnc, inboundKeyEnc, outboundKeyAuth, inboundKeyAuth;
 
     public TunnelMode(InetAddress localAddress, InetAddress remoteAddress, SecurityAssociationSecrets sas, ESPTransformIDEnum cipher, KeyLengthAttributeEnum keylength, AuthenticationAlgorithmAttributeEnum authAlgo, int timeout) throws IOException, NoSuchAlgorithmException {
         this.localAddress = localAddress;
@@ -88,30 +89,40 @@ public class TunnelMode {
             this.keySize = keylength.getKeySize();
         }
 
+        /*
+         * https://tools.ietf.org/html/rfc4306#section-2.17
+         * All keys for SAs carrying data from the initiator to the responder
+         * are taken before SAs going in the reverse direction. [...]
+         * If a single protocol has both encryption and authentication keys,
+         * the encryption key is taken from the first octets of KEYMAT and
+         * the authentication key is taken from the next octets.
+         */
         int macLength = 0;
-        byte[] keymat = secrets.getOutboundKeyMaterial();
-        if (keymat.length < cipher.getKeySize()) {
+        byte[] keymat = new byte[this.keySize];
+        if (secrets.getOutboundKeyMaterial(keymat) < cipher.getKeySize()) {
             throw new UnsupportedOperationException("Not enough key material!");
         }
-        this.outboundKeyEnc = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+        this.outboundKeyEnc = new SecretKeySpec(keymat, cipher.cipherJCEName());
         if (this.authAlgo != null) {
             macLength = Mac.getInstance(this.authAlgo.macJCEName()).getMacLength();
-            if (keymat.length < cipher.getKeySize() + macLength) {
+            keymat = new byte[macLength];
+            if (secrets.getOutboundKeyMaterial(keymat) < macLength) {
                 throw new UnsupportedOperationException("Not enough key material!");
             }
-            this.outboundKeyAuth = new SecretKeySpec(Arrays.copyOfRange(keymat, this.keySize, this.keySize + macLength), this.authAlgo.macJCEName());
+            this.outboundKeyAuth = new SecretKeySpec(keymat, this.authAlgo.macJCEName());
         }
 
-        keymat = secrets.getInboundKeyMaterial();
-        if (keymat.length < cipher.getKeySize()) {
+        keymat = new byte[this.keySize];
+        if (secrets.getInboundKeyMaterial(keymat) < cipher.getKeySize()) {
             throw new UnsupportedOperationException("Not enough key material!");
         }
-        this.inboundKeyEnc = new SecretKeySpec(Arrays.copyOf(keymat, this.keySize), cipher.cipherJCEName());
+        this.inboundKeyEnc = new SecretKeySpec(keymat, cipher.cipherJCEName());
         if (this.authAlgo != null) {
-            if (keymat.length < cipher.getKeySize() + macLength) {
+            keymat = new byte[macLength];
+            if (secrets.getInboundKeyMaterial(keymat) < macLength) {
                 throw new UnsupportedOperationException("Not enough key material!");
             }
-            this.inboundKeyAuth = new SecretKeySpec(Arrays.copyOfRange(keymat, this.keySize, this.keySize + macLength), this.authAlgo.macJCEName());
+            this.inboundKeyAuth = new SecretKeySpec(keymat, this.authAlgo.macJCEName());
         }
 
         nextOutboundSequenceNumber = 1;

@@ -216,20 +216,11 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         }
         this.setCiphertext(bais);
         this.decrypt();
-//        IKEPayloadTypeEnum payloadType = getNextPayload();
-//        for (IKEv2Payload payload : decMessage.getPayloads()) {
-//            switch (payloadType) {
-//                case EncryptedAndAuthenticated:
-//                    //payload.getBody();
-//                    break;
-//                default:
-//                    throw new IKEHandshakeException("Not implemented yet!");
-//            }
-//            payloadType = payload.getNextPayload();
-//        }
         if (length != this.getLength()) {
             throw new IKEv2ParsingException("Message lengths differ - Computed: " + this.getLength() + " vs. Received: " + length + "!");
         }
+        adjustSA(secrets.getSA(this.getMessageId()), ciphersuite);
+        secrets.computeSecretKeys();
     }
 
     public static EncryptedIKEv2Message fromPlainMessage(IKEv2Message msg, SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {

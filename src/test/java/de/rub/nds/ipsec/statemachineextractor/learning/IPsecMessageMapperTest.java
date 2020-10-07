@@ -108,6 +108,11 @@ public class IPsecMessageMapperTest {
             abstractOutput = instance.mapOutput(concreteOutput);
             assertEquals("v2_AUTH_IDr-AUTH-SA-TSi-TSr", abstractOutput);
             
+            abstractInput = "ESP_IPv4_TCP_SYN_SSH";
+            executableInput = instance.mapInput(abstractInput);
+            concreteOutput = executableInput.execute(conn);
+            abstractOutput = instance.mapOutput(concreteOutput);
+            assertEquals("ESP_IPv4_TCP_SYNACK", abstractOutput);
         } catch (Exception ex) {
             Logger.getLogger(IPsecMessageMapperTest.class.getName()).log(Level.SEVERE, null, ex);
             throw ex;

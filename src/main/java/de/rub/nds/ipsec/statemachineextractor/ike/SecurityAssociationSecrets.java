@@ -9,6 +9,7 @@
 package de.rub.nds.ipsec.statemachineextractor.ike;
 
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
+import java.io.ByteArrayInputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -27,14 +28,14 @@ public class SecurityAssociationSecrets implements Cloneable {
     private PublicKey peerPublicKey;
     private boolean isInitiatorNonceChosen = false;
     private byte[] dhSecret;
-    private byte[] initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    private byte[] responderNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    private byte[] initiatorNonce = new byte[8];
+    private byte[] responderNonce = new byte[8];
     private byte[] securityAssociationOfferBody;
     private byte[] keyExchangeData;
     private byte[] peerKeyExchangeData;
     private byte[] inboundSPI = new byte[]{0x7f, 0x7f, 0x7f, 0x7f};
     private byte[] outboundSPI = new byte[]{0x7f, 0x7f, 0x7f, 0x7f};
-    private byte[] inboundKeyMaterial, outboundKeyMaterial;
+    private ByteArrayInputStream inboundKeyStream, outboundKeyStream;
     private ProtocolIDEnum protocol = ProtocolIDEnum.ISAKMP_IKE;
 
     public SecurityAssociationSecrets(DHGroupEnum DHGroup) {
@@ -125,20 +126,20 @@ public class SecurityAssociationSecrets implements Cloneable {
         if (!isInitiatorNonceChosen) {
             return null;
         }
-        return initiatorNonce;
+        return initiatorNonce.clone();
     }
 
     public void setInitiatorNonce(byte[] initiatorNonce) {
-        this.initiatorNonce = initiatorNonce;
+        this.initiatorNonce = initiatorNonce.clone();
         isInitiatorNonceChosen = true;
     }
 
     public byte[] getResponderNonce() {
-        return responderNonce;
+        return responderNonce.clone();
     }
 
     public void setResponderNonce(byte[] responderNonce) {
-        this.responderNonce = responderNonce;
+        this.responderNonce = responderNonce.clone();
     }
 
     public byte[] getSAOfferBody() {
@@ -162,7 +163,7 @@ public class SecurityAssociationSecrets implements Cloneable {
             generateDhKeyPair();
         }
         this.keyExchangeData = CryptoHelper.publicKey2Bytes(dhKeyPair.getPublic());
-        return this.keyExchangeData;
+        return this.keyExchangeData.clone();
     }
 
     public byte[] getPeerKeyExchangeData() {
@@ -203,19 +204,19 @@ public class SecurityAssociationSecrets implements Cloneable {
         this.protocol = protocol;
     }
 
-    public byte[] getInboundKeyMaterial() {
-        return inboundKeyMaterial.clone();
+    public int getInboundKeyMaterial(byte[] b) {
+        return this.inboundKeyStream.read(b, 0, b.length); //long form avoids need to declare IOException
     }
 
-    public void setInboundKeyMaterial(byte[] inboundKeyMaterial) {
-        this.inboundKeyMaterial = inboundKeyMaterial.clone();
+    public void setInboundKeyMaterial(ByteArrayInputStream bais) {
+        this.inboundKeyStream = bais;
     }
 
-    public byte[] getOutboundKeyMaterial() {
-        return outboundKeyMaterial.clone();
+    public int getOutboundKeyMaterial(byte[] b) {
+        return this.outboundKeyStream.read(b, 0, b.length); //long form avoids need to declare IOException
     }
 
-    public void setOutboundKeyMaterial(byte[] outboundKeyMaterial) {
-        this.outboundKeyMaterial = outboundKeyMaterial.clone();
+    public void setOutboundKeyMaterial(ByteArrayInputStream bais) {
+        this.outboundKeyStream = bais;
     }
 }

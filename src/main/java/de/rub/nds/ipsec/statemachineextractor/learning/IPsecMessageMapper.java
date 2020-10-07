@@ -60,12 +60,13 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                         adjustQuickModeMessageID(conn.getHandshake(), new ISAKMPMessage());
                         return null;
                     }
-                    if (abstractInput.startsWith("v1")) {
-                        return executeISAKMP(conn);
-                    } else if (abstractInput.startsWith("v2")) {
-                        return executeIKEv2(conn);
-                    } else {
-                        return executeESP(conn);
+                    switch(abstractInput.substring(0, 2)) {
+                        case "v1":
+                            return executeISAKMP(conn);
+                        case "v2":
+                            return executeIKEv2(conn);
+                        default:
+                            return executeESP(conn);
                     }
                 } catch (IOException | IKEHandshakeException | GeneralSecurityException ex) {
                     throw new SULException(ex);
@@ -173,8 +174,8 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                             case "HASH3":
                                 adjustQuickModeMessageID(conn.getHandshake(), msg);
                                 conn.getHandshake().addIKEv1Phase2Hash3Payload(msg);
-                                SecurityAssociationSecrets sas = conn.getHandshake().getMostRecentSecurityAssociation();
-                                conn.getHandshake().computeIPsecKeyMaterial(sas);
+                                SecurityAssociationSecrets sas = conn.getHandshake().getMostRecentSecurityAssociationv1();
+                                conn.getHandshake().computeIPsecKeyMaterialv1(sas);
                                 conn.establishTunnel(sas, ESPTransformIDEnum.AES, KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA);
                                 break;
 
@@ -238,7 +239,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                         conn.getHandshake().adjustCiphersuite(sa);
                                         break;
                                     case IKE_AUTH:
-//                                      conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
+                                        conn.getHandshake().addInboundSPIAndProtocolToIPsecSecurityAssociation(sa);
                                         break;
                                     default:
                                         throw new UnsupportedOperationException("Not supported yet.");
@@ -267,7 +268,13 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 throw new UnsupportedOperationException("Malformed message identifier");
                         }
                     }
-                    return (IKEv2Message) conn.getHandshake().exchangeMessage(msg);
+                    IKEv2Message result = (IKEv2Message) conn.getHandshake().exchangeMessage(msg);
+                    if (msg.getExchangeType() == ExchangeTypeEnum.IKE_AUTH) {
+                        SecurityAssociationSecrets sas = conn.getHandshake().getIPsecSecurityAssociationv2();
+                        conn.getHandshake().computeIPsecKeyMaterialv2(sas);
+                        conn.establishTunnel(sas, ESPTransformIDEnum.AES, KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA);
+                    }
+                    return result;
                 } catch (GenericIKEParsingException ex) {
                     return PARSING_ERROR_v2;
                 }

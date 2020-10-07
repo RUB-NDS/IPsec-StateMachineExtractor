@@ -17,6 +17,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.IKEPayloadTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -33,6 +34,7 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
     private byte[] skeyid, skeyid_d, skeyid_a, skeyid_e, ka, ke_i, ke_r;
     private byte[] identificationPayloadBody;
     private byte[] peerIdentificationPayloadBody;
+    private byte[] mostRecentMessageID;
     private final IKEv1Ciphersuite ciphersuite;
 
     public IKEv1HandshakeSessionSecrets(IKEv1Ciphersuite ciphersuite, HandshakeLongtermSecrets ltsecrets) {
@@ -41,6 +43,7 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         updateHandshakeSA();
     }
 
+    @Override
     public SecurityAssociationSecrets getHandshakeSA() {
         return HandshakeSA;
     }
@@ -55,6 +58,14 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         computeSecretKeys();
     }
 
+    public byte[] getMostRecentMessageID() {
+        return mostRecentMessageID;
+    }
+
+    public void setMostRecentMessageID(byte[] mostRecentMessageID) {
+        this.mostRecentMessageID = mostRecentMessageID;
+    }
+    
     public byte[] getSKEYID() {
         return skeyid;
     }
@@ -90,7 +101,7 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         SecretKeySpec hmacKey;
         byte[] initiatorNonce = this.HandshakeSA.getInitiatorNonce();
         if (initiatorNonce == null) {
-            initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+            initiatorNonce = new byte[8];
         }
         byte[] responderNonce = this.HandshakeSA.getResponderNonce();
         byte[] concatNonces = Arrays.copyOf(initiatorNonce, initiatorNonce.length + responderNonce.length);
@@ -243,38 +254,38 @@ public class IKEv1HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
     }
 
     @Override
-    public void computeKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException {
+    public void computeKeyMaterial(SecurityAssociationSecrets ipsec_sas) throws GeneralSecurityException {
         final String HmacIdentifier = "Hmac" + ciphersuite.getHash().toString();
         this.computeSecretKeys();
         Mac prfIn = Mac.getInstance(HmacIdentifier);
         Mac prfOut = Mac.getInstance(HmacIdentifier);
         prfIn.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
         prfOut.init(new SecretKeySpec(this.getSKEYID_d(), HmacIdentifier));
-        ByteArrayOutputStream inboundKeyMaterialOutputStream = new ByteArrayOutputStream((int) (KEY_MATERIAL_AMOUNT * 1.3));
-        ByteArrayOutputStream outboundKeyMaterialOutputStream = new ByteArrayOutputStream((int) (KEY_MATERIAL_AMOUNT * 1.3));
+        ByteArrayOutputStream inboundKeyMaterialOutputStream = new ByteArrayOutputStream(KEY_MATERIAL_AMOUNT);
+        ByteArrayOutputStream outboundKeyMaterialOutputStream = new ByteArrayOutputStream(KEY_MATERIAL_AMOUNT);
         byte[] lastBlockIn = new byte[0], lastBlockOut = new byte[0];
         while (inboundKeyMaterialOutputStream.size() < KEY_MATERIAL_AMOUNT || outboundKeyMaterialOutputStream.size() < KEY_MATERIAL_AMOUNT) {
             prfIn.update(lastBlockIn);
             prfOut.update(lastBlockOut);
-            if (sas.getDHSecret() != null) {
-                prfIn.update(sas.getDHSecret());
-                prfOut.update(sas.getDHSecret());
+            if (ipsec_sas.getDHSecret() != null) {
+                prfIn.update(ipsec_sas.getDHSecret());
+                prfOut.update(ipsec_sas.getDHSecret());
             }
-            prfIn.update(sas.getProtocol().getValue());
-            prfOut.update(sas.getProtocol().getValue());
-            prfIn.update(sas.getInboundSpi());
-            prfOut.update(sas.getOutboundSpi());
-            prfIn.update(sas.getInitiatorNonce());
-            prfOut.update(sas.getInitiatorNonce());
-            prfIn.update(sas.getResponderNonce());
-            prfOut.update(sas.getResponderNonce());
+            prfIn.update(ipsec_sas.getProtocol().getValue());
+            prfOut.update(ipsec_sas.getProtocol().getValue());
+            prfIn.update(ipsec_sas.getInboundSpi());
+            prfOut.update(ipsec_sas.getOutboundSpi());
+            prfIn.update(ipsec_sas.getInitiatorNonce());
+            prfOut.update(ipsec_sas.getInitiatorNonce());
+            prfIn.update(ipsec_sas.getResponderNonce());
+            prfOut.update(ipsec_sas.getResponderNonce());
             lastBlockIn = prfIn.doFinal();
             lastBlockOut = prfOut.doFinal();
             inboundKeyMaterialOutputStream.write(lastBlockIn, 0, lastBlockIn.length);
             outboundKeyMaterialOutputStream.write(lastBlockOut, 0, lastBlockOut.length);
         }
-        sas.setInboundKeyMaterial(inboundKeyMaterialOutputStream.toByteArray());
-        sas.setOutboundKeyMaterial(outboundKeyMaterialOutputStream.toByteArray());
+        ipsec_sas.setInboundKeyMaterial(new ByteArrayInputStream(inboundKeyMaterialOutputStream.toByteArray()));
+        ipsec_sas.setOutboundKeyMaterial(new ByteArrayInputStream(outboundKeyMaterialOutputStream.toByteArray()));
     }
 
     @Override

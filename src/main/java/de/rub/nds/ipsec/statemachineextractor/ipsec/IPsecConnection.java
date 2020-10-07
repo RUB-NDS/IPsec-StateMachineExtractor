@@ -65,7 +65,8 @@ public final class IPsecConnection {
         this.SA.setProtocol(ProtocolIDEnum.IPSEC_ESP);
         this.SA.setInboundSpi(DatatypeHelper.intTo4ByteArray(new Random().nextInt()));
         this.SA.setOutboundSpi(DatatypeHelper.intTo4ByteArray(new Random().nextInt()));
-        this.handshake.computeIPsecKeyMaterial(this.SA);
+        this.handshake.computeIPsecKeyMaterialv1(this.SA);
+        this.handshake.computeIPsecKeyMaterialv2(this.SA);
         this.tunnel = new TunnelMode(localTunnelEndpoint, remoteTunnelEndpoint, SA, ESPTransformIDEnum.DES, null, null, timeout);
     }
 

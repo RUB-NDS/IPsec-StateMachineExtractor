@@ -13,6 +13,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.GenericIKEHandshakeSessionSecr
 import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -31,11 +32,17 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
     private byte[] IDi, IDr;
     private byte[] octets, message;
     private final IKEv2Ciphersuite ciphersuite;
+    protected SecurityAssociationSecrets IPsecSA;
 
     public IKEv2HandshakeSessionSecrets(IKEv2Ciphersuite ciphersuite, HandshakeLongtermSecrets ltsecrets) {
         super(ciphersuite, ltsecrets);
         this.ciphersuite = ciphersuite;
         updateHandshakeSA();
+        this.IPsecSA = getSA(new byte[]{0, 0, 0, 1});
+    }
+
+    public SecurityAssociationSecrets getIPsecSA() {
+        return IPsecSA;
     }
 
     public byte[] getSKai() {
@@ -75,13 +82,7 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
         Mac prf = Mac.getInstance(HmacIdentifier);
         SecretKeySpec hmacKey;
-        byte[] initiatorNonce = this.HandshakeSA.getInitiatorNonce();
-        if (initiatorNonce == null) {
-            initiatorNonce = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        }
-        byte[] responderNonce = this.HandshakeSA.getResponderNonce();
-        byte[] concatNonces = Arrays.copyOf(initiatorNonce, initiatorNonce.length + responderNonce.length);
-        System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
+        byte[] concatNonces = getConcatNonces();
         byte[] concatCookies = Arrays.copyOf(initiatorCookie, IKEv2Message.COOKIE_LEN * 2);
         System.arraycopy(responderCookie, 0, concatCookies, IKEv2Message.COOKIE_LEN, IKEv2Message.COOKIE_LEN);
         hmacKey = new SecretKeySpec(concatNonces, HmacIdentifier);
@@ -174,6 +175,17 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         }
     }
 
+    private byte[] getConcatNonces() {
+        byte[] initiatorNonce = this.HandshakeSA.getInitiatorNonce();
+        if (initiatorNonce == null) {
+            initiatorNonce = new byte[8];
+        }
+        byte[] responderNonce = this.HandshakeSA.getResponderNonce();
+        byte[] concatNonces = Arrays.copyOf(initiatorNonce, initiatorNonce.length + responderNonce.length);
+        System.arraycopy(responderNonce, 0, concatNonces, initiatorNonce.length, responderNonce.length);
+        return concatNonces;
+    }
+
     public byte[] getMessage() {
         return message.clone();
     }
@@ -247,7 +259,30 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
     }
 
     @Override
-    public void computeKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void computeKeyMaterial(SecurityAssociationSecrets ipsec_sas) throws GeneralSecurityException {
+        final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
+        this.computeSecretKeys();
+        Mac prf = Mac.getInstance(HmacIdentifier);
+        prf.init(new SecretKeySpec(this.getSKd(), HmacIdentifier));
+        ByteArrayOutputStream keyMaterialOutputStream = new ByteArrayOutputStream(2 * KEY_MATERIAL_AMOUNT);
+        byte[] lastBlock = new byte[0];
+        byte[] dhsecret = new byte[0];
+        if (ipsec_sas.getDHSecret() != null) {
+            dhsecret = ipsec_sas.getDHSecret();
+        }
+        byte[] concatNonces = getConcatNonces();
+        byte counter = 1;
+        while (keyMaterialOutputStream.size() < 2 * KEY_MATERIAL_AMOUNT) {
+            prf.update(lastBlock);
+            prf.update(dhsecret);
+            prf.update(concatNonces);
+            prf.update(counter++);
+            lastBlock = prf.doFinal();
+            keyMaterialOutputStream.write(lastBlock, 0, lastBlock.length);
+        }
+        ByteArrayInputStream bais = new ByteArrayInputStream(keyMaterialOutputStream.toByteArray());
+        // Use same stream twice
+        ipsec_sas.setOutboundKeyMaterial(bais);
+        ipsec_sas.setInboundKeyMaterial(bais);
     }
 }

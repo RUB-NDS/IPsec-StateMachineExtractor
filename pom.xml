@@ -155,6 +155,7 @@
                     </includes>
                     <!-- Integration tests and slow tests are started -->
                     <groups>${includegroups}</groups>
+                    <argLine>-Djava.library.path=${basedir}/src/main/resources/lib:${java.library.path}</argLine>
                 </configuration>
                 <executions>
                     <execution>

@@ -110,4 +110,41 @@ public class IKEv1HandshakeSessionSecretsTest {
         assertEquals(0x00, secret[0]);
         assertEquals(128, secret.length);
     }
+
+    /**
+     * Test of computeKeyMaterial method, of class IKEv1HandshakeSessionSecrets.
+     */
+    @Test
+    public void testComputeKeyMaterial() throws Exception {
+        IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        handshake.adjustCiphersuite(SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2);
+        IKEv1HandshakeSessionSecrets instance = handshake.secrets_v1;
+        instance.generateDefaults();
+        handshake.ltsecrets.setPreSharedKey("AAAA".getBytes());
+        instance.setInitiatorCookie(DatatypeHelper.hexDumpToByteArray("2e204dce151b64dc"));
+        instance.setResponderCookie(DatatypeHelper.hexDumpToByteArray("070449eb13758cb5"));
+        instance.getHandshakeSA().setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("646355bc6c07de71db2359eda468c6fa"));
+        instance.getHandshakeSA().setResponderNonce(DatatypeHelper.hexDumpToByteArray("a4a1dfc1fbdcd0fd31308e1c01350634ce8ffcccbb63c475bad81d3ef1d942f1"));
+        instance.getHandshakeSA().setKeyExchangeData(DatatypeHelper.hexDumpToByteArray("771b9e1f3a547b5d050c6240eb91020e958f5345dffb235ccf105d9b1c1ecda4d04f6da0fcd80b82c81c55829da676811a1d624ebd8eef2336747b42c834140cf57006dc6aa83f5917e3792f7a3d0ef51b86e32baa0e9add4e1fe6200e1886164a8e44fd71315a311bb07fb9d7cc6873e483833b9543009ba36073b736d6d0e5"));
+        instance.getHandshakeSA().setPeerKeyExchangeData(DatatypeHelper.hexDumpToByteArray("7a444ad40235131c1c4d420b2ba2649054b46f0f4d228cefc5e2f9788683f54b3ef17e095eb4b7efb150b1c16ccba05ef13d6ada396d4538e24dcb54c076d9df0e69898e7f0fddb6a93faee312486d7f846685e575d4e32eaf32f2e7fa62e3a439f95c79f24a29933d4dad15e2d317bf651ba8d71b958eaea6ea6926a8109b12"));
+        instance.getHandshakeSA().setSAOfferBody(DatatypeHelper.hexDumpToByteArray("00000001000000010000002c00010001000000240001000080010007800e0080800200028004000280030001800b0001800c7080"));
+        instance.setPeerIdentificationPayloadBody(DatatypeHelper.hexDumpToByteArray("010000000a00030a"));
+        instance.getHandshakeSA().setDHSecret(DatatypeHelper.hexDumpToByteArray("91F6B3D878C92B1AC6F7AEE051D4A358FDFEFA3E8F1FCABB9957318C7D1F81A249465708E17C11990C4EF1F7780EFD1542AED8D5702D8549EA6D3349F2CB24BD6DC749C22ECF0F3E2D06F51E105C612FB73179B19C79EEBC252EC7EC4B2726A02E5D63FC5E02755A7E6095DBA6433EEA9C6B55F4A7B2C591495216E7274A2361"));
+
+        SecurityAssociationSecrets ipsec_sas = new SecurityAssociationSecrets(DHGroupEnum.GROUP1_768);
+        ipsec_sas.setProtocol(ProtocolIDEnum.IPSEC_ESP);
+        ipsec_sas.setInboundSpi(DatatypeHelper.hexDumpToByteArray("bc87cf3f"));
+        ipsec_sas.setOutboundSpi(DatatypeHelper.hexDumpToByteArray("c6af22ee"));
+        ipsec_sas.setInitiatorNonce(DatatypeHelper.hexDumpToByteArray("CEC1AE1E6E1D7F5B6D59A658CE2933EB"));
+        ipsec_sas.setResponderNonce(DatatypeHelper.hexDumpToByteArray("8EE957F9076B169465D28C0075BFADDE31F9BF5A7CF6F48CA3E63D729DC36992"));
+        instance.computeKeyMaterial(ipsec_sas);
+
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("FA1FB169062972CCEE0403DC021BC7F0"), instance.getKa());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("56C65ECA47FC0A0C5E4E3DCBB0F903A9"), instance.getIV(new byte[]{0x00, 0x00, 0x00, 0x00}));
+        byte[] b = new byte[36];
+        ipsec_sas.getOutboundKeyMaterial(b);
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("7a4a4c9117705ff453f50a8914bd7726665f3b5e5c90cc1d039138a0273a2b4e0f2cc3d2"), b);
+        ipsec_sas.getInboundKeyMaterial(b);
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("9b7ef7409cf03c5c960e8ea3a832919ea877cbc00d1bdf385e94eec05b91fc40b43585f8"), b);
+    }
 }

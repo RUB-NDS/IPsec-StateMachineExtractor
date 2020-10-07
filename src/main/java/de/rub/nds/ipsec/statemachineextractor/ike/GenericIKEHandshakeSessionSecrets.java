@@ -25,7 +25,6 @@ public abstract class GenericIKEHandshakeSessionSecrets {
     protected byte[] responderCookie = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     protected final Map<String, byte[]> IVs = new HashMap<>();
     protected final Map<String, SecurityAssociationSecrets> SAs = new HashMap<>();
-    private byte[] mostRecentMessageID;
     protected SecurityAssociationSecrets HandshakeSA;
     private final GenericIKECiphersuite ciphersuite;
     protected final HandshakeLongtermSecrets ltsecrets;
@@ -71,19 +70,11 @@ public abstract class GenericIKEHandshakeSessionSecrets {
         this.responderCookie = responderCookie;
     }
 
-    public byte[] getMostRecentMessageID() {
-        return mostRecentMessageID;
-    }
-
-    public void setMostRecentMessageID(byte[] mostRecentMessageID) {
-        this.mostRecentMessageID = mostRecentMessageID;
-    }
-
     public abstract void computeSecretKeys() throws GeneralSecurityException;
 
     public abstract void computeKeyMaterial(SecurityAssociationSecrets sas) throws GeneralSecurityException;
 
-    public SecurityAssociationSecrets getSA(byte[] msgID) {
+    public final SecurityAssociationSecrets getSA(byte[] msgID) {
         String msgIDStr = DatatypeHelper.byteArrayToHexDump(msgID);
         if (!SAs.containsKey(msgIDStr)) {
             SAs.put(msgIDStr, new SecurityAssociationSecrets(HandshakeSA.getDHGroup())); //TODO: Set group based on Security Association payload
