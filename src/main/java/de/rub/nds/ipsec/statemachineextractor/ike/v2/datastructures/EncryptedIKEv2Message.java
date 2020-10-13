@@ -26,7 +26,6 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -34,8 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKEData {
 
-    private final SecretKey ENCRsecretKey;
-    private byte[] INTEGsecretKey;
+    private final SecretKey ENCRsecretKey, INTEGsecretKey;
     private IvParameterSpec IV;
     private Cipher cipherEnc, cipherDec;
     protected boolean isInSync = false;
@@ -47,7 +45,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
     private byte[] header = new byte[4];
     protected EncryptedPayload ENCRPayload = new EncryptedPayload();
 
-    public EncryptedIKEv2Message(SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
+    public EncryptedIKEv2Message(SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, SecretKey INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         this.ENCRsecretKey = ENCRsecretKey;
         this.INTEGsecretKey = INTEGsecretKey;
         this.mode = mode;
@@ -86,6 +84,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         if (this.ciphertext.length == 0) {
             throw new IllegalStateException("No ciphertext set!");
         }
+        // TODO: Check integrity MAC
         cipherDec.init(Cipher.DECRYPT_MODE, ENCRsecretKey, IV);
         byte[] plaintextwithpadding = cipherDec.doFinal(this.ciphertext);
         this.plaintext = Arrays.copyOf(plaintextwithpadding, plaintextwithpadding.length - plaintextwithpadding[plaintextwithpadding.length - 1] - 1);
@@ -142,8 +141,8 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         return ciphertext.clone();
     }
 
-    public void setCiphertext(ByteArrayInputStream bais) {
-        this.ciphertext = new byte[bais.available() - 4 - this.ENCRPayload.getIV().length - 12];
+    public void setCiphertext(ByteArrayInputStream bais, int length) {
+        this.ciphertext = new byte[length - 4 - this.ENCRPayload.getIV().length - 12];
         bais.read(this.header, 0, this.header.length);
         byte[] buffer = new byte[this.ENCRPayload.getIV().length];
         bais.read(buffer, 0, buffer.length);
@@ -177,7 +176,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         super.writeBytes(baos);
     }
 
-    public void computeINTEGChecksumData() {
+    private void computeINTEGChecksumData() {
         if (this.ciphertext == null) {
             try {
                 this.encrypt();
@@ -189,8 +188,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         final String HmacIdentifier = "Hmac" + this.auth.toString();
         try {
             Mac checksumData = Mac.getInstance(HmacIdentifier);
-            SecretKeySpec hmacKey = new SecretKeySpec(this.INTEGsecretKey, HmacIdentifier);
-            checksumData.init(hmacKey);
+            checksumData.init(this.INTEGsecretKey);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             super.writeBytes(baos);
             byte[] predata = checksumData.doFinal(baos.toByteArray());
@@ -214,7 +212,8 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
             bais.reset();
             throw new IsNotEncryptedException();
         }
-        this.setCiphertext(bais);
+        // TODO: save integrity MAC for later check
+        this.setCiphertext(bais, length - IKE_MESSAGE_HEADER_LEN);
         this.decrypt();
         if (length != this.getLength()) {
             throw new IKEv2ParsingException("Message lengths differ - Computed: " + this.getLength() + " vs. Received: " + length + "!");
@@ -223,7 +222,7 @@ public class EncryptedIKEv2Message extends IKEv2Message implements EncryptedIKED
         secrets.computeSecretKeys();
     }
 
-    public static EncryptedIKEv2Message fromPlainMessage(IKEv2Message msg, SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
+    public static EncryptedIKEv2Message fromPlainMessage(IKEv2Message msg, SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, SecretKey INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         EncryptedIKEv2Message enc = new EncryptedIKEv2Message(ENCRsecretKey, mode, IV, INTEGsecretKey, auth);
         enc.setInitiatorCookie(msg.getInitiatorCookie());
         enc.setResponderCookie(msg.getResponderCookie());

@@ -171,7 +171,7 @@ public class IKEHandshake {
                 } catch (IKEv2Message.IsEncryptedException ex) {
                     SecretKeySpec ENCRkey = new SecretKeySpec(secrets_v2.getSKer(), ciphersuite_v2.getCipher().cipherJCEName());
                     byte[] iv = secrets_v2.getIV(messageReceived.getMessageId());
-                    byte[] INTEGkey = secrets_v2.getSKar();
+                    SecretKeySpec INTEGkey = new SecretKeySpec(secrets_v2.getSKar(), "Hmac" + ciphersuite_v2.getAuthMethod().toString());
                     messageReceived = new EncryptedIKEv2Message(ENCRkey, ciphersuite_v2.getCipher(), iv, INTEGkey, ciphersuite_v2.getAuthMethod());
                     messageReceived.processFromStream(bais, ciphersuite_v2, secrets_v2, ltsecrets);
                 }
@@ -200,7 +200,8 @@ public class IKEHandshake {
         if (messageToSend.getExchangeType() != ExchangeTypeEnum.IKE_SA_INIT) {
             SecretKeySpec ENCRkey = new SecretKeySpec(secrets_v2.getSKei(), ciphersuite_v2.getCipher().cipherJCEName());
             byte[] iv = secrets_v2.getIV(getNextv2MessageID());
-            messageToSend = EncryptedIKEv2Message.fromPlainMessage(messageToSend, ENCRkey, ciphersuite_v2.getCipher(), iv, secrets_v2.getSKai(), ciphersuite_v2.getAuthMethod());
+            SecretKeySpec INTEGkey = new SecretKeySpec(secrets_v2.getSKai(), "Hmac" + ciphersuite_v2.getAuthMethod().toString());
+            messageToSend = EncryptedIKEv2Message.fromPlainMessage(messageToSend, ENCRkey, ciphersuite_v2.getCipher(), iv, INTEGkey, ciphersuite_v2.getAuthMethod());
         }
         if (messageToSend.getNextPayload() == IKEPayloadTypeEnum.SecurityAssociationv2 && secrets_v2.getHandshakeSA().getSAOfferBody() == null) {
             secrets_v2.getHandshakeSA().setSAOfferBody(messageToSend.getPayloads().get(0).getBody());
@@ -440,5 +441,5 @@ public class IKEHandshake {
     public byte[] getNextv2MessageID() {
         return DatatypeHelper.intTo4ByteArray(nextv2MessageID);
     }
-   
+
 }

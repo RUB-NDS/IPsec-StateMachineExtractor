@@ -174,15 +174,15 @@ public class IKEv2HandshakeIT {
         SecretKeySpec ENCRkey = new SecretKeySpec(handshake.secrets_v2.getSKei(), handshake.ciphersuite_v2.getCipher().cipherJCEName());
         handshake.secrets_v2.setIV(msgID, DatatypeHelper.hexDumpToByteArray("2BB84E27D979E2342446D5D9CFF1BAFB"));
         byte[] iv = handshake.secrets_v2.getIV(msgID);
-        EncryptedIKEv2Message ENCmsg = EncryptedIKEv2MessageMock.fromPlainMessage(msg, ENCRkey, handshake.ciphersuite_v2.getCipher(), iv, handshake.secrets_v2.getSKai(), handshake.ciphersuite_v2.getAuthMethod());
+        SecretKeySpec INTEGkey = new SecretKeySpec(handshake.secrets_v2.getSKai(), "Hmac" + handshake.ciphersuite_v2.getAuthMethod().toString());
+        EncryptedIKEv2Message ENCmsg = EncryptedIKEv2MessageMock.fromPlainMessage(msg, ENCRkey, handshake.ciphersuite_v2.getCipher(), iv, INTEGkey, handshake.ciphersuite_v2.getAuthMethod());
         EncryptedPayloadMock ENCRPayload = new EncryptedPayloadMock();
         ENCRPayload.setIV(((EncryptedIKEv2MessageMock) ENCmsg).getENCRPayload().getIV());
         ENCRPayload.setPresetPadding(DatatypeHelper.hexDumpToByteArray("689EDB13A9EC81374F4C7C"));
         ((EncryptedIKEv2MessageMock) ENCmsg).setENCRPayload(ENCRPayload);
         answer = handshake.exchangeMessage(ENCmsg);
 
-//        TODO: Check parsing of message
-//        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("cc23d268"), ((SecurityAssociationPayload) answer.getPayloads().get(1)).getProposalPayloads().get(0).getSPI());
-//        assertFalse(((HashPayload) answer.getPayloads().get(0)).isCheckFailed());
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("c2c80c11"), ((SecurityAssociationPayloadv2) answer.getPayloads().get(2)).getProposalPayloads().get(0).getSPI());
+        // TODO: test integrity check
     }
 }

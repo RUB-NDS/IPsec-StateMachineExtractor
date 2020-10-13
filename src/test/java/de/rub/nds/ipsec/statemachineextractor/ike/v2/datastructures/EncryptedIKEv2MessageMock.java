@@ -17,7 +17,7 @@ import javax.crypto.SecretKey;
  */
 public class EncryptedIKEv2MessageMock extends EncryptedIKEv2Message {
 
-    public EncryptedIKEv2MessageMock(SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
+    public EncryptedIKEv2MessageMock(SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, SecretKey INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         super(ENCRsecretKey, mode, IV, INTEGsecretKey, auth);
     }
 
@@ -28,8 +28,8 @@ public class EncryptedIKEv2MessageMock extends EncryptedIKEv2Message {
     public void setENCRPayload(EncryptedPayload ENCRPayload) {
         this.ENCRPayload = ENCRPayload;
     }
-    
-    public static EncryptedIKEv2MessageMock fromPlainMessage(IKEv2Message msg, SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, byte[] INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
+
+    public static EncryptedIKEv2MessageMock fromPlainMessage(IKEv2Message msg, SecretKey ENCRsecretKey, EncryptionAlgorithmTransformEnum mode, byte[] IV, SecretKey INTEGsecretKey, IntegrityAlgorithmTransformEnum auth) throws GeneralSecurityException {
         EncryptedIKEv2MessageMock enc = new EncryptedIKEv2MessageMock(ENCRsecretKey, mode, IV, INTEGsecretKey, auth);
         enc.setInitiatorCookie(msg.getInitiatorCookie());
         enc.setResponderCookie(msg.getResponderCookie());
