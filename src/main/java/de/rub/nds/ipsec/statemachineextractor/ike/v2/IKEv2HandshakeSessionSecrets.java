@@ -207,7 +207,9 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         byte[] MACedIDForI = prf.doFinal(this.IDi);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            baos.write(getMessage());
+            if (message != null) {
+                baos.write(message);
+            }
             baos.write(this.HandshakeSA.getResponderNonce());
             baos.write(MACedIDForI);
         } catch (IOException ex) {
