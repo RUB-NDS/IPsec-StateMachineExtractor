@@ -30,6 +30,7 @@ import de.learnlib.oracle.membership.SULOracle;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.IPsecConnection;
 import de.rub.nds.ipsec.statemachineextractor.learning.IPsecInputAlphabet;
 import de.rub.nds.ipsec.statemachineextractor.learning.IPsecConnectionContextHandler;
+import de.rub.nds.ipsec.statemachineextractor.learning.ProbabilisticConfidenceSULOracle;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import java.io.File;
 import java.io.PrintStream;
@@ -49,8 +50,9 @@ public class Main {
     }
 
     private static final int timeout = 800;
-    private static final String host = "10.0.3.10"; //change to my docker IP 
+    private static final String host = "10.0.3.10";
     private static final int port = 500;
+    private static final int maxHandshakesPerQuery = 7;
 
     public static void main(String[] args) throws UnknownHostException {
         Instant instant = Instant.now();
@@ -60,7 +62,7 @@ public class Main {
         final ContextExecutableInputSUL<ContextExecutableInput<SerializableMessage, IPsecConnection>, SerializableMessage, IPsecConnection> ceiSUL;
         ceiSUL = new ContextExecutableInputSUL<>(contextHandler);
         SUL<String, String> sul = SULMappers.apply(new IPsecMessageMapper(), ceiSUL);
-        SULOracle<String, String> oracle = new SULOracle<>(sul);
+        SULOracle<String, String> oracle = new ProbabilisticConfidenceSULOracle(sul, maxHandshakesPerQuery);
         MealyCacheOracle<String, String> mqOracle = MealyCacheOracle.createDAGCacheOracle(inputAlphabet, oracle);
 
         MealyLearner<String, String> learner;
@@ -72,7 +74,7 @@ public class Main {
         MealyEquivalenceOracle<String, String> eqOracle = new MealyRandomWordsEQOracle<>(
                 mqOracle,
                 1, // minLength
-                4, //maxLength
+                8, //maxLength
                 50, // maxTests
                 new Random(1));
 
