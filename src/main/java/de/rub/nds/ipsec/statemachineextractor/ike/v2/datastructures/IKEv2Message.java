@@ -144,6 +144,9 @@ public class IKEv2Message extends IKEMessage implements IKEv2Serializable {
                 case Notify:
                     payload = NotificationPayloadv2.fromStream(bais);
                     break;
+                case VendorIDv2:
+                    payload = VendorIDPayloadv2.fromStream(bais);
+                    break;
                 default:
                     throw new UnsupportedOperationException("Not supported yet.");
             }

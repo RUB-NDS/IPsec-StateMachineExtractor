@@ -42,9 +42,13 @@ public enum IKEPayloadTypeEnum implements ByteValueEnum {
     Authentication((byte) 39),
     Noncev2((byte) 40),
     Notify((byte) 41),
+    Deletev2((byte) 42),
+    VendorIDv2((byte) 43),
     TrafficSelectorInitiator((byte) 44),
     TrafficSelectorResponder((byte) 45),
-    EncryptedAndAuthenticated((byte) 46);
+    EncryptedAndAuthenticated((byte) 46),
+    Configuration((byte) 47),
+    ExtensibleAuthentication((byte) 48);
 
     private final byte value;
 

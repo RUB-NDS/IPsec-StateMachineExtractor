@@ -302,7 +302,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
         if (concreteOutput == null) {
             return IPsecOutputAlphabet.NO_RESPONSE;
         }
-        if (concreteOutput == PARSING_ERROR_v1) {
+        if (concreteOutput == PARSING_ERROR_v1 || concreteOutput == PARSING_ERROR_v2) {
             return IPsecOutputAlphabet.PARSING_ERROR;
         }
         return concreteOutput.toString();

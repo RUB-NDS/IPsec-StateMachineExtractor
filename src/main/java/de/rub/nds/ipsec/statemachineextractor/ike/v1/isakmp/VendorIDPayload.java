@@ -27,17 +27,13 @@ public class VendorIDPayload extends SimpleBinaryISAKMPPayload {
         return getBinaryData();
     }
 
-    public void setVendorID(byte[] vendorID) {
+    public final void setVendorID(byte[] vendorID) {
         setBinaryData(vendorID);
     }
 
     private VendorIDPayload(String vendorID) {
         super(IKEPayloadTypeEnum.VendorID);
-        _setVendorID(hexDumpToByteArray(vendorID));
-    }
-
-    private void _setVendorID(byte[] vendorID) {
-        setBinaryData(vendorID);
+        setVendorID(hexDumpToByteArray(vendorID));
     }
 
     @Override
