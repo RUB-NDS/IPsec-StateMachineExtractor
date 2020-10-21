@@ -484,7 +484,6 @@ public class IKEv1HandshakeIT {
         encryptedBodyField.setAccessible(true);
         encryptedBodyField.set(noncePayload, DatatypeHelper.hexDumpToByteArray("a49e8f892c471b86f0744d3164f3b70699f65f00d17470d89860e3f43d033409d37824509c0f46e6f0fef4f3e34fcabbc2de91ec5b50432cda858af91751198d1ea68cb2dc7ff817ac0104b2d704833b3781c68fdb28469a0be397be3f9b9b20bae3a470afe9b94dd6e16671b54da58f22d810327cbe876b75a383678673dd01d950f8cea34a08d60310781d9175e9116d97fcfe84b2e33e69cf5a8284a7a224db1be54292397194c44743cfb7993715403e1264b046a8d4bc71a8443ded6363f4bc6f5da6472935559604eb7af14d0fc99583f1234e43da033e5870b6334e7947ef5d03e268222f52b57daf4a1d138bac8800b56a7aa04ecfbc16b97a72dd7b"));
         msg.addPayload(noncePayload);
-
         answer = handshake.exchangeMessage(msg);
 
         msg = new ISAKMPMessage();
@@ -498,5 +497,7 @@ public class IKEv1HandshakeIT {
         encryptedBodyField.set(identificationPayload, DatatypeHelper.hexDumpToByteArray("b80c23042f1ba728e14f15d4988ced90c0461c14c137c8a9b193601822af1ea98ffab1b37715a2d7c2cb3b9a6c9710659141f2ddaf59cb22d8e7a91496914a2d2b55566d27e12970187ca64e0d52117fc8a715877c2808b56ec6a47f0073eac77652797c58ff9981fc7cda928c12716f8982009af953e50f456ab67e425de1731ed03254ae375096e41657a89e2ae7429640054d79fb596456e0ddd9ecf767e48e807cbdd59feb0955eee94a88dafe87ad4e582a6bcde03c550cbe1fdad9c8895ab8d172a57c6b3f324cd76db8615a877ffc573ec648d284b6bb5af32d76d8b9fc239be547fd1e7d3a5848e580a378231b6e15d4a67a42640e20b0c87d13232c"));
         msg.addPayload(identificationPayload);
         answer = handshake.exchangeMessage(msg);
+
+        assertArrayEquals(DatatypeHelper.hexDumpToByteArray("C4B2DE59F95C56E9803299A256EF017D"), handshake.secrets_v1.getIV(answer.getMessageId()));
     }
 }

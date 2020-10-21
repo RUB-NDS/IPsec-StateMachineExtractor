@@ -140,7 +140,12 @@ public class IKEHandshake {
         messageReceived = IKEMessageFromByteArray(rxData);
         if ((messageToSend instanceof ISAKMPMessage) && ((ISAKMPMessage) messageToSend).isEncryptedFlag()) {
             //message could be unmarshalled, so store last ciphertext block as IV for next encryption
-            secrets_v1.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(rxData, rxData.length - ciphersuite_v1.getCipher().getBlockSize(), rxData.length));
+            if (messageReceived instanceof EncryptedISAKMPMessage) {
+                byte[] messageReceivedBytes = ((EncryptedISAKMPMessage) messageReceived).getCiphertext();
+                secrets_v1.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(messageReceivedBytes, messageReceivedBytes.length - ciphersuite_v1.getCipher().getBlockSize(), messageReceivedBytes.length));
+            } else {
+                secrets_v1.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(rxData, rxData.length - ciphersuite_v1.getCipher().getBlockSize(), rxData.length));
+            }
         }
         messages.add(new WireMessage(rxData, messageReceived, false));
         return messageReceived;

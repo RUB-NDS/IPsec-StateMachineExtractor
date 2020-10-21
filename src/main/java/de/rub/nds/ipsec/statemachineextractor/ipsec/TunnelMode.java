@@ -13,7 +13,6 @@ import de.rub.nds.ipsec.statemachineextractor.ike.SecurityAssociationSecrets;
 import static de.rub.nds.ipsec.statemachineextractor.ipsec.ESPMessage.IPv4_HEADER_LENGTH;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlgorithmAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
-import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.IPProtocolsEnum;
 import java.io.IOException;
 import java.io.InterruptedIOException;
