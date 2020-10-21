@@ -243,7 +243,11 @@ public class IKEHandshake {
     }
 
     public void setMostRecentMessageID(byte[] mostRecentMessageID) {
-        secrets_v1.setMostRecentMessageID(mostRecentMessageID.clone());
+        if (mostRecentMessageID == null) {
+            secrets_v1.setMostRecentMessageID(null);
+        } else {
+            secrets_v1.setMostRecentMessageID(mostRecentMessageID.clone());
+        }
     }
 
     public SecurityAssociationSecrets getMostRecentSecurityAssociationv1() {
