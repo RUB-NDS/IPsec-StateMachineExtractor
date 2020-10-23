@@ -202,6 +202,9 @@ public class IKEv2HandshakeSessionSecrets extends GenericIKEHandshakeSessionSecr
         final String HmacIdentifier = "Hmac" + ciphersuite.getPrf().toString();
         Mac prf = Mac.getInstance(HmacIdentifier);
         SecretKeySpec hmacKey;
+        if (this.SK_pi == null || this.SK_pi.length == 0) {
+            this.computeSecretKeys();
+        }
         hmacKey = new SecretKeySpec(this.SK_pi, HmacIdentifier);
         prf.init(hmacKey);
         byte[] MACedIDForI = prf.doFinal(this.IDi);

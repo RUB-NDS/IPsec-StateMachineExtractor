@@ -9,7 +9,6 @@
 package de.rub.nds.ipsec.statemachineextractor.learning;
 
 import de.learnlib.api.SUL;
-import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
@@ -41,8 +40,6 @@ public class ProbabilisticConfidenceSULOracle<I, O> extends SULOracle<I, O> {
 
     private final SUL<I, O> sul;
     private final int max_times;
-
-    protected PrintWriter log;
 
     public ProbabilisticConfidenceSULOracle(SUL<I, O> sul, int max_times) {
         super(sul);
