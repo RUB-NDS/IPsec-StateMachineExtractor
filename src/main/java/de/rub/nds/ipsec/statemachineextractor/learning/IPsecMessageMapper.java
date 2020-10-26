@@ -24,6 +24,7 @@ import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.AuthenticationAlg
 import de.rub.nds.ipsec.statemachineextractor.ipsec.attributes.KeyLengthAttributeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.ExchangeTypeEnum;
 import de.rub.nds.ipsec.statemachineextractor.ike.IDTypeEnum;
+import de.rub.nds.ipsec.statemachineextractor.ike.IKEMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
@@ -73,7 +74,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                 }
             }
 
-            private ISAKMPMessage executeISAKMP(IPsecConnection conn) throws GeneralSecurityException, IKEHandshakeException, UnsupportedOperationException, IOException {
+            private IKEMessage executeISAKMP(IPsecConnection conn) throws GeneralSecurityException, IKEHandshakeException, UnsupportedOperationException, IOException {
                 ISAKMPMessage msg = new ISAKMPMessage();
                 SecurityAssociationPayload sa = null;
                 IdentificationPayload id;
@@ -186,13 +187,13 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                     if (requiresHash1PostProcessing) {
                         conn.getHandshake().addIKEv1Phase2Hash1Payload(msg);
                     }
-                    return (ISAKMPMessage) conn.getHandshake().exchangeMessage(msg);
+                    return conn.getHandshake().exchangeMessage(msg);
                 } catch (GenericIKEParsingException ex) {
                     return PARSING_ERROR_v1;
                 }
             }
 
-            private IKEv2Message executeIKEv2(IPsecConnection conn) throws GeneralSecurityException, IKEHandshakeException, UnsupportedOperationException, IOException {
+            private IKEMessage executeIKEv2(IPsecConnection conn) throws GeneralSecurityException, IKEHandshakeException, UnsupportedOperationException, IOException {
                 IKEv2Message msg = new IKEv2Message();
                 msg.setInitiatorFlag(true);
                 SecurityAssociationPayloadv2 sa = null;
@@ -268,7 +269,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                                 throw new UnsupportedOperationException("Malformed message identifier");
                         }
                     }
-                    IKEv2Message result = (IKEv2Message) conn.getHandshake().exchangeMessage(msg);
+                    IKEMessage result = conn.getHandshake().exchangeMessage(msg);
                     if (msg.getExchangeType() == ExchangeTypeEnum.IKE_AUTH) {
                         SecurityAssociationSecrets sas = conn.getHandshake().getIPsecSecurityAssociationv2();
                         conn.getHandshake().computeIPsecKeyMaterialv2(sas);
