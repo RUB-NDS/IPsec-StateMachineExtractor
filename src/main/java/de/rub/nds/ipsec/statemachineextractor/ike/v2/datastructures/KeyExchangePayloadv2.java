@@ -95,6 +95,9 @@ public class KeyExchangePayloadv2 extends IKEv2Payload {
     @Override
     protected void fillFromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
+        if (length < HEADER_LEN) {
+            throw new IKEv2ParsingException("Payload length too short!");
+        }
         byte[] buffer = read4ByteFromStream(bais);
         this.setDhGroup(DHGroupTransformEnum.get(buffer[1]));
         byte[] buffer1 = new byte[length - HEADER_LEN];

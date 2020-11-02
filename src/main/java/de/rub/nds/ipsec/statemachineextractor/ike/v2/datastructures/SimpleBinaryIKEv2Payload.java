@@ -60,6 +60,9 @@ public abstract class SimpleBinaryIKEv2Payload extends IKEv2Payload implements S
     @Override
     protected void fillFromStream(ByteArrayInputStream bais) throws GenericIKEParsingException {
         int length = this.fillGenericPayloadHeaderFromStream(bais);
+        if (length < HEADER_LEN) {
+            throw new IKEv2ParsingException("Payload length too short!");
+        }
         byte[] buffer = new byte[length - HEADER_LEN];
         int readBytes;
         try {

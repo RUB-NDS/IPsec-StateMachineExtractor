@@ -35,4 +35,17 @@ public class HashPayloadTest {
         assertEquals(0, bais.available());
     }
     
+    /**
+     * Test of fromStream method, of class HashPayload.
+     */
+    @Test(expected=ISAKMPParsingException.class)
+    public void testFromStreamLengthTooShort() throws Exception {
+        VendorIDPayload origInstance = VendorIDPayload.DeadPeerDetection;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        origInstance.writeBytes(baos);
+        byte[] result = baos.toByteArray();
+        result[3] = 3;
+        ByteArrayInputStream bais = new ByteArrayInputStream(result);
+        HashPayload newInstance = HashPayload.fromStream(bais);
+    }
 }
