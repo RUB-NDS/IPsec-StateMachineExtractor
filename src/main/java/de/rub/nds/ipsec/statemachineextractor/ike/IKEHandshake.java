@@ -23,6 +23,7 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.PKCS1EncryptedISAKMP
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ProposalPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1Ciphersuite;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.IKEv1HandshakeSessionSecrets;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SymmetricallyEncryptedIdentificationPayloadHuaweiStyle;
@@ -88,7 +89,9 @@ public class IKEHandshake {
         if (!udpTH.isInitialized()) {
             udpTH.initialize();
         }
-        udpTH.sendData(txData);
+        if (txData != null) {
+            udpTH.sendData(txData);
+        }
         byte[] rxData = udpTH.fetchData();
         if (rxData.length == 0) {
             return null;
@@ -123,21 +126,33 @@ public class IKEHandshake {
             throw new UnsupportedOperationException("Not supported.");
         }
 
-        byte[] txData = messageToSend.getBytes();
+        byte[] rxData, txData = messageToSend.getBytes();
         messages.add(new WireMessage(txData, messageToSend, true));
-        byte[] rxData = exchangeData(txData);
-        if (rxData == null) {
-            return null;
-        }
-
-        //received an answer, so store necessary stuff
-        secrets_v2.setMessage(txData);
-        nextv2MessageID += 1;
         if ((messageToSend instanceof ISAKMPMessage) && ((ISAKMPMessage) messageToSend).isEncryptedFlag()) {
             //store last ciphertext block as IV for decryption
             secrets_v1.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage) messageToSend).getNextIV());
         }
-        messageReceived = IKEMessageFromByteArray(rxData);
+        byte[] toSendData = txData;
+        do {
+            rxData = exchangeData(toSendData);
+            if (rxData == null) {
+                return null;
+            }
+            messageReceived = IKEMessageFromByteArray(rxData);
+            messages.add(new WireMessage(rxData, messageReceived, false));
+            toSendData = null;
+        } while (messageReceived.getVersion() == 0x10
+                /* These v1_INFO*_HASH-ResponderLifetime are sent to inform the initiator that the responder uses a shorter phase 1 SA lifetime.(see https://tools.ietf.org/html/draft-ietf-ipsec-ike-lifetime-00).
+                 * They are sent unsolicited and therefore confuse a state learner. Therefore, we ignore them.
+                 */
+                && messageReceived.getExchangeType() == ExchangeTypeEnum.Informational
+                && messageReceived.getPayloads().size() == 2
+                && messageReceived.getPayloads().get(1) instanceof NotificationPayload
+                && ((NotificationPayload) messageReceived.getPayloads().get(1)).getNotifyMessageType() == NotifyMessageTypeEnum.ResponderLifetime);
+
+        //received an answer, so store necessary stuff
+        secrets_v2.setMessage(txData);
+        nextv2MessageID += 1;
         if ((messageToSend instanceof ISAKMPMessage) && ((ISAKMPMessage) messageToSend).isEncryptedFlag()) {
             //message could be unmarshalled, so store last ciphertext block as IV for next encryption
             if (messageReceived instanceof EncryptedISAKMPMessage) {
@@ -147,7 +162,6 @@ public class IKEHandshake {
                 secrets_v1.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(rxData, rxData.length - ciphersuite_v1.getCipher().getBlockSize(), rxData.length));
             }
         }
-        messages.add(new WireMessage(rxData, messageReceived, false));
         return messageReceived;
     }
 

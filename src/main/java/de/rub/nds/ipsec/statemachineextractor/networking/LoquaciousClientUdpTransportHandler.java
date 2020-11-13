@@ -64,7 +64,7 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         long minTimeMillies = System.currentTimeMillis() + timeout;
         socket.setSoTimeout(5);
-        while ((System.currentTimeMillis() < minTimeMillies)) {
+        do {
             if (inStream.available() != 0) {
                 while (inStream.available() != 0) {
                     int read = inStream.read();
@@ -72,7 +72,7 @@ public class LoquaciousClientUdpTransportHandler extends TransportHandler {
                 }
                 break;
             }
-        }
+        } while ((System.currentTimeMillis() < minTimeMillies));
         socket.setSoTimeout((int) getTimeout());
         return stream.toByteArray();
     }
