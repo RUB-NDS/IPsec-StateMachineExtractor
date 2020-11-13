@@ -18,7 +18,6 @@ public class IPsecInputAlphabet extends ArrayAlphabet<String> {
 
     public IPsecInputAlphabet() {
         super((new String[]{
-            "RESET",
             "NEW_QM_MSG_ID",
             "v1_MM_PSK-SA",
             "v1_MM_PKE-SA",
