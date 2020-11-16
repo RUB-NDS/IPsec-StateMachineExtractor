@@ -105,7 +105,7 @@ public class IKEHandshake {
 
     public IKEMessage exchangeMessage(IKEMessage messageToSend) throws IOException, GenericIKEParsingException, GeneralSecurityException, IKEHandshakeException {
         byte[] initiatorCookie;
-        IKEMessage messageReceived;
+        IKEMessage messageReceived = null;
         if (secrets_v1.getInitiatorCookie() == null && secrets_v2.getInitiatorCookie() == null) {
             initiatorCookie = messageToSend.getInitiatorCookie(); // gets random cookie
         } else if (secrets_v1.getInitiatorCookie() != null) {
@@ -133,74 +133,81 @@ public class IKEHandshake {
             secrets_v1.setIV(messageToSend.getMessageId(), ((EncryptedISAKMPMessage) messageToSend).getNextIV());
         }
         byte[] toSendData = txData;
+        List<IKEMessage> IKEMessages;
         do {
             rxData = exchangeData(toSendData);
             if (rxData == null) {
                 return null;
             }
-            messageReceived = IKEMessageFromByteArray(rxData);
-            messages.add(new WireMessage(rxData, messageReceived, false));
+            IKEMessages = IKEMessagesFromByteArray(rxData);
+            for (IKEMessage msg : IKEMessages) {
+                messages.add(new WireMessage(rxData, msg, false));
+                if (msg.getVersion() == 0x10
+                        /* These v1_INFO*_HASH-ResponderLifetime are sent to inform the initiator that the responder uses a shorter phase 1 SA lifetime.(see https://tools.ietf.org/html/draft-ietf-ipsec-ike-lifetime-00).
+                         * They are sent unsolicited and therefore confuse a state learner. Therefore, we ignore them.
+                         */
+                        && msg.getExchangeType() == ExchangeTypeEnum.Informational
+                        && msg.getPayloads().size() == 2
+                        && msg.getPayloads().get(1) instanceof NotificationPayload
+                        && ((NotificationPayload) msg.getPayloads().get(1)).getNotifyMessageType() == NotifyMessageTypeEnum.ResponderLifetime) {
+                    continue;
+                }
+                messageReceived = msg;
+                break;
+            }
             toSendData = null;
-        } while (messageReceived.getVersion() == 0x10
-                /* These v1_INFO*_HASH-ResponderLifetime are sent to inform the initiator that the responder uses a shorter phase 1 SA lifetime.(see https://tools.ietf.org/html/draft-ietf-ipsec-ike-lifetime-00).
-                 * They are sent unsolicited and therefore confuse a state learner. Therefore, we ignore them.
-                 */
-                && messageReceived.getExchangeType() == ExchangeTypeEnum.Informational
-                && messageReceived.getPayloads().size() == 2
-                && messageReceived.getPayloads().get(1) instanceof NotificationPayload
-                && ((NotificationPayload) messageReceived.getPayloads().get(1)).getNotifyMessageType() == NotifyMessageTypeEnum.ResponderLifetime);
-
+        } while (IKEMessages.size() > 0 && messageReceived == null);
         //received an answer, so store necessary stuff
         secrets_v2.setMessage(txData);
         nextv2MessageID += 1;
-        if ((messageToSend instanceof ISAKMPMessage) && ((ISAKMPMessage) messageToSend).isEncryptedFlag()) {
-            //message could be unmarshalled, so store last ciphertext block as IV for next encryption
-            if (messageReceived instanceof EncryptedISAKMPMessage) {
-                byte[] messageReceivedBytes = ((EncryptedISAKMPMessage) messageReceived).getCiphertext();
-                secrets_v1.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(messageReceivedBytes, messageReceivedBytes.length - ciphersuite_v1.getCipher().getBlockSize(), messageReceivedBytes.length));
-            } else {
-                secrets_v1.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(rxData, rxData.length - ciphersuite_v1.getCipher().getBlockSize(), rxData.length));
-            }
-        }
         return messageReceived;
     }
 
-    protected IKEMessage IKEMessageFromByteArray(byte[] bytes) throws GenericIKEParsingException, UnsupportedOperationException, IOException, GeneralSecurityException {
+    protected List<IKEMessage> IKEMessagesFromByteArray(byte[] bytes) throws GenericIKEParsingException, UnsupportedOperationException, IOException, GeneralSecurityException {
         if (bytes.length < IKEMessage.IKE_MESSAGE_HEADER_LEN) {
             throw new ISAKMPParsingException("Not enough bytes supplied to build an ISAKMPMessage!");
         }
-        IKEMessage messageReceived;
-        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-        switch (bytes[17]) {
-            case ISAKMPMessage.VERSION:
-                messageReceived = new ISAKMPMessage();
-                try {
-                    messageReceived.processFromStream(bais, ciphersuite_v1, secrets_v1, ltsecrets);
-                } catch (ISAKMPMessage.IsEncryptedException ex) {
-                    SecretKeySpec key = new SecretKeySpec(secrets_v1.getKa(), ciphersuite_v1.getCipher().cipherJCEName());
-                    byte[] iv = secrets_v1.getIV(messageReceived.getMessageId());
-                    messageReceived = new EncryptedISAKMPMessage(key, ciphersuite_v1.getCipher(), iv);
-                    messageReceived.processFromStream(bais, ciphersuite_v1, secrets_v1, ltsecrets);
-                }
-                break;
-            case IKEv2Message.VERSION:
-                messageReceived = new IKEv2Message();
-                try {
-                    messageReceived.processFromStream(bais, ciphersuite_v2, secrets_v2, ltsecrets);
-                } catch (IKEv2Message.IsEncryptedException ex) {
-                    SecretKeySpec ENCRkey = new SecretKeySpec(secrets_v2.getSKer(), ciphersuite_v2.getCipher().cipherJCEName());
-                    byte[] iv = secrets_v2.getIV(messageReceived.getMessageId());
-                    SecretKeySpec INTEGkey = new SecretKeySpec(secrets_v2.getSKar(), "Hmac" + ciphersuite_v2.getAuthMethod().toString());
-                    messageReceived = new EncryptedIKEv2Message(ENCRkey, ciphersuite_v2.getCipher(), iv, INTEGkey, ciphersuite_v2.getAuthMethod());
-                    messageReceived.processFromStream(bais, ciphersuite_v2, secrets_v2, ltsecrets);
-                }
-                break;
-            default:
-                throw new UnsupportedOperationException("Not supported.");
-        }
-        secrets_v1.setResponderCookie(messageReceived.getResponderCookie());
-        secrets_v2.setResponderCookie(messageReceived.getResponderCookie());
-        return messageReceived;
+        List<IKEMessage> messagesReceived = new ArrayList<>();
+        ByteArrayInputStream bais;
+        do {
+            IKEMessage messageReceived;
+            bais = new ByteArrayInputStream(bytes);
+            switch (bytes[17]) {
+                case ISAKMPMessage.VERSION:
+                    messageReceived = new ISAKMPMessage();
+                    try {
+                        messageReceived.processFromStream(bais, ciphersuite_v1, secrets_v1, ltsecrets);
+                    } catch (ISAKMPMessage.IsEncryptedException ex) {
+                        SecretKeySpec key = new SecretKeySpec(secrets_v1.getKa(), ciphersuite_v1.getCipher().cipherJCEName());
+                        byte[] iv = secrets_v1.getIV(messageReceived.getMessageId());
+                        messageReceived = new EncryptedISAKMPMessage(key, ciphersuite_v1.getCipher(), iv);
+                        messageReceived.processFromStream(bais, ciphersuite_v1, secrets_v1, ltsecrets);
+                        byte[] messageReceivedBytes = ((EncryptedISAKMPMessage) messageReceived).getCiphertext();
+                        secrets_v1.setIV(messageReceived.getMessageId(), Arrays.copyOfRange(messageReceivedBytes, messageReceivedBytes.length - ciphersuite_v1.getCipher().getBlockSize(), messageReceivedBytes.length));
+                    }
+                    break;
+                case IKEv2Message.VERSION:
+                    messageReceived = new IKEv2Message();
+                    try {
+                        messageReceived.processFromStream(bais, ciphersuite_v2, secrets_v2, ltsecrets);
+                    } catch (IKEv2Message.IsEncryptedException ex) {
+                        SecretKeySpec ENCRkey = new SecretKeySpec(secrets_v2.getSKer(), ciphersuite_v2.getCipher().cipherJCEName());
+                        byte[] iv = secrets_v2.getIV(messageReceived.getMessageId());
+                        SecretKeySpec INTEGkey = new SecretKeySpec(secrets_v2.getSKar(), "Hmac" + ciphersuite_v2.getAuthMethod().toString());
+                        messageReceived = new EncryptedIKEv2Message(ENCRkey, ciphersuite_v2.getCipher(), iv, INTEGkey, ciphersuite_v2.getAuthMethod());
+                        messageReceived.processFromStream(bais, ciphersuite_v2, secrets_v2, ltsecrets);
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Not supported.");
+            }
+            messagesReceived.add(messageReceived);
+            secrets_v1.setResponderCookie(messageReceived.getResponderCookie());
+            secrets_v2.setResponderCookie(messageReceived.getResponderCookie());
+            bytes = new byte[bais.available()];
+            bais.read(bytes);
+        } while (bytes.length > 0);
+        return messagesReceived;
     }
 
     protected ISAKMPMessage prepareISAKMPMessageForSending(ISAKMPMessage messageToSend) throws GeneralSecurityException {

@@ -19,6 +19,7 @@ import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
 import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
+import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Ignore;
@@ -66,30 +67,41 @@ public class IKEv1HandshakeTest {
     }
 
     /**
-     * Test of fromByteArray method, of class IKEv1MessageBuilder.
+     * Test of fromByteArray method, of class IKEHandshake.
      */
     @Test
     public void testFromByteArray_IKEv1MainModeSecurityAssociationMessage() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         getTestIKEv1MainModeSecurityAssociationMessage().writeBytes(baos);
         IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
-        IKEMessage instance = handshake.IKEMessageFromByteArray(baos.toByteArray());
+        IKEMessage instance = handshake.IKEMessagesFromByteArray(baos.toByteArray()).get(0);
         assertEquals(1, instance.getPayloads().size());
     }
 
     /**
-     * Test of fromByteArray method, of class IKEv1MessageBuilder.
+     * Test of fromByteArray method, of class IKEHandshake.
      */
     @Test
     public void testFromByteArray_IKEv1PayloadMalformedNotification() throws Exception {
         byte[] wiresharkDump = DatatypeHelper.hexDumpToByteArray("00574fee41e8f80a3287d995d890aaed0b100500d9ac8bc0000000280000000c0000000101000010");
         IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
-        IKEMessage instance = handshake.IKEMessageFromByteArray(wiresharkDump);
+        IKEMessage instance = handshake.IKEMessagesFromByteArray(wiresharkDump).get(0);
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("3287d995d890aaed"), instance.getResponderCookie());
         assertEquals(ExchangeTypeEnum.Informational, instance.getExchangeType());
         assertEquals(1, instance.getPayloads().size());
         assertEquals(IKEPayloadTypeEnum.Notification, instance.getPayloads().get(0).getType());
         assertEquals(NotifyMessageTypeEnum.PayloadMalformed, ((NotificationPayload) instance.getPayloads().get(0)).getNotifyMessageType());
+    }
+
+    /**
+     * Test of IKEMessagesFromByteArray method, of class IKEHandshake.
+     */
+    @Test
+    public void testIKEMessagesFromByteArray() throws Exception {
+        byte[] wiresharkDump = DatatypeHelper.hexDumpToByteArray("577c85a9cd808d5400000000000000000110020000000000000000540000003800000001000000010000002c00010001000000240001000080010007800e0080800200028004000280030001800b0001800c7080408dec91a926847c00000000000000000810050000000000000000400b0000181d13e6cb71e9f28ce3c87a1ade5cf05f0c51bc5a0000000c0000000101006000");
+        IKEHandshake handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
+        List<IKEMessage> messages = handshake.IKEMessagesFromByteArray(wiresharkDump);
+        assertEquals(2, messages.size());
     }
 
     @Test
