@@ -15,9 +15,9 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.EncryptedPay
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.IKEv2Message;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.NotificationPayloadv2;
 import de.rub.nds.ipsec.statemachineextractor.ike.v2.datastructures.SecurityAssociationPayloadv2;
+import de.rub.nds.ipsec.statemachineextractor.networking.ClientUdpTransportHandlerMock;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
-import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.security.GeneralSecurityException;
@@ -61,7 +61,7 @@ public class IKEv2HandshakeIT {
     @Before
     public void setUp() throws Exception {
         handshake = new IKEHandshakeMock(0, InetAddress.getLocalHost(), 500);
-        handshake.udpTH = new ClientUdpTransportHandlerMock();
+        handshake.udpTH = new ClientUdpTransportHandlerMock(msgPairs, new byte[]{10, 0, 3, 1});
     }
 
     class IKEHandshakeMock extends IKEHandshake {
@@ -73,48 +73,6 @@ public class IKEv2HandshakeIT {
         @Override
         protected IKEv2Message prepareIKEv2MessageForSending(IKEv2Message messageToSend) throws GeneralSecurityException {
             return messageToSend;
-        }
-    }
-
-    class ClientUdpTransportHandlerMock extends LoquaciousClientUdpTransportHandler {
-
-        byte[] nextResponse;
-
-        public ClientUdpTransportHandlerMock() {
-            super(0, "localhost", 0);
-        }
-
-        @Override
-        public InetAddress getLocalAddress() throws IOException {
-            return InetAddress.getByAddress(new byte[]{10, 0, 3, 1});
-        }
-
-        @Override
-        public void initialize() throws IOException {
-        }
-
-        @Override
-        public void closeConnection() throws IOException {
-        }
-
-        @Override
-        public boolean isInitialized() {
-            return true;
-        }
-
-        @Override
-        public void sendData(byte[] data) throws IOException {
-            final String dataHex = DatatypeHelper.byteArrayToHexDump(data).toLowerCase();
-            if (!msgPairs.containsKey(dataHex)) {
-                nextResponse = null;
-                throw new IOException("Unexpected Message: " + dataHex);
-            }
-            nextResponse = DatatypeHelper.hexDumpToByteArray(msgPairs.get(dataHex));
-        }
-
-        @Override
-        public byte[] fetchData() throws IOException {
-            return nextResponse;
         }
     }
 

@@ -14,11 +14,11 @@ import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.ISAKMPMessage;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.PKCS1EncryptedISAKMPPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.IdentificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NoncePayload;
+import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.NotificationPayload;
 import de.rub.nds.ipsec.statemachineextractor.ike.v1.isakmp.SecurityAssociationPayload;
+import de.rub.nds.ipsec.statemachineextractor.networking.ClientUdpTransportHandlerMock;
 import de.rub.nds.ipsec.statemachineextractor.util.CryptoHelper;
 import de.rub.nds.ipsec.statemachineextractor.util.DatatypeHelper;
-import de.rub.nds.ipsec.statemachineextractor.networking.LoquaciousClientUdpTransportHandler;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.security.KeyFactory;
@@ -140,7 +140,7 @@ public class IKEv1HandshakeIT {
     @Before
     public void setUp() throws Exception {
         handshake = new IKEHandshake(0, InetAddress.getLocalHost(), 500);
-        handshake.udpTH = new ClientUdpTransportHandlerMock(new byte[]{10, 0, 3, 1});
+        handshake.udpTH = new ClientUdpTransportHandlerMock(msgPairs, new byte[]{10, 0, 3, 1});
         byte[] decoded = Base64.getDecoder().decode(CSR1PrivPEM);
         KeySpec spec = new PKCS8EncodedKeySpec(decoded);
         KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -148,50 +148,6 @@ public class IKEv1HandshakeIT {
         decoded = Base64.getDecoder().decode(CSR2PubPEM);
         spec = new X509EncodedKeySpec(decoded);
         handshake.ltsecrets.setPeerPublicKeyPKE(kf.generatePublic(spec));
-    }
-
-    class ClientUdpTransportHandlerMock extends LoquaciousClientUdpTransportHandler {
-
-        byte[] nextResponse;
-        byte[] localAddress;
-
-        public ClientUdpTransportHandlerMock(byte[] localAddress) {
-            super(0, "localhost", 0);
-            this.localAddress = localAddress;
-        }
-
-        @Override
-        public InetAddress getLocalAddress() throws IOException {
-            return InetAddress.getByAddress(localAddress);
-        }
-
-        @Override
-        public void initialize() throws IOException {
-        }
-
-        @Override
-        public void closeConnection() throws IOException {
-        }
-
-        @Override
-        public boolean isInitialized() {
-            return true;
-        }
-
-        @Override
-        public void sendData(byte[] data) throws IOException {
-            final String dataHex = DatatypeHelper.byteArrayToHexDump(data).toLowerCase();
-            if (!msgPairs.containsKey(dataHex)) {
-                nextResponse = null;
-                throw new IOException("Unexpected Message: " + dataHex);
-            }
-            nextResponse = DatatypeHelper.hexDumpToByteArray(msgPairs.get(dataHex));
-        }
-
-        @Override
-        public byte[] fetchData() throws IOException {
-            return nextResponse;
-        }
     }
 
     @Test
@@ -446,7 +402,7 @@ public class IKEv1HandshakeIT {
         IKEMessage answer;
         SecurityAssociationPayload sa;
 
-        handshake.udpTH = new ClientUdpTransportHandlerMock(new byte[]{10, 14, 0, 1});
+        handshake.udpTH = new ClientUdpTransportHandlerMock(msgPairs, new byte[]{10, 14, 0, 1});
         sa = SecurityAssociationPayloadFactory.V1_P1_PKE_AES128_SHA1_G5;
         handshake.adjustCiphersuite(sa);
         IKEv1HandshakeSessionSecrets secrets = handshake.secrets_v1;
@@ -499,5 +455,36 @@ public class IKEv1HandshakeIT {
         answer = handshake.exchangeMessage(msg);
 
         assertArrayEquals(DatatypeHelper.hexDumpToByteArray("C4B2DE59F95C56E9803299A256EF017D"), handshake.secrets_v1.getIV(answer.getMessageId()));
+    }
+    
+    @Test
+    public void testIgnoredNotifications() throws Exception {
+        ISAKMPMessage msg;
+        IKEMessage answer;
+        SecurityAssociationPayload sa;
+        HashMap<String, String> pairs = new HashMap<>();
+        
+        handshake.udpTH = new ClientUdpTransportHandlerMock(null, new byte[]{10, 0, 3, 1});
+        sa = SecurityAssociationPayloadFactory.V1_P1_PSK_AES128_SHA1_G2;
+        handshake.adjustCiphersuite(sa);
+        IKEv1HandshakeSessionSecrets secrets = handshake.secrets_v1;
+        secrets.generateDefaults();
+        
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.Informational);
+        NotificationPayload notificationPayload = new NotificationPayload();
+        notificationPayload.setNotifyMessageType(NotifyMessageTypeEnum.ResponderLifetime);
+        msg.addPayload(notificationPayload);
+        handshake.addIKEv1Phase2Hash1Payload(msg);
+        String responderLifetimeHexDump = DatatypeHelper.byteArrayToHexDump(msg.getBytes()).toLowerCase();
+
+        msg = new ISAKMPMessage();
+        msg.setExchangeType(ExchangeTypeEnum.IdentityProtection);
+        msg.addPayload(sa);
+        pairs.put(DatatypeHelper.byteArrayToHexDump(msg.getBytes()).toLowerCase(), responderLifetimeHexDump);
+        handshake.udpTH = new ClientUdpTransportHandlerMock(pairs, new byte[]{10, 0, 3, 1});
+        answer = handshake.exchangeMessage(msg);
+        
+        assertNull(answer);
     }
 }

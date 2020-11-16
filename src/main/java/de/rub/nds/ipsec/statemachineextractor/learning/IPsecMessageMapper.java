@@ -61,7 +61,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                         adjustQuickModeMessageID(conn.getHandshake(), new ISAKMPMessage());
                         return null;
                     }
-                    switch(abstractInput.substring(0, 2)) {
+                    switch (abstractInput.substring(0, 2)) {
                         case "v1":
                             return executeISAKMP(conn);
                         case "v2":
@@ -187,9 +187,33 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                     if (requiresHash1PostProcessing) {
                         conn.getHandshake().addIKEv1Phase2Hash1Payload(msg);
                     }
-                    return conn.getHandshake().exchangeMessage(msg);
+                    IKEMessage result = conn.getHandshake().exchangeMessage(msg);
+                    waitOnDeleteNotification(result);
+                    return result;
                 } catch (GenericIKEParsingException ex) {
                     return PARSING_ERROR_v1;
+                }
+            }
+
+            private void waitOnDeleteNotification(IKEMessage result) throws RuntimeException {
+                if (result.toString().equals("v1_INFO*_HASH-DEL")) {
+                    /* Cisco's IOS seems to have a daemon that deletes
+                    * inactive handshakes and their data (keys, nonces,
+                    * etc.) every few minutes. For each deleted handshake
+                    * it sends out a delete notification, so the other side
+                    * knows that the data is no longer valid. Since this is
+                    * all UDP, these notifications always slip into my
+                    * handshakes and create non-determinism. Therefore, we
+                    * wait a few seconds to let the daemon finish sending
+                    * out its notifications so that another run does not
+                    * receive a notification (assuming a
+                    * ProbabilisticConfidenceSULOracle is used).
+                    */
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
 
@@ -275,6 +299,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
                         conn.getHandshake().computeIPsecKeyMaterialv2(sas);
                         conn.establishTunnel(sas, ESPTransformIDEnum.AES, KeyLengthAttributeEnum.L128, AuthenticationAlgorithmAttributeEnum.HMAC_SHA);
                     }
+                    waitOnDeleteNotification(result);
                     return result;
                 } catch (GenericIKEParsingException ex) {
                     return PARSING_ERROR_v2;
