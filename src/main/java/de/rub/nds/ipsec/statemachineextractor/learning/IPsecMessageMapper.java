@@ -196,7 +196,7 @@ public class IPsecMessageMapper implements SULMapper<String, String, ContextExec
             }
 
             private void waitOnDeleteNotification(IKEMessage result) throws RuntimeException {
-                if (result.toString().equals("v1_INFO*_HASH-DEL")) {
+                if (result != null && result.toString().equals("v1_INFO*_HASH-DEL")) {
                     /* Cisco's IOS seems to have a daemon that deletes
                     * inactive handshakes and their data (keys, nonces,
                     * etc.) every few minutes. For each deleted handshake
