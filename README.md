@@ -11,3 +11,6 @@ Under Linux, RockSaw requires the `CAP_NET_RAW` capability. This can be achieved
 ```
 # setcap cap_net_raw+ep /path/to/your/java
 ```
+
+## Acknowledgement
+Parts of this software are funded by the Cisco University Research Program Fund through the Silicon Valley Community Foundation.
